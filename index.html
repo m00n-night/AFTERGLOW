@@ -1562,48 +1562,10 @@ body>.map-popup-layer :is(.card .nm,.card .dline,.card .hpn,.mini .t,.mini .dlin
   text-align:left;
   text-align-last:auto;
 }
-/* 캐릭터 카드: 1행 직업 / 역할 / 고유 특성, 2행 레벨 (적군 레벨은 기존과 같이 표시하지 않음). */
+/* 캐릭터 카드 이름 칸 */
 #app .mainwin .side .card{container-type:inline-size}
 #app .mainwin .side .card .hd{min-width:0;align-items:center}
 #app .mainwin .side .card .card-name{min-width:0;flex:1 1 auto}
-#app .mainwin .side .card .card-identity{margin:3px 0 4px;min-width:0;max-width:100%;text-align:left}
-#app .mainwin .side .card .card-meta-line{
-  display:flex;
-  align-items:baseline;
-  justify-content:flex-start;
-  flex-wrap:nowrap;
-  width:max-content;
-  max-width:100%;
-  gap:3px;
-  white-space:nowrap;
-  overflow:visible;
-  font-size:11px;
-  line-height:1.25;
-  letter-spacing:-.065em;
-  font-weight:400;
-  color:var(--muted);
-  text-align:left;
-  text-align-last:auto;
-}
-#app .mainwin .side .card .card-meta-line .tp{white-space:nowrap;text-decoration:none;flex:none}
-#app .mainwin .side .card .card-meta-sep{font-size:.9em;opacity:.7;flex:none;letter-spacing:-.08em}
-#app .mainwin .side .card .card-level{
-  margin-top:2px;
-  white-space:nowrap;
-  font-size:11px;
-  line-height:1.2;
-  letter-spacing:-.02em;
-  font-weight:500;
-  color:var(--muted);
-  text-align:left;
-}
-/* 전투 칸이 좁아져도 명칭의 세 항목을 분리하거나 두 줄로 내리지 않습니다. */
-@container (max-width:150px){
-  #app .mainwin .side .card .card-meta-line{font-size:10px;gap:2px;letter-spacing:-.09em}
-}
-@container (max-width:118px){
-  #app .mainwin .side .card .card-meta-line{font-size:9px;gap:1px;letter-spacing:-.1em}
-}
 @media (max-width:480px){
   #app .mainwin .rwrap{gap:10px}
   #app .mainwin .rwrap > .win.reward-panel{min-width:112px;max-width:100%}
@@ -2036,6 +1998,12 @@ const ART_DETAIL_BASE = {
  "parity": "공격 주사위 눈의 합계가 짝수일 때 공격 피해가 20% 증가합니다. 합계가 홀수이면 오히려 피해가 10% 감소합니다.",
  "mirror": "방어 주사위 결과에 같은 숫자가 2개 이상 있으면 그 방어 판정의 방어값이 8 증가합니다. 같은 숫자가 없으면 추가 방어를 얻지 못합니다."
 };
+/* 조사: 앞말의 받침(숫자는 읽는 소리)에 맞춰 을/를·이/가·은/는·과/와·으로/로를 고릅니다. */
+const JO=(w,p)=>{const t=String(w).replace(/<[^>]*>/g,'').trim(),c=t.slice(-1);let f=false,r=false;
+ if(/[가-힣]/.test(c)){const k=(c.charCodeAt(0)-0xAC00)%28;f=k>0;r=k===8}
+ else if(/\d/.test(c)){const d=+c;f=d===0||[1,3,6,7,8].includes(d);r=[1,7,8].includes(d)}
+ const P={을:['을','를'],를:['을','를'],이:['이','가'],가:['이','가'],은:['은','는'],는:['은','는'],과:['과','와'],와:['과','와']};
+ if(p==='으로'||p==='로')return f&&!r?'으로':'로';return f?P[p][0]:P[p][1]};
 const ART_COND_TEXT={
  all:'출전한 아군 전체',front:'전열에 배치된 아군',middle:'중열에 배치된 아군',back:'후열에 배치된 아군',
  tank:'탱커 역할의 아군',dealer:'딜러 역할의 아군',support:'서포터 역할의 아군',
@@ -2060,15 +2028,15 @@ function fullArtDescription(a){
  const sumCap=cap?` 동일한 효과 유형의 추가 수치는 합산하여 최대 ${cap}${['pct','crit','reduce'].includes(f.type)?'%':''}까지만 적용됩니다.`:'';
  switch(f.type){
   case 'atk':return `${who}의 ${f.damageKind==='magic'?'마법':f.damageKind==='physical'?'물리':''} 공격값이 ${f.v} 증가합니다. 공격이 해당 유형일 때만 적용됩니다.${sumCap}`;
-  case 'pct':return `${who}가 적에게 공격할 때 공격 피해가 ${f.v}% 증가합니다. 조건을 만족하지 않는 동안에는 적용되지 않습니다.${sumCap}`;
-  case 'crit':return `${who}가 공격할 때 치명타 확률이 ${f.v}% 증가합니다. 다른 치명타 보너스와 함께 계산됩니다.${sumCap}`;
-  case 'shield':return `전투가 시작될 때 ${who}에게 보호막 ${f.v}를 부여합니다. 보호막은 HP 대신 피해를 먼저 흡수합니다.${sumCap}`;
+  case 'pct':return `${who}${JO(who,'가')} 적에게 공격할 때 공격 피해가 ${f.v}% 증가합니다. 조건을 만족하지 않는 동안에는 적용되지 않습니다.${sumCap}`;
+  case 'crit':return `${who}${JO(who,'가')} 공격할 때 치명타 확률이 ${f.v}% 증가합니다. 다른 치명타 보너스와 함께 계산됩니다.${sumCap}`;
+  case 'shield':return `전투가 시작될 때 ${who}에게 보호막 ${f.v}${JO(f.v,'를')} 부여합니다. 보호막은 HP 대신 피해를 먼저 흡수합니다.${sumCap}`;
   case 'heal':return `매 라운드 시작 시 살아 있는 ${who}의 HP를 ${f.v} 회복합니다. 초과 회복량은 보호막으로 전환됩니다.${sumCap}`;
   case 'def':return `${who}의 방어 판정에서 방어값이 ${f.v} 증가합니다. 적에게서 받는 피해를 막는 데 사용됩니다.${sumCap}`;
-  case 'reduce':return `${who}가 피해를 받을 때 피해량을 ${f.v}% 줄입니다. 조건을 만족하는 동안에만 적용됩니다.${sumCap}`;
+  case 'reduce':return `${who}${JO(who,'가')} 피해를 받을 때 피해량을 ${f.v}% 줄입니다. 조건을 만족하는 동안에만 적용됩니다.${sumCap}`;
   case 'inflict':return `아군의 공격이 적에게 실제 HP 피해를 입혔을 때 확률로 적에게 상태이상을 부여합니다(${f.v}%). ${ART_DEBUFF_TEXT[f.debuff]||''} 여러 상태이상 유물이 동시에 발동하더라도 공격 1회당 유물로 부여되는 상태이상은 최대 1종입니다.`;
   case 'party':return `출전 파티의 최대 편성 인원을 ${f.v}명 늘립니다. 기본 출전 가능 인원은 5명입니다. 편성 인원 증가 유물을 여러 개 보유했다면 수치를 더하지 않고 가장 높은 증가량 하나만 적용하며, 최대 8명까지 편성할 수 있습니다.`;
-  case 'nodecoin':return `헌터 영입소·협회 상점·안전 지대·보물 상자·돌발 퀘스트처럼 전투가 없는 지도 노드를 처음 방문하면 마석 ${f.v}을 추가 지급합니다. 같은 노드에서는 한 번만 발동합니다.${sumCap}`;
+  case 'nodecoin':return `헌터 영입소·협회 상점·안전 지대·보물 상자·돌발 퀘스트처럼 전투가 없는 지도 노드를 처음 방문하면 마석 ${f.v}${JO(f.v,'을')} 추가 지급합니다. 같은 노드에서는 한 번만 발동합니다.${sumCap}`;
   case 'rstart':return `전투가 시작될 때 출전 아군 각자에게 역할 자원 ${f.v}칸을 지급합니다. 탱커의 결의·서포터의 은총·딜러의 살기에 적용되며, 각 캐릭터의 최대 보유량을 넘지 않습니다.${sumCap}`;
   case 'rmax':return `출전 아군의 역할 자원 최대 보유량이 ${f.v}칸 증가하여 기본 3칸에서 4칸이 됩니다. 역할 기술을 쓰는 데 필요한 자원 3칸은 그대로입니다.${sumCap}`;
   case 'rthird':return `전투의 3라운드가 시작될 때 살아 있는 아군 각자에게 역할 자원 ${f.v}칸을 지급합니다. 최대 보유량을 넘어서 누적되지 않습니다.${sumCap}`;
@@ -2644,6 +2612,9 @@ function attackQuality(c,u,t,opening,duplicate){
 const ACTL={atk:'공격',def:'방어',guard:'대신 맞기',heal:'치유',ambush:'기습',potheal:'포션 사용'};
 const L=(c,x)=>{if(c.V)c.rec.ev.push(x)};
 
+/* 장기전 광폭: 40라운드부터 적의 공격값이 라운드마다 3씩 쌓여 오릅니다(40라운드 +3, 41라운드 +6 …). 끝나지 않는 전투를 막습니다. */
+const ENRAGE_ROUND=40,ENRAGE_STEP=3;
+const enrageAtk=c=>c&&c.round>=ENRAGE_ROUND?(c.round-ENRAGE_ROUND+1)*ENRAGE_STEP:0;
 /* 라운드 시작: 민첩 굴림과 순서, 라운드 효과 */
 function startRound(c){
  c.round++;c.curBegun=null;
@@ -2656,6 +2627,7 @@ function startRound(c){
   if(HA(c,u,'patience')&&c.round>1){u.pat=u._patHit?0:Math.min(12,(u.pat||0)+4)}u._patHit=false;
  }
  startResonances(c);
+ if(enrageAtk(c))L(c,`장기전 광폭 → ${c.round===ENRAGE_ROUND?'전투가 길어져 ':''}적 전원의 공격값 +${enrageAtk(c)}`);
  const lv=units.filter(liveU);
  if(has('hymn')){const t=lv.filter(u=>u.side==='a'&&u.hp<u.maxHp).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){const h=receiveHealing(t,6);L(c,`아티팩트 ${AR.hymn.n} → ${nm(t)} ${healText(h)}`)}}
  if(c.round===3){for(const u of lv.filter(u=>u.side==='a')){if(has('hglass'))u.shield=(u.shield||0)+positionShield(u,8);if(has('rally'))gainR(c,u,1);if(extraTotal('rthird'))gainR(c,u,extraTotal('rthird'))}if(has('hglass'))L(c,`아티팩트 ${AR.hglass.n} → 보호막 +8`);if(has('rally'))L(c,`아티팩트 ${AR.rally.n} → 3라운드 아군 역할 자원 +1`)}
@@ -2690,7 +2662,7 @@ function hit(c,f,t,v){
  if(t.side==='a'&&extraTotal('reduce',t))d=Math.max(1,Math.ceil(d*(1-extraTotal('reduce',t)/100)));
  if(t.shield){const a=Math.min(t.shield,d);t.shield-=a;d-=a}
  t.hp=Math.max(0,t.hp-d);
- if(t.hp<=0&&t.side==='a'&&has('phoenix')&&!c.phx){c.phx=1;t.hp=Math.max(1,Math.ceil(t.maxHp*.15));if(c.V)consumeArt('phoenix');L(c,`아티팩트 ${AR.phoenix.n} → ${nm(t)} HP ${t.hp}로 부활했습니다. 깃털은 소멸했습니다.`)}
+ if(t.hp<=0&&t.side==='a'&&has('phoenix')&&!c.phx){c.phx=1;t.hp=Math.max(1,Math.ceil(t.maxHp*.15));if(c.V)consumeArt('phoenix');L(c,`아티팩트 ${AR.phoenix.n} → ${nm(t)} HP ${t.hp}${JO(t.hp,'로')} 부활했습니다. 깃털은 소멸했습니다.`)}
  const st=c.stat;if(f)(st[f.id]=st[f.id]||{d:0,t:0}).d+=d;(st[t.id]=st[t.id]||{d:0,t:0}).t+=d;
  if(d>0){t._patHit=true;if(t.pat){t.pat=0}}
  // 전열: 적 공격으로 HP 피해를 받으면 매번 독립 판정. 지속 피해/보호막만 손실 시 발동하지 않음.
@@ -2802,6 +2774,7 @@ function doAction(c,u,a){
  if(u.side==='a'&&has('fullmoon'))add(4*mx,AR.fullmoon.n);
  if(HA(c,u,'pride')&&u.hp>=u.maxHp*.8)add(8,'특성 오만');if(HA(c,u,'wrath'))add(Math.min(12,Math.floor((1-u.hp/u.maxHp)*10)*2),'특성 분노');if(HA(c,u,'glut'))add(u.feast||0,'특성 폭식');if(HA(c,u,'dilig'))add(u.grind||0,'특성 근면');if(resolveResonance(c,u))add(6,'공명 억눌린 격노');
  if(debOn(c,u,'plunder'))add(-5,'저주');
+ if(u.side==='e')add(enrageAtk(c),'장기전 광폭');
  
  // 선제공격은 새로운 스킬이 아닌 첫 라운드의 민첩 우위 보너스.
  const opening=c.round===1&&!u._opened&&(u._g||0)>=(t._g||0)+(u.side==='a'&&has('horn')?6:8);
@@ -2839,7 +2812,7 @@ function doAction(c,u,a){
   const nativePierce=u.job==='archer'?Math.floor(ab/4):0;const artPierce=u.side==='a'&&has('quiver')&&u.job==='archer'?4:0;const pierce=nativePierce+artPierce;dd=p-ab+pierce;txt=`방어로 ${ab} 막음${nativePierce?', 직업 추적자 관통 +'+nativePierce:''}${artPierce?', 아티팩트 '+AR.quiver.n+' +'+artPierce:''}, 남은 방어 ${s.left}`}
  else{dd=p;if(t.stance&&!amb)t.stance.foes.push({id:u.id,p});txt=amb&&t.stance&&t.stance.left>0?'기습으로 방어 무시':'방어 없음'}
  t._incomingQuality=quality;
-  if(HA(c,u,'envy')&&t.shield>0&&liveU(u)){const sv=Math.min(12,t.shield);t.shield-=sv;u.shield=(u.shield||0)+sv;L(c,`특성 시기 → ${nm(u)}이(가) ${nm(t)}의 보호막 ${sv}를 빼앗음`)}
+  if(HA(c,u,'envy')&&t.shield>0&&liveU(u)){const sv=Math.min(12,t.shield);t.shield-=sv;u.shield=(u.shield||0)+sv;L(c,`특성 시기 → ${nm(u)}이(가) ${nm(t)}의 보호막 ${sv}${JO(sv,'를')} 빼앗음`)}
   const priorHp=t.hp;
   const real=hit(c,u,t,dd);
   // 중열: 공격이 방어를 뚫고 적중했다면 역할 자원 +1을 독립 판정합니다.
@@ -2994,7 +2967,7 @@ function finishBattle(){
  if(B.over==='win'&&has('bandage')){
   const fallen=S.party.filter(u=>!alive(u));
   const target=fallen.find(u=>u.isP)||fallen[0];
-  if(target){target.hp=Math.max(1,Math.ceil(target.maxHp*.25));consumeArt('bandage');revive=`붕대 꾸러미: ${esc(target.name)}이(가) HP ${target.hp}/${target.maxHp}로 부활했습니다. 사용한 꾸러미는 소멸했습니다.`}
+  if(target){target.hp=Math.max(1,Math.ceil(target.maxHp*.25));consumeArt('bandage');revive=`붕대 꾸러미: ${esc(target.name)}이(가) HP ${target.hp}/${target.maxHp}${JO(target.maxHp,'로')} 부활했습니다. 사용한 꾸러미는 소멸했습니다.`}
  }
  if(B.over==='win'&&has('leaf')){for(const u of S.party.filter(alive))receiveHealing(u,Math.ceil(u.maxHp*.06))}
  const lost=S.party.filter(u=>!alive(u)).map(u=>u.name);
@@ -3054,7 +3027,7 @@ const EVENTS=[
  {t:'레드 게이트 감지',d:'경로 옆에 붉은 균열이 열렸습니다. 들어가면 안의 몬스터를 모두 처치하기 전까지 나올 수 없습니다.',o:[
   {n:'진입한다 (레드 게이트 전투)',c:()=>canFight()&&S.floor>=2,f:()=>startBattle('red')},{n:'협회에 보고하고 지나친다',f:()=>done('균열 좌표를 협회에 전송했습니다.')}]},
  {t:'정체불명의 계약서',d:'바닥에 떨어진 계약서. 서명하면 마석을 주겠다는 문구가 떠오릅니다.',o:[
-  {n:()=>`서명한다 (플레이어 최대 HP -10, 마석 +${60+f_()*10})`,f:()=>{const p=P(),g=60+f_()*10;p.maxHp-=10;p.hp=hurtTo(p,Math.min(p.hp,p.maxHp));S.gold+=g;done(`계약 성립. 마석 ${g}이 들어왔습니다.`)}},{n:'무시한다',f:()=>done('계약서가 재가 되어 흩어졌습니다.')}]},
+  {n:()=>`서명한다 (플레이어 최대 HP -10, 마석 +${60+f_()*10})`,f:()=>{const p=P(),g=60+f_()*10;p.maxHp-=10;p.hp=hurtTo(p,Math.min(p.hp,p.maxHp));S.gold+=g;done(`계약 성립. 마석 ${g}${JO(g,'이')} 들어왔습니다.`)}},{n:'무시한다',f:()=>done('계약서가 재가 되어 흩어졌습니다.')}]},
  {t:'떠돌이 아티팩트 상인',d:'"마석 말고 피로 받지. 출전 인원 전원이 조금씩만."',o:[
   {n:'거래한다 (출전 인원 HP -15, 아티팩트 1개)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-15));const r=artOpts(1)[0];if(r){gainArt(r.k);done(`아티팩트 「${r.n}」 획득.`)}else done('더 줄 물건이 없다며 사라졌습니다.')}},{n:'거절한다',f:()=>done('상인은 어깨를 으쓱하고 사라졌습니다.')}]},
  {t:'조난당한 헌터',d:'파티가 전멸하고 혼자 남은 헌터가 동행을 청합니다.',o:[
@@ -3065,12 +3038,12 @@ const EVENTS=[
   {n:'마신다 (생존한 출전 인원 HP 20 회복)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,20)});done('생존한 파티원의 상처가 아물었습니다.')}},{n:'병에 담는다 (회복 포션 +1)',f:()=>{S.potions++;done('회복 포션 1개를 챙겼습니다.')}}]},
  {t:'함정 복도',d:'바닥에 압력판이 빼곡합니다. 민첩하게 지나가면 끝에 마석 더미가 보입니다.',o:[
   {n:()=>`통과한다 (각자 민첩 판정 · 실패 시 피해 ${10+2*f_()})`,f:()=>{const dc=10+2*f_(),out=S.party.filter(alive).map(u=>{const r=rollPool(u,u.dice.agi,'agi').sum+(u.pos===1?2:0);if(r>=dc)return`${esc(u.name)} 성공(${r})`;u.hp=hurtTo(u,u.hp-dc);return`${esc(u.name)} 실패(${r}) -${dc}`});const g=30+8*f_();S.gold+=g;done(out.join(' · ')+`. 마석 ${g} 획득.`)}},
-  {n:()=>`마석 ${15+3*f_()}을 내고 우회한다`,c:()=>S.gold>=15+3*f_(),f:()=>{S.gold-=15+3*f_();done('안전한 길로 돌아갔습니다.')}}]},
+  {n:()=>`마석 ${15+3*f_()}${JO(15+3*f_(),'을')} 내고 우회한다`,c:()=>S.gold>=15+3*f_(),f:()=>{S.gold-=15+3*f_();done('안전한 길로 돌아갔습니다.')}}]},
  {t:'잠긴 보물상자',d:'봉인된 상자입니다. 마석을 녹여 넣으면 열릴 것 같습니다.',o:[
-  {n:()=>`마석 ${20+4*f_()}으로 연다`,c:()=>S.gold>=20+4*f_(),f:()=>{S.gold-=20+4*f_();const r=Math.random();if(r<.45){const a=artOpts(1)[0];if(a){gainArt(a.k);return done(`아티팩트 「${a.n}」!`)}}if(r<.8){const g=60+12*f_();S.gold+=g;return done(`마석 ${g}이 쏟아졌습니다.`)}const lv=S.party.filter(alive),u=pick(lv.length?lv:S.party);u.hp=hurtTo(u,u.hp-20);done(`미믹이었습니다! ${esc(u.name)} HP -20.`)}},{n:'두고 간다',f:()=>done('상자를 그대로 두었습니다.')}]},
+  {n:()=>`마석 ${20+4*f_()}${JO(20+4*f_(),'으로')} 연다`,c:()=>S.gold>=20+4*f_(),f:()=>{S.gold-=20+4*f_();const r=Math.random();if(r<.45){const a=artOpts(1)[0];if(a){gainArt(a.k);return done(`아티팩트 「${a.n}」!`)}}if(r<.8){const g=60+12*f_();S.gold+=g;return done(`마석 ${g}${JO(g,'이')} 쏟아졌습니다.`)}const lv=S.party.filter(alive),u=pick(lv.length?lv:S.party);u.hp=hurtTo(u,u.hp-20);done(`미믹이었습니다! ${esc(u.name)} HP -20.`)}},{n:'두고 간다',f:()=>done('상자를 그대로 두었습니다.')}]},
  {t:'수련의 석판',d:'석판에 손을 얹으면 한 명이 깨달음을 얻습니다.',o:()=>S.party.map(u=>({n:`${esc(u.name)} (Lv${u.lvl}) · 경험치 +${40+10*f_()}`,f:()=>{const ups=gainExp(u,40+10*f_());done(`${esc(u.name)} 경험치 +${40+10*f_()}${ups.length?` · 레벨 업! Lv${u.lvl}`:''}`)}}))},
  {t:'매복',d:'몬스터 무리가 숨어 있습니다. 싸워서 이기면 평소의 두 배 마석을 얻습니다.',o:[
-  {n:'맞서 싸운다 (보상 마석 ×2)',c:()=>canFight(),f:()=>startBattle('normal',2)},{n:()=>`마석 ${10+5*f_()}을 던져 주의를 끈다`,c:()=>S.gold>=10+5*f_(),f:()=>{S.gold-=10+5*f_();done('몬스터들이 마석을 쫓아갔습니다.')}}]},
+  {n:'맞서 싸운다 (보상 마석 ×2)',c:()=>canFight(),f:()=>startBattle('normal',2)},{n:()=>`마석 ${10+5*f_()}${JO(10+5*f_(),'을')} 던져 주의를 끈다`,c:()=>S.gold>=10+5*f_(),f:()=>{S.gold-=10+5*f_();done('몬스터들이 마석을 쫓아갔습니다.')}}]},
  {t:'버려진 협회 사물함',d:'누군가 두고 간 사물함입니다.',o:[
   {n:'연다',f:()=>{const r=Math.random();if(r<.5){const g=ticketGrade(f_());S.tickets.push(g);done(`영입권 (${gname(g)})을 찾았습니다.`)}else{const n=1+R(2);S.potions+=n;done(`회복 포션 ${n}개를 찾았습니다.`)}}}]},
  {t:'영혼 거래상',d:'"마석을 주면 네 동료들의 경험을 대신 쌓아 주지."',o:[
@@ -3080,7 +3053,7 @@ const EVENTS=[
  {t:'부상당한 협회 의무관',d:'의무관이 치료를 해 주겠다고 합니다. 대가는 마석.',o:[
   {n:()=>`마석 ${20+5*f_()} · 생존한 모든 캐릭터 HP 완전 회복`,c:()=>S.gold>=20+5*f_(),f:()=>{S.gold-=20+5*f_();all().forEach(u=>{if(alive(u))u.hp=u.maxHp});done('생존한 캐릭터가 완전히 회복했습니다. 쓰러진 동료는 안전 지대에서만 부활할 수 있습니다.')}},{n:'붕대만 받는다 (생존한 출전 인원 HP 10)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,10)});done('생존한 출전 인원이 응급 처치를 받았습니다.')}}]},
  {t:'무너진 계단',d:'무너진 계단 너머에 위층으로 향하다 쓰러진 헌터의 유품이 보입니다. 잔해를 치우려면 힘을 써야 합니다.',o:[
-  {n:()=>`잔해를 치운다 (출전 인원 HP -8, 마석 +${40+8*f_()})`,f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-8));const g=40+8*f_();S.gold+=g;done(`돌무더기를 치웠더니 마석 ${g}을 찾았습니다.`)}},{n:'명복을 빌고 지나친다',f:()=>done('조용히 묵념하고 지나갔습니다.')}]},
+  {n:()=>`잔해를 치운다 (출전 인원 HP -8, 마석 +${40+8*f_()})`,f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-8));const g=40+8*f_();S.gold+=g;done(`돌무더기를 치웠더니 마석 ${g}${JO(g,'을')} 찾았습니다.`)}},{n:'명복을 빌고 지나친다',f:()=>done('조용히 묵념하고 지나갔습니다.')}]},
  {t:'낯선 약초 군락',d:'처음 보는 약초가 무성합니다. 몸에 좋을지 독이 될지는 먹어 봐야 압니다.',o:[
   {n:'먹어 본다 (50%: 출전 인원 최대 HP +6 / 50%: HP -12)',f:()=>{if(Math.random()<.5){S.party.forEach(u=>{u.maxHp+=6;if(alive(u))u.hp+=6});done('몸에 힘이 솟습니다. 출전 인원 최대 HP +6.')}else{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-12));done('독초였습니다. 출전 인원 HP -12.')}}},
   {n:'포션 재료로 채집한다 (회복 포션 +1)',f:()=>{S.potions++;done('약초를 정리해 회복 포션 1개를 만들었습니다.')}}]},
@@ -3091,7 +3064,7 @@ const EVENTS=[
   {n:'사냥에 나선다 (정예 전투 · 보상 마석 ×2.5)',c:()=>canFight()&&S.floor>=2,f:()=>startBattle('elite',2.5)},{n:'다른 헌터에게 양보한다',f:()=>done('벽보를 다시 붙여 두었습니다.')}]},
  {t:'멈춰 선 보급 수레',d:'바퀴가 빠진 협회 보급 수레가 길을 막고 있습니다. 주인은 보이지 않습니다.',o:[
   {n:'바퀴를 끼워 준다 (출전 인원 HP -5, 회복 포션 +2)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-5));S.potions+=2;done('돌아온 상인이 고맙다며 포션 2개를 건넸습니다.')}},
-  {n:()=>`짐을 뒤진다 (마석 +${50+10*f_()} · 확률로 매복 전투(50%))`,f:()=>{const g=50+10*f_();S.gold+=g;if(Math.random()<.5&&canFight()){S.msg=`마석 ${g}을 챙겼지만 수레를 노리던 몬스터가 덮칩니다!`;startBattle('normal')}else done(`마석 ${g}을 챙겼습니다.`)}}]},
+  {n:()=>`짐을 뒤진다 (마석 +${50+10*f_()} · 확률로 매복 전투(50%))`,f:()=>{const g=50+10*f_();S.gold+=g;if(Math.random()<.5&&canFight()){S.msg=`마석 ${g}${JO(g,'을')} 챙겼지만 수레를 노리던 몬스터가 덮칩니다!`;startBattle('normal')}else done(`마석 ${g}${JO(g,'을')} 챙겼습니다.`)}}]},
  {t:'고대 제단',d:'제단에 아티팩트를 바치면 그 힘을 마석과 치유로 돌려준다고 새겨져 있습니다.',o:[
   {n:()=>`아티팩트 1개를 무작위로 바친다 (마석 +${80+15*f_()}, 생존 인원 완전 회복)`,c:()=>S.arts.length>0,f:()=>{const i=R(S.arts.length),k=S.arts.splice(i,1)[0],g=80+15*f_();reconcileParty();S.gold+=g;all().forEach(u=>{if(alive(u))u.hp=u.maxHp});done(`「${AR[k].n}」이(가) 빛이 되어 사라졌습니다. 마석 ${g}, 생존 인원 완전 회복.`)}},{n:'손대지 않는다',f:()=>done('제단을 지나쳤습니다.')}]},
  {t:'갇힌 정령',d:'마석 결정 속에 작은 정령이 갇혀 있습니다.',o:[
@@ -3099,16 +3072,16 @@ const EVENTS=[
   {n:()=>`결정째 판다 (마석 +${70+10*f_()})`,f:()=>{const g=70+10*f_();S.gold+=g;done(`마석 ${g}에 팔았습니다. 결정 속 빛이 잠깐 흔들렸습니다.`)}}]},
  {t:'협회 보급 투하',d:'상공에서 협회 보급 상자가 떨어졌습니다. 하나만 챙길 시간이 있습니다.',o:[
   {n:'회복 포션 2개',f:()=>{S.potions+=2;done('회복 포션 2개를 챙겼습니다.')}},
-  {n:()=>`마석 ${30+8*f_()}`,f:()=>{const g=30+8*f_();S.gold+=g;done(`마석 ${g}을 챙겼습니다.`)}},
+  {n:()=>`마석 ${30+8*f_()}`,f:()=>{const g=30+8*f_();S.gold+=g;done(`마석 ${g}${JO(g,'을')} 챙겼습니다.`)}},
   {n:'영입권 1장 (낮은 등급)',f:()=>{const g=ticketGrade(Math.max(1,f_()-2));S.tickets.push(g);done(`${gname(g)} 영입권을 챙겼습니다. 헌터 영입 칸에서 쓸 수 있습니다.`)}}]},
  {t:'마석 광맥',d:'벽면에 마석 광맥이 드러나 있습니다. 캐는 소리에 몬스터가 몰려올지도 모릅니다.',o:[
-  {n:()=>`조심히 조금만 캔다 (마석 +${20+5*f_()})`,f:()=>{const g=20+5*f_();S.gold+=g;done(`마석 ${g}을 캤습니다.`)}},
-  {n:()=>`욕심껏 캔다 (마석 +${60+12*f_()} · 확률로 전투(40%))`,f:()=>{const g=60+12*f_();S.gold+=g;if(Math.random()<.4&&canFight()){S.msg=`마석 ${g}을 캤지만 소리를 듣고 몬스터가 몰려왔습니다!`;startBattle('normal')}else done(`마석 ${g}을 캤습니다.`)}}]},
+  {n:()=>`조심히 조금만 캔다 (마석 +${20+5*f_()})`,f:()=>{const g=20+5*f_();S.gold+=g;done(`마석 ${g}${JO(g,'을')} 캤습니다.`)}},
+  {n:()=>`욕심껏 캔다 (마석 +${60+12*f_()} · 확률로 전투(40%))`,f:()=>{const g=60+12*f_();S.gold+=g;if(Math.random()<.4&&canFight()){S.msg=`마석 ${g}${JO(g,'을')} 캤지만 소리를 듣고 몬스터가 몰려왔습니다!`;startBattle('normal')}else done(`마석 ${g}${JO(g,'을')} 캤습니다.`)}}]},
  {t:'노병의 모닥불',d:'은퇴한 노헌터가 모닥불가에서 옛 이야기를 들려줍니다.',o:[
   {n:()=>`이야기를 듣는다 (모든 캐릭터 경험치 +${15+4*f_()})`,f:()=>{const x=15+4*f_(),ups=all().filter(u=>gainExp(u,x).length).map(u=>esc(u.name));done(`많은 것을 배웠습니다.${ups.length?' 레벨 업: '+ups.join(', '):''}`)}},
   {n:'불가에서 쉰다 (생존 인원 HP +15)',f:()=>{all().forEach(u=>{if(alive(u))receiveHealing(u,15)});done('따뜻한 불 곁에서 숨을 돌렸습니다.')}}]}
 ];
-function gamble(n){const r=1+R(6);if(r>=4){S.gold+=n;say(`D6 = ${r}. 마석 ${n}을 땄습니다! (보유 ${S.gold})`)}else{S.gold-=n;say(`D6 = ${r}. 마석 ${n}을 잃었습니다. (보유 ${S.gold})`)}if(S.gold<=0)done(`D6 = ${r}. 마석이 바닥났습니다. 쫓겨났습니다.`);return'stay'}
+function gamble(n){const r=1+R(6);if(r>=4){S.gold+=n;say(`D6 = ${r}. 마석 ${n}${JO(n,'을')} 땄습니다! (보유 ${S.gold})`)}else{S.gold-=n;say(`D6 = ${r}. 마석 ${n}${JO(n,'을')} 잃었습니다. (보유 ${S.gold})`)}if(S.gold<=0)done(`D6 = ${r}. 마석이 바닥났습니다. 쫓겨났습니다.`);return'stay'}
 const evOpts=e=>typeof e.o==='function'?e.o():e.o;
 const lbl=o=>typeof o.n==='function'?o.n():o.n;
 /* 선택지 이름 뒤의 괄호 설명은 굵은 이름 아래 작은 글씨로 나눕니다. */
@@ -3574,7 +3547,7 @@ const tp=(label,desc,cls='')=>`<span class="tp ${cls}" data-tip="${esc(desc)}">$
 const TS=(label,k)=>`<i class="tp" data-tip="${esc(GL[k])}">${label}</i>`;
 const tJob=k=>tp(JOBS[k].n,`${JOBS[k].n} (${JOBS[k].sub}) — ${JOBS[k].tr}. ${JOBS[k].ab}`);
 const tPos=p=>tp(POS[p].n,`${POS[p].n} — ${POS[p].ab}`);
-const tRole=r=>tp(ROLES[r].n,`${ROLES[r].n} — ${ROLES[r].ab}. 역할 기술 「${SKILL[r].n}」(${SKILL[r].r}가 다 차면): ${SKILL[r].d}`);
+const tRole=r=>tp(ROLES[r].n,`${ROLES[r].n} — ${ROLES[r].ab}. 역할 기술 「${SKILL[r].n}」(${SKILL[r].r}${JO(SKILL[r].r,'가')} 다 차면): ${SKILL[r].d}`);
 const tAttr=k=>tp(AT[k].n,`${AT[k].n} (${AT[k].sin?'7대죄':'7주선'}) — ${AT[k].ab} / 공명 ${resonanceText(k)}`);
 const tags=u=>`${tJob(u.job)} · ${tPos(u.pos)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}`;
 const head=(t,d,kick)=>`<header class="head">${kick?`<div class="kick">${kick}</div>`:''}<h1>${t}</h1>${d?`<p>${d}</p>`:''}</header>`;
@@ -3667,7 +3640,7 @@ function mapScreen(){
   +paid.map(id=>ln(M.nodes[M.cur],M.nodes[id],'paid')).join('');
  const btns=ns.map((n,i)=>{const c=reach.includes(n.id),p=paid.includes(n.id),ok=p&&S.gold>=cost;
   return `<button class="node t-${n.type} L${n.id==='B'?'B':n.l} ${c?'can':''} ${p?'pay':''} ${M.visited.includes(n.id)?'done':''} ${M.cur===n.id?'cur':''}" style="left:${X(n)}%;top:${Y(n)}%" ${c?`data-act="go" data-v="${n.id}"`:ok?`data-act="go" data-v="${n.id}" data-pay="1"`:'disabled'} aria-label="${ntn(n.type)}${p?' 마석 '+cost:''}"><span>${NT[n.type].b}</span><small>${p?'마석 '+cost:ntn(n.type)}</small></button>`}).join('');
- return head(floorLabel(S.floor),`표시된 칸 중 다음 구역을 고르세요. 점선 칸은 마석 ${cost}을 내고 옆 경로로 건너가는 칸입니다. 탑은 끝없이 위로 이어집니다.`)+`<div class="mapgrid"><div>
+ return head(floorLabel(S.floor),`표시된 칸 중 다음 구역을 고르세요. 점선 칸은 마석 ${cost}${JO(cost,'을')} 내고 옆 경로로 건너가는 칸입니다. 탑은 끝없이 위로 이어집니다.`)+`<div class="mapgrid"><div>
  <div class="win map" data-t="경로도 — ${floorLabel(S.floor)}"><div class="mapsc"><div class="mapin" style="--mh:${(MR+1)*60+24}px;--mw:${ML*96}px"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${btns}</div></div></div></div>
  <aside><div class="aside-scroll"><div class="win" data-t="출전 파티 ${S.party.length}/${partyLimit()}">${S.party.map(mini).join('')}${resonanceSummary(S.party)}${S.bench.length?`<p class="small mute">대기실 ${S.bench.length}명: ${S.bench.map(u=>esc(u.name)).join(', ')}</p>`:''}</div>
  <div class="win" style="margin-top:12px" data-t="아티팩트">${artList()}</div></div>
@@ -3723,7 +3696,7 @@ function battleScreen(){
  const over=B.over,pdead=!alive(P());
  if(B.cur&&!B.sel){const u=unitC(B,B.cur),t=u&&validC(B,u)[0];B.sel=t?{a:'atk',t:t.id}:{a:'def'}}
  const cur=B.hist[0];
- return head(`${floorLabel(S.floor)} ${kindN(B.kind)}`,`라운드 ${B.round}<br><span class="small">승리 보상 확률: ${dropLine(B.kind)}${B.bonus>1?' · 마석 ×'+B.bonus:''}</span>`)+`
+ return head(`${floorLabel(S.floor)} ${kindN(B.kind)}`,`라운드 ${B.round}${enrageAtk(B)?` · <b class="warn">장기전 광폭: 적 공격값 +${enrageAtk(B)}</b>`:B.round>=ENRAGE_ROUND-5?` · <span class="warn">${ENRAGE_ROUND}라운드부터 적이 광폭해집니다</span>`:''}<br><span class="small">승리 보상 확률: ${dropLine(B.kind)}${B.bonus>1?' · 마석 ×'+B.bonus:''}</span>`)+`
  <div class="field">${side(B.allies,'a')}${side(B.enemies,'e')}</div>
  ${resonanceSummary(B.allies)}
  ${over?`<div class="ctl c"><button class="btn" data-act="fin">${over==='win'?'전리품 확인':'결과 보기'}</button><span>${over==='win'?'<b>CLEAR</b> 모든 적을 처치했습니다.':'<b>WIPE</b> 파티가 전멸했습니다.'}</span></div>`:
@@ -3834,7 +3807,7 @@ function editOv(){
  </div>
  <h3 class="sub l">기본 설정 변경</h3>${respecHTML(E,u)}
  <h3 class="sub l">스탯</h3>
- ${locked?'<p class="small mute">고정 NPC · 설정 잠금 · 기본 총량의 115% · 레벨 업 시 자동 성장</p>':E.must?`<p class="small">${E.promo?gname(u.tier)+'으로 승급했습니다. ':'강화로 '}스탯 총량이 ${u.budget}이 되었습니다. 무료 재분배 가능</p>`:E.unlock?`<p class="small warn">스탯 변경: 마석 ${cost}</p>`:`<div class="row"><button class="ghost" data-act="unlock" ${S.gold<cost?'disabled':''}>스탯 재분배 잠금 해제 (저장 시 마석 ${cost})</button><span class="small mute">이름·이미지 무료 변경</span></div>`}
+ ${locked?'<p class="small mute">고정 NPC · 설정 잠금 · 기본 총량의 115% · 레벨 업 시 자동 성장</p>':E.must?`<p class="small">${E.promo?gname(u.tier)+'으로 승급했습니다. ':'강화로 '}스탯 총량이 ${u.budget}${JO(u.budget,'이')} 되었습니다. 무료 재분배 가능</p>`:E.unlock?`<p class="small warn">스탯 변경: 마석 ${cost}</p>`:`<div class="row"><button class="ghost" data-act="unlock" ${S.gold<cost?'disabled':''}>스탯 재분배 잠금 해제 (저장 시 마석 ${cost})</button><span class="small mute">이름·이미지 무료 변경</span></div>`}
  ${allocHTML('edit',locked?u.dice:E.dice,totalBudget(u),locked||!E.unlock)}${locked?`<p class="small mute">고정 NPC 총량: 기본 ${u.budget} × 115% = ${totalBudget(u)} (짝수로 반올림)</p>`:''}
  <div class="row c" style="margin-top:12px">${locked?'<button class="btn" data-act="editclose">닫기</button>':`<button class="btn" data-act="editsave" ${ok&&S.gold>=total?'':'disabled'}>저장${total?' · 마석 '+total:''}</button>`}</div></div></div>`;
 }
@@ -4059,7 +4032,7 @@ const ACT={
  editsave:()=>{const E=S.edit,u=byId(E.id);if(!u)return;
   // 화면 조작뿐 아니라 저장 처리에서도 잠금 검증: 우회 입력으로도 스탯·등급·기본 설정 불변.
   if(isLockedNpc(u)){
-    S.msg=`${esc(u.name)}은 고정 NPC라 프로필을 변경할 수 없습니다.`;
+    S.msg=`${esc(u.name)}${JO(esc(u.name),'은')} 고정 NPC라 프로필을 변경할 수 없습니다.`;
    S.edit=null;return;
   }
   if(!dvalid(E.dice,totalBudget(u)))return;const changed=!sameD(E.dice,u.dice),c=E.must?0:reCost(),rd=reDiff(E,u)&&!u.respec&&!B,rc=rd?respecCost():0;if(S.gold<(changed?c:0)+rc)return;if(changed){S.gold-=c;u.preset=E.preset||null}
