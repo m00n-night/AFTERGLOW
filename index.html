@@ -204,17 +204,36 @@ input[type=range]{width:100%;accent-color:var(--acc)}
 .ev em.e{text-decoration:underline}
 details{margin-top:8px}
 summary{cursor:pointer;font-size:13px;padding:3px 0}
-.lt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;background:var(--paper)}
+/* 각 라운드 기록은 별도 표이므로, 동일한 열 위치를 유지하도록 고정 배치 */
+.lt{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12.5px;margin-top:6px;background:var(--paper)}
+.lt th:nth-child(1){width:6%}
+.lt th:nth-child(2){width:10%}
+.lt th:nth-child(3){width:14%}
+.lt th:nth-child(4){width:25%}
+.lt th:nth-child(5){width:25%}
+.lt th:nth-child(6){width:7%}
+.lt th:nth-child(7){width:13%}
+.lt th,.lt td{overflow-wrap:anywhere}
 .lt th,.lt td{padding:4px 6px;border-bottom:1px solid var(--soft);text-align:left;vertical-align:top}
 .lt th{font-weight:700;border-bottom-color:var(--line)}
 .lt tr.e td:nth-child(2){text-decoration:underline}
+/* 한국어가 임의로 잘리지 않도록 줄바꿈 규칙을 통일 */
+.msg,.desc,.ev li,.mini .t,.dline,.card .nm,.card .tg,.pl .info,.pl .info *,.prof,.rel,.sub,.head p,.kick,.rc,.opt,.tgt,.setc,.status span,.menu,.node small{word-break:keep-all;overflow-wrap:break-word;line-break:strict;hyphens:none}
+.lt th,.lt td{overflow-wrap:break-word;word-break:keep-all;line-break:strict}
+.card .nm,.card .tg,.mini .t,.dline{line-height:1.45}
+.info b,.info .small,.info .mute{word-break:keep-all;overflow-wrap:break-word;line-break:strict}
 /* ----- 기타 ----- */
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,250px));justify-content:center;gap:10px;margin:12px 0}
 .opt{display:flex;flex-direction:column;gap:4px;text-align:left;padding:14px}
 .opt .p{font-weight:700;font-size:13px;color:var(--gold)}
 .opt .gr{font-size:32px;font-weight:900;line-height:1}
-.rwrap{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:0 auto 12px}
-.rwrap .win{min-width:260px}
+.rwrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));align-items:stretch;gap:12px;margin:0 auto 12px;max-width:860px}
+.rwrap .win{min-width:0;height:100%}
+.reward-panel{display:flex;flex-direction:column;justify-content:flex-start;text-align:center}
+.reward-list{display:grid;gap:8px;justify-items:center;align-content:start}
+.reward-entry{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;text-align:center;line-height:1.45;word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+.reward-entry .txt{display:inline-flex;align-items:center;justify-content:center;gap:4px 6px;flex-wrap:wrap}
+.reward-entry .item-icon{flex:none}
 .lvup{font-weight:700;padding:0 6px;background:var(--acc);color:var(--acc-ink);border-radius:var(--rad)}
 .ov{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.45);place-items:center}
 .ov .win{width:min(860px,100%)}
@@ -282,6 +301,13 @@ summary{cursor:pointer;font-size:13px;padding:3px 0}
   .gc .gr{font-size:40px}
   .lt{font-size:11.5px}
   .lt th:nth-child(5),.lt td:nth-child(5){display:none}
+  /* 작은 화면은 주사위 열 숨김에 맞춰 남은 6개 열을 재배분 */
+  .lt th:nth-child(1){width:7%}
+  .lt th:nth-child(2){width:14%}
+  .lt th:nth-child(3){width:18%}
+  .lt th:nth-child(4){width:30%}
+  .lt th:nth-child(6){width:8%}
+  .lt th:nth-child(7){width:23%}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important}
@@ -1148,16 +1174,17 @@ html[data-skin=grimoire] .gc .small,html[data-skin=grimoire] .gc .mute{color:#df
 html[data-skin=grimoire] .card,html[data-skin=grimoire] .dx, html[data-skin=grimoire] .resonance-detail,html[data-skin=grimoire] .resonance-summary, html[data-skin=grimoire] .rc{background:linear-gradient(140deg,#fbefd4,#e9d2a8);color:#3f2b21;border:1px solid #ab8751;box-shadow:inset 0 0 0 2px rgba(255,248,219,.55)}
 html[data-skin=grimoire] .msg{background:linear-gradient(110deg,#fbefd0,#e6cf9c);color:#57371e;border:1px solid #c29451;border-left:4px double #8c5229;font-style:normal}
 html[data-skin=grimoire] .desc,html[data-skin=grimoire] .rebox, html[data-skin=grimoire] .bud,html[data-skin=grimoire] .imgctl{background:#f5e5c4;border-color:#ae8753}
-html[data-skin=grimoire] .mapin{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20600%22%20fill%3D%22none%22%20stroke%3D%22%23826036%22%20stroke-width%3D%221.3%22%20opacity%3D%22.25%22%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22275%22%20stroke-width%3D%222%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22266%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22243%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22233%22%20stroke-dasharray%3D%222%207%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22185%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22176%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22116%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22110%22%2F%3E%3Cpath%20d%3D%22M544.0%20300.0%20L566.0%20300.0%22%2F%3E%3Cpath%20d%3D%22M535.7%20363.2%20L549.2%20366.8%22%2F%3E%3Cpath%20d%3D%22M511.3%20422.0%20L530.4%20433.0%22%2F%3E%3Cpath%20d%3D%22M472.5%20472.5%20L482.4%20482.4%22%2F%3E%3Cpath%20d%3D%22M422.0%20511.3%20L433.0%20530.4%22%2F%3E%3Cpath%20d%3D%22M363.2%20535.7%20L366.8%20549.2%22%2F%3E%3Cpath%20d%3D%22M300.0%20544.0%20L300.0%20566.0%22%2F%3E%3Cpath%20d%3D%22M236.8%20535.7%20L233.2%20549.2%22%2F%3E%3Cpath%20d%3D%22M178.0%20511.3%20L167.0%20530.4%22%2F%3E%3Cpath%20d%3D%22M127.5%20472.5%20L117.6%20482.4%22%2F%3E%3Cpath%20d%3D%22M88.7%20422.0%20L69.6%20433.0%22%2F%3E%3Cpath%20d%3D%22M64.3%20363.2%20L50.8%20366.8%22%2F%3E%3Cpath%20d%3D%22M56.0%20300.0%20L34.0%20300.0%22%2F%3E%3Cpath%20d%3D%22M64.3%20236.8%20L50.8%20233.2%22%2F%3E%3Cpath%20d%3D%22M88.7%20178.0%20L69.6%20167.0%22%2F%3E%3Cpath%20d%3D%22M127.5%20127.5%20L117.6%20117.6%22%2F%3E%3Cpath%20d%3D%22M178.0%2088.7%20L167.0%2069.6%22%2F%3E%3Cpath%20d%3D%22M236.8%2064.3%20L233.2%2050.8%22%2F%3E%3Cpath%20d%3D%22M300.0%2056.0%20L300.0%2034.0%22%2F%3E%3Cpath%20d%3D%22M363.2%2064.3%20L366.8%2050.8%22%2F%3E%3Cpath%20d%3D%22M422.0%2088.7%20L433.0%2069.6%22%2F%3E%3Cpath%20d%3D%22M472.5%20127.5%20L482.4%20117.6%22%2F%3E%3Cpath%20d%3D%22M511.3%20178.0%20L530.4%20167.0%22%2F%3E%3Cpath%20d%3D%22M535.7%20236.8%20L549.2%20233.2%22%2F%3E%3Cpolygon%20points%3D%22300%2C106%20132%2C405%20468%2C405%22%20stroke-width%3D%222%22%2F%3E%3Cpolygon%20points%3D%22300%2C494%20132%2C195%20468%2C195%22%20stroke-width%3D%222%22%2F%3E%3Ccircle%20cx%3D%22300.0%22%20cy%3D%2290.0%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M294.0%2090.0h12%20M300.0%2084.0v12%22%2F%3E%3Ccircle%20cx%3D%22448.5%22%20cy%3D%22151.5%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M442.5%20151.5h12%20M448.5%20145.5v12%22%2F%3E%3Ccircle%20cx%3D%22510.0%22%20cy%3D%22300.0%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M504.0%20300.0h12%20M510.0%20294.0v12%22%2F%3E%3Ccircle%20cx%3D%22448.5%22%20cy%3D%22448.5%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M442.5%20448.5h12%20M448.5%20442.5v12%22%2F%3E%3Ccircle%20cx%3D%22300.0%22%20cy%3D%22510.0%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M294.0%20510.0h12%20M300.0%20504.0v12%22%2F%3E%3Ccircle%20cx%3D%22151.5%22%20cy%3D%22448.5%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M145.5%20448.5h12%20M151.5%20442.5v12%22%2F%3E%3Ccircle%20cx%3D%2290.0%22%20cy%3D%22300.0%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M84.0%20300.0h12%20M90.0%20294.0v12%22%2F%3E%3Ccircle%20cx%3D%22151.5%22%20cy%3D%22151.5%22%20r%3D%228%22%2F%3E%3Cpath%20d%3D%22M145.5%20151.5h12%20M151.5%20145.5v12%22%2F%3E%3Cpath%20d%3D%22M300%20210L390%20300%20300%20390%20210%20300Z%22%20stroke-width%3D%222%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%2235%22%20stroke-width%3D%222%22%2F%3E%3Cpath%20d%3D%22M300%20265v70%20M265%20300h70%20M277%20277l46%2046%20M323%20277l-46%2046%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%227%22%20fill%3D%22%23826036%22%20stroke%3D%22none%22%2F%3E%3C%2Fsvg%3E"),
-  radial-gradient(ellipse at 50% 50%,rgba(255,250,219,.85),#dfc297 100%);background-size:min(100%,650px) auto,auto;background-position:center;background-repeat:no-repeat;border:2px solid #9c6e35;box-shadow:inset 0 0 0 4px #e8d2a9,inset 0 0 0 5px #ad8144}
-html[data-skin=grimoire] .map .ln{stroke:#917044;stroke-width:1.5;stroke-dasharray:2 4;stroke-linecap:round}
-html[data-skin=grimoire] .map .ln.walk{stroke:#7c392f;stroke-width:3;stroke-dasharray:none}
-html[data-skin=grimoire] .map .ln.open{stroke:#8f5a2f;stroke-width:2.5;stroke-dasharray:5 4}
-html[data-skin=grimoire] .node span{background:radial-gradient(circle,#4c2b1f,#2b1915);color:#f4d68c;border:2px double #ae8244;border-radius:50%;box-shadow:0 0 0 3px #e7d6ad,0 0 0 4px #9d7648,inset 0 0 0 3px rgba(202,152,72,.24)}
-html[data-skin=grimoire] .node small{background:#f3e3bf;color:#583d26;border:1px solid #b6915e;font-style:normal;font-family:var(--display)}
-html[data-skin=grimoire] .node.cur span{background:radial-gradient(circle,#f7dd96,#be8535);color:#352018;border-color:#7f4b27}
-html[data-skin=grimoire] .node.can span{background:radial-gradient(circle,#7b4131,#3f241e);border-color:#e0af55;box-shadow:0 0 0 3px #ecd6aa,0 0 0 5px #cb9d58,0 0 18px rgba(180,116,38,.35)}
-html[data-skin=grimoire] .node.t-boss span{background:#68242e;color:#fff0be;border-color:#d6aa65}
+html[data-skin=grimoire] .mapin{overflow:hidden;background:linear-gradient(180deg,rgba(249,239,213,.98),rgba(238,219,181,.98)),repeating-linear-gradient(180deg,transparent 0 44px,rgba(126,87,44,.06) 44px 45px),radial-gradient(circle at 14% 14%,rgba(162,116,56,.08),transparent 22%),radial-gradient(circle at 86% 84%,rgba(162,116,56,.08),transparent 24%);border:1px solid #ae8753;box-shadow:inset 0 0 0 2px rgba(255,248,219,.45)}
+html[data-skin=grimoire] .mapin::before{content:'';position:absolute;inset:10px 12px;pointer-events:none;opacity:.17;background:linear-gradient(90deg,transparent 0 11%,rgba(122,82,37,.36) 11.15% 11.45%,transparent 11.7%),repeating-linear-gradient(180deg,transparent 0 45px,rgba(122,82,37,.24) 45px 46px)}
+html[data-skin=grimoire] .map .ln{stroke:#8f6f45;stroke-width:2.1;stroke-dasharray:1.5 5.5;stroke-linecap:round;opacity:.92;filter:drop-shadow(0 1px 0 rgba(255,250,232,.55))}
+html[data-skin=grimoire] .map .ln.walk{stroke:#74412f;stroke-width:3.6;stroke-dasharray:8 6;opacity:1}
+html[data-skin=grimoire] .map .ln.open{stroke:#99603a;stroke-width:3.1;stroke-dasharray:6 5}
+html[data-skin=grimoire] .map .ln.paid{stroke:#ab8a5c;stroke-width:2.4;stroke-dasharray:2 6}
+html[data-skin=grimoire] .node span{width:42px;height:42px;background:linear-gradient(180deg,#fbf0cf,#e8c98e);color:#5c3b24;border:1px solid #a47b47;border-radius:8px 10px 7px 9px;box-shadow:0 1px 0 rgba(255,255,255,.7),0 0 0 2px rgba(169,127,71,.24),2px 3px 0 rgba(90,53,24,.18);transform:rotate(-4deg)}
+html[data-skin=grimoire] .node small{margin-top:1px;padding:1px 6px;background:rgba(249,239,213,.96);color:#5a3a25;border:1px dashed #b6915e;border-radius:5px;box-shadow:0 1px 0 rgba(255,255,255,.6);font-style:normal;font-family:var(--display)}
+html[data-skin=grimoire] .node.cur span{background:linear-gradient(180deg,#f8dfaa,#cd9958);color:#3d2517;border-color:#85522b}
+html[data-skin=grimoire] .node.can span{background:linear-gradient(180deg,#fff1c9,#e5bb72);color:#4d2e18;border-color:#b27a3c;box-shadow:0 0 0 3px rgba(236,214,170,.75),0 0 0 5px rgba(203,157,88,.6),0 0 18px rgba(180,116,38,.2)}
+html[data-skin=grimoire] .node.t-boss span{width:52px;height:52px;background:linear-gradient(180deg,#f5d79a,#ca9350);color:#4a221a;border-color:#8c5932;border-radius:10px}
 html[data-skin=grimoire] .legend b{color:#ecc278;background:#40271d;border:1px solid #a57b45}
 html[data-skin=grimoire] .hpbar{background:#e4cdab;border-color:#a8804c}
 html[data-skin=grimoire] .hpbar i{background:#9d4c51}
@@ -1317,6 +1344,447 @@ html[data-skin=whiteboard] ::-webkit-scrollbar-thumb{background:linear-gradient(
 .cr .rand-btn .rand-dice{width:20px;height:20px;flex:none}
 .cr .rand-btn .rand-dice rect{fill:none;stroke:currentColor;stroke-width:2}
 .cr .rand-btn .rand-dice circle{fill:currentColor}
+
+/* ========== 12. 어절 줄바꿈 · 양쪽 맞춤 · 결과별 자동 크기 ========== */
+/* 모든 한국어 명칭을 음절 중간에서 분리하지 않습니다. 단어가 긴 경우는 칸이
+   자연스럽게 커지거나 줄이 바뀌도록 하며, 외부 텍스트 입력란의 내용은 건드리지 않습니다. */
+html,body,#app,#app .mainwin,body>.map-popup-layer{word-break:keep-all;overflow-wrap:normal;line-break:strict;hyphens:none}
+#app .mainwin :where(*),body>.map-popup-layer :where(*){
+  word-break:keep-all;
+  overflow-wrap:normal;
+  line-break:strict;
+  hyphens:none;
+}
+/* 설명은 단일 행이면 왼쪽 정렬. 여러 행이면 마지막 줄을 제외한 줄을
+   양쪽 맞춤으로 배치합니다. 버튼과 이름 등 UI 메타 정보는 개별 정렬을 유지합니다. */
+#app .mainwin,body>.map-popup-layer{ text-align:left; text-align-last:auto; }
+#app .mainwin :where(p,li,.desc,.dline,.rel,.calc,.ev,.rc,.rebox,.dx,.card .tg,.card .nm,.mini .t,.pl .info,.opt .small,.choice-sub,.resonance-detail,.resonance-summary,.map-popup-body),
+body>.map-popup-layer :where(p,li,.desc,.dline,.rel,.calc,.ev,.rc,.rebox,.dx,.map-popup-body){
+  text-align:justify;
+  text-align-last:left;
+}
+#app .mainwin :where(.head p,.msg,.bmsg),body>.map-popup-layer .msg{
+  text-align:justify;
+  text-align-last:left;
+}
+/* 고정 높이/한 줄 강제로 짧은 이름이 잘리던 곳을 줄 수에 맞춥니다. */
+#app .mainwin .chips .choice-chip .choice-name,
+#app .mainwin .chip b,#app .mainwin .chip small,
+#app .mainwin .setc b,#app .mainwin .setc small,
+#app .mainwin .tgt,#app .mainwin .seg button,
+#app .mainwin .status span{
+  white-space:normal;
+  text-overflow:clip;
+  overflow:visible;
+}
+#app .mainwin .chip:not(.choice-chip){height:auto;min-height:54px;overflow:visible}
+#app .mainwin .setc{height:auto;min-height:96px;overflow:visible}
+#app .mainwin .seg button{height:auto;min-height:52px;padding-block:8px}
+#app .mainwin .tgt{height:auto;min-height:38px;padding-block:6px}
+#app .mainwin .chips .choice-chip{height:auto;overflow:visible}
+#app .mainwin .node small{white-space:normal;max-width:132px;text-align:center}
+#app .mainwin .menu{white-space:normal}
+/* 돌발 퀘스트를 포함한 결과 안내는 내용에 맞춰 축소하고, 길면 최대 폭까지만 확장합니다. */
+#app .mainwin .msg,body>.map-popup-layer .msg{
+  display:block;
+  box-sizing:border-box;
+  width:fit-content;
+  max-width:min(100%,860px);
+  margin-inline:auto;
+  padding:9px 18px;
+}
+/* 보상 칸은 서로 높이·폭을 강제로 맞추지 않고 개별 항목 수에 따라 자랍니다. */
+#app .mainwin .rwrap{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  align-items:flex-start;
+  align-content:flex-start;
+  gap:12px;
+  width:100%;
+  max-width:860px;
+}
+#app .mainwin .rwrap .reward-panel{
+  flex:0 1 auto;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  width:fit-content;
+  min-width:min(135px,100%);
+  max-width:100%;
+  height:auto;
+  align-self:flex-start;
+  text-align:center;
+}
+#app .mainwin .reward-list{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:7px;
+  width:100%;
+}
+#app .mainwin .reward-entry{
+  max-width:100%;
+  min-width:0;
+  justify-content:center;
+  text-align:justify;
+  text-align-last:center;
+}
+#app .mainwin .reward-entry .txt{max-width:100%;min-width:0;justify-content:center}
+@media(max-width:480px){
+  #app .mainwin .rwrap{gap:9px}
+  #app .mainwin .rwrap .reward-panel{width:100%;min-width:0;max-width:100%}
+  #app .mainwin .msg,body>.map-popup-layer .msg{padding-inline:12px}
+}
+
+/* ========== 13. 보상창 독립 크기 · 설명 정렬 · 전투 카드 메타 정보 ========== */
+/* 보상창의 제목과 목록을 각각 내용 폭만큼만 배치하고, 옆 보상 상자의 높이를 따라 늘어나지 않습니다. */
+#app .mainwin .rwrap{
+  display:flex;
+  flex-flow:row wrap;
+  justify-content:center;
+  align-items:flex-start;
+  align-content:flex-start;
+  gap:12px;
+  width:100%;
+  max-width:100%;
+  margin:0 auto 12px;
+}
+#app .mainwin .rwrap > .win.reward-panel{
+  display:inline-flex;
+  flex:0 0 auto;
+  flex-direction:column;
+  align-items:center;
+  width:max-content;
+  min-width:126px;
+  max-width:min(100%,460px);
+  height:max-content;
+  min-height:0;
+  align-self:flex-start;
+  padding-left:12px;
+  padding-right:12px;
+  text-align:center;
+  text-align-last:center;
+}
+#app .mainwin .rwrap .reward-list{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  flex:0 0 auto;
+  gap:7px;
+  width:max-content;
+  max-width:100%;
+  min-width:0;
+  margin:0 auto;
+}
+#app .mainwin .rwrap .reward-entry{
+  display:flex;
+  flex:0 0 auto;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  width:max-content;
+  min-width:0;
+  max-width:100%;
+  text-align:center;
+  text-align-last:center;
+  white-space:normal;
+}
+#app .mainwin .rwrap .reward-entry .txt{
+  display:inline-flex;
+  flex-wrap:wrap;
+  flex:0 1 auto;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  max-width:100%;
+  text-align:center;
+  text-align-last:center;
+}
+#app .mainwin .rwrap .reward-entry .txt > span,
+#app .mainwin .rwrap .reward-entry .txt > b{white-space:nowrap}
+
+/* 선택 카드의 부가 설명도 전역 양쪽 맞춤보다 카드 자체의 중앙 정렬을 우선합니다. */
+#app .mainwin .chips .choice-chip .choice-name,
+#app .mainwin .chips .choice-chip .choice-sub,
+body>.map-popup-layer .chips .choice-chip .choice-name,
+body>.map-popup-layer .chips .choice-chip .choice-sub{
+  text-align:center;
+  text-align-last:center;
+}
+/* 상세 설명은 왼쪽 시작점을 통일하고, 길어지면 양쪽 맞춤으로 읽습니다. */
+#app .mainwin .grp > .desc,
+#app .mainwin .grp > .resonance-detail,
+#app .mainwin .resonance-detail,
+#app .mainwin .resonance-summary,
+#app .mainwin .resonance-detail p,
+#app .mainwin .resonance-summary p,
+body>.map-popup-layer .grp > .desc,
+body>.map-popup-layer .resonance-detail,
+body>.map-popup-layer .resonance-summary,
+body>.map-popup-layer .resonance-detail p,
+body>.map-popup-layer .resonance-summary p{
+  text-align:justify;
+  text-align-last:left;
+}
+#app .mainwin .resonance-heading,
+body>.map-popup-layer .resonance-heading{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:5px 16px;
+  flex-wrap:wrap;
+  text-align:center;
+}
+#app .mainwin .resonance-line,
+body>.map-popup-layer .resonance-line{
+  width:100%;
+  min-width:0;
+  justify-items:stretch;
+  text-align:left;
+  text-align-last:auto;
+}
+#app .mainwin .resonance-line > :is(.small,span),
+body>.map-popup-layer .resonance-line > :is(.small,span){
+  display:block;
+  width:100%;
+  text-align:justify;
+  text-align-last:left;
+}
+#app .mainwin .resonance-line > strong,
+body>.map-popup-layer .resonance-line > strong{ text-align:left; text-align-last:auto; }
+/* 캐릭터 이름, 수치, 목록은 행 단위 왼쪽 정렬로 통일하여 양쪽 맞춤으로 벌어지지 않게 합니다. */
+#app .mainwin :is(.card .nm,.card .dline,.card .hpn,.mini .t,.mini .dline,.pl .info,.pinfo,.dx,.ev li),
+body>.map-popup-layer :is(.card .nm,.card .dline,.card .hpn,.mini .t,.mini .dline,.pl .info,.pinfo,.dx,.ev li){
+  text-align:left;
+  text-align-last:auto;
+}
+/* 캐릭터 카드: 1행 직업 / 역할 / 고유 특성, 2행 레벨 (적군 레벨은 기존과 같이 표시하지 않음). */
+#app .mainwin .side .card{container-type:inline-size}
+#app .mainwin .side .card .hd{min-width:0;align-items:center}
+#app .mainwin .side .card .card-name{min-width:0;flex:1 1 auto}
+#app .mainwin .side .card .card-identity{margin:3px 0 4px;min-width:0;max-width:100%;text-align:left}
+#app .mainwin .side .card .card-meta-line{
+  display:flex;
+  align-items:baseline;
+  justify-content:flex-start;
+  flex-wrap:nowrap;
+  width:max-content;
+  max-width:100%;
+  gap:3px;
+  white-space:nowrap;
+  overflow:visible;
+  font-size:11px;
+  line-height:1.25;
+  letter-spacing:-.065em;
+  font-weight:400;
+  color:var(--muted);
+  text-align:left;
+  text-align-last:auto;
+}
+#app .mainwin .side .card .card-meta-line .tp{white-space:nowrap;text-decoration:none;flex:none}
+#app .mainwin .side .card .card-meta-sep{font-size:.9em;opacity:.7;flex:none;letter-spacing:-.08em}
+#app .mainwin .side .card .card-level{
+  margin-top:2px;
+  white-space:nowrap;
+  font-size:11px;
+  line-height:1.2;
+  letter-spacing:-.02em;
+  font-weight:500;
+  color:var(--muted);
+  text-align:left;
+}
+/* 전투 칸이 좁아져도 명칭의 세 항목을 분리하거나 두 줄로 내리지 않습니다. */
+@container (max-width:150px){
+  #app .mainwin .side .card .card-meta-line{font-size:10px;gap:2px;letter-spacing:-.09em}
+}
+@container (max-width:118px){
+  #app .mainwin .side .card .card-meta-line{font-size:9px;gap:1px;letter-spacing:-.1em}
+}
+@media (max-width:480px){
+  #app .mainwin .rwrap{gap:10px}
+  #app .mainwin .rwrap > .win.reward-panel{min-width:112px;max-width:100%}
+}
+
+/* ========== 14. 설명 전용 정렬: 한 줄 왼쪽 / 여러 줄 양쪽 맞춤 ========== */
+/* 일반적인 양쪽 맞춤은 짧은 1줄과 마지막 줄을 왼쪽에 두고,
+   2줄 이상일 때 중간 줄의 좌우 끝을 맞춥니다. 
+   제목·버튼·수치·캐릭터 이름의 독립적인 정렬은 유지합니다. */
+#app .mainwin .grp > .desc,
+#app .mainwin .chips .choice-chip .choice-sub,
+#app .mainwin .resonance-detail p,
+#app .mainwin .resonance-summary p,
+#app .mainwin .resonance-line > .small,
+#app .mainwin .dx .small.mute,
+#app .mainwin .opt .small,
+#app .mainwin .setc small,
+#app .mainwin .head p,
+#app .mainwin .msg,
+#app .mainwin .bmsg,
+#app .mainwin .rebox p,
+#app .mainwin .card .tg,
+#app .mainwin .mini .t,
+#app .mainwin .ev li,
+#app .mainwin .rel > div,
+#app .mainwin .map-popup-body p,
+body > .map-popup-layer .grp > .desc,
+body > .map-popup-layer .chips .choice-chip .choice-sub,
+body > .map-popup-layer .resonance-detail p,
+body > .map-popup-layer .resonance-summary p,
+body > .map-popup-layer .resonance-line > .small,
+body > .map-popup-layer .dx .small.mute,
+body > .map-popup-layer .opt .small,
+body > .map-popup-layer .setc small,
+body > .map-popup-layer .msg,
+body > .map-popup-layer .ev li,
+body > .map-popup-layer .map-popup-body p{
+  text-align:justify;
+  text-align-last:left;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  line-break:strict;
+}
+
+/* 도감 설명/스킬 설명/툴팁 역시 같은 규칙을 적용합니다. */
+#app .mainwin :is(.dx .small.mute,.desc,.rel .mute,.rebox p,.pinfo .wide2,.font-foot,.font-reading-sample,.map-popup-body .small),
+body > .map-popup-layer :is(.dx .small.mute,.desc,.rel .mute,.rebox p,.pinfo .wide2,.map-popup-body .small),
+body .tipbox{
+  text-align:justify;
+  text-align-last:left;
+  word-break:keep-all;
+  overflow-wrap:normal;
+  line-break:strict;
+}
+/* 한 줄부터 줄 간격이 벌어지지 않도록 문장의 시작은 항상 왼쪽에 고정합니다. */
+#app .mainwin .resonance-line > :is(.small,span),
+body > .map-popup-layer .resonance-line > :is(.small,span){
+  justify-self:stretch;
+  text-align:justify;
+  text-align-last:left;
+}
+
+
+/* ========== 15. 보상 창 크기(지도 팝업 포함) · 설명 상자 · 전투 카드 이름줄 ========== */
+/* 경험치·획득 아이템 상자는 돌발 퀘스트 결과처럼 글이 짧으면 상자도 짧게. 지도 위 보상 팝업에도 같은 규칙 */
+:is(#app .mainwin,body>.map-popup-layer) .rwrap{display:flex;flex-flow:row wrap;justify-content:center;align-items:flex-start;align-content:flex-start;gap:12px;width:100%;max-width:100%;margin:0 auto 12px}
+:is(#app .mainwin,body>.map-popup-layer) .rwrap>.win.reward-panel{display:flex;flex:0 0 auto;flex-direction:column;align-items:stretch;width:max-content;min-width:150px;max-width:min(100%,460px);height:auto;min-height:0;align-self:flex-start;text-align:center;text-align-last:center}
+:is(#app .mainwin,body>.map-popup-layer) .rwrap .reward-list{display:flex;flex-direction:column;align-items:center;gap:7px;width:auto;max-width:100%;margin:0 auto;padding:0 14px}
+:is(#app .mainwin,body>.map-popup-layer) .rwrap .reward-entry{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px;width:auto;max-width:100%;text-align:center;text-align-last:center}
+:is(#app .mainwin,body>.map-popup-layer) .rwrap .reward-entry .txt{display:inline-flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 6px;max-width:100%}
+/* 가운데 놓인 짧은 설명은 상자째 가운데, 글은 왼쪽부터 (두 줄이 넘으면 양쪽 맞춤) */
+:is(#app .mainwin,body>.map-popup-layer) .head p{width:fit-content;max-width:min(100%,760px);margin-inline:auto;text-align:justify;text-align-last:left}
+/* 전투 카드: 이름 아래 1행 '직업 · 역할 · 특성', 2행 레벨 */
+#app .mainwin .side .card .hd>.card-name .tg{margin-top:2px;white-space:nowrap;font-size:11px;line-height:1.3;color:var(--muted);text-align:left;text-align-last:auto}
+#app .mainwin .side .card .hd>.card-name .card-lv{margin-top:1px;font-size:11px;line-height:1.25;color:var(--muted);text-align:left}
+@container (max-width:150px){#app .mainwin .side .card .hd>.card-name .tg{font-size:10px;letter-spacing:-.04em}}
+@container (max-width:118px){#app .mainwin .side .card .hd>.card-name .tg{font-size:9px;letter-spacing:-.06em}}
+
+/* ========== 16. 좁은 설명창: 글자 단위 줄바꿈 + 양쪽 맞춤 ========== */
+/* 폭이 좁은 말풍선(지도 노드 설명·용어 설명)은 어절 단위로 줄을 바꾸면 양쪽 맞춤 때 띄어쓰기가 크게 벌어지므로,
+   글자 단위로 줄을 바꿔 줄 끝을 꽉 채운 뒤 양쪽 맞춤을 한다. 마지막 줄은 왼쪽 정렬. */
+body .tipbox{max-width:min(360px,calc(100vw - 12px));text-align:justify;text-align-last:left;word-break:break-all;line-break:strict;text-wrap:wrap}
+/* 도감 설명도 같은 방식: 글자 단위 줄바꿈 + 양쪽 맞춤, 마지막 줄 왼쪽 정렬 */
+:is(#app,body) .dex-panel .dex-scroll :is(.dx .small,p){text-align:justify;text-align-last:left;word-break:break-all;line-break:strict;overflow-wrap:normal;text-wrap:wrap}
+
+/* ========== 17. 미감 정리 ========== */
+/* 설정 테마 카드 설명: 좁은 칸이라 설명창과 같이 글자 단위 줄바꿈 + 양쪽 맞춤 */
+:is(#app,body) .setc.theme-choice small{text-align:justify;text-align-last:left;word-break:break-all;line-break:strict;overflow-wrap:normal;white-space:normal}
+/* 지도 노드 이름은 지도 끝에서도 한 줄로 */
+:is(#app,body) .mapin .node{width:max-content}
+:is(#app,body) .mapin .node small{white-space:nowrap;word-break:keep-all}
+/* 보스 노드가 배경에 묻히던 테마 */
+html[data-skin=channel] .node.t-boss span{background:#e5172b;color:#fff;box-shadow:0 0 0 3px #fff,0 0 0 5px #e5172b}
+html[data-skin=ops] .node.t-boss span{width:42px;height:42px;background:#e9a757;color:#1a1408;border-color:#ffd08a;box-shadow:0 0 0 3px rgba(233,167,87,.25),0 0 16px rgba(233,167,87,.55)}
+html[data-skin=ops] .node.t-boss span .mi{width:24px;height:24px}
+/* 지도 위 팝업: 제목·소제목을 카드 묶음과 같은 가운데 축으로 */
+body>.map-popup-layer .map-popup-body :is(.head,.head h1,.head .kick,h3.sub){text-align:center;text-align-last:center}
+body>.map-popup-layer .map-popup-body .head{margin-inline:auto}
+body>.map-popup-layer .map-popup-body h3.sub{margin-inline:auto}
+/* 창 제목줄에 이미 이름이 있으므로 팝업 속 작은 배지는 숨김 */
+body>.map-popup-layer .map-popup-body .head .kick{display:none}
+/* 선택지가 3개면 한 줄에 3장 */
+:is(#app .mainwin,body>.map-popup-layer) .opts:has(>.opt:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,210px))}
+/* 돌발 퀘스트 선택지: 굵은 이름 + 작은 설명 */
+:is(#app .mainwin,body>.map-popup-layer) .opt[data-act=eopt]{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+:is(#app .mainwin,body>.map-popup-layer) .opt[data-act=eopt] .small{align-self:stretch;text-align:justify;text-align-last:left;word-break:break-all;line-break:strict;overflow-wrap:normal}
+/* 전투 머리말의 짧은 두 줄은 가운데 정렬 */
+:is(#app .mainwin) .scr-battle .head p{text-align:center;text-align-last:center}
+/* 지도 범례: 오른쪽 열의 상자 안 2열 */
+:is(#app,body) .map-legend-win .legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px;margin:0;justify-content:stretch}
+:is(#app,body) .map-legend-win .legend span{display:flex;align-items:center;min-width:0;white-space:nowrap}
+/* 범례 상자는 아티팩트와 떨어뜨려 오른쪽 열 맨 아래(지도 아래 끝선)에 고정.
+   파티·아티팩트는 위쪽 칸 안에서만 스크롤되고 범례는 항상 보인다. */
+.mapgrid>aside>.aside-scroll{display:flex;flex-direction:column;gap:12px;flex:0 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.mapgrid>aside>.aside-scroll>.win[style]{margin-top:0!important}
+.mapgrid>aside>.win.map-legend-win{margin-top:auto;flex:none}
+@media (min-width:901px){.scr-map>.mapgrid>aside{overflow:hidden;padding-right:0}}
+@media (max-width:900px){.mapgrid>aside>.aside-scroll{overflow:visible}}
+/* 시작 전 화면의 빈 정보줄 숨김 */
+.mainwin>.menu:empty{display:none}
+/* 각성 등급 카드: 등급이 높을수록 진하고 강조 */
+.gc.F .gr{opacity:.45}
+.gc.E .gr{opacity:.6}
+.gc.D .gr{opacity:.78}
+.gc:is(.C,.B) .gr{color:var(--acc)}
+.gc:is(.A,.S){border-color:var(--acc);box-shadow:var(--raise),0 0 0 2px var(--acc)}
+.gc:is(.A,.S) .gr{color:var(--acc)}
+
+/* ========== 18. 각성 등급 빛 · 마도서 지도 ========== */
+/* 각성 등급 카드: C급부터 은은한 빛 테두리, S급에 가까울수록 크고 밝게 */
+.gc:is(.C,.B,.A,.S){position:relative;isolation:isolate}
+html[data-skin=grimoire] .gc{--glow:#f0bd5e}
+.gc:is(.C,.B,.A,.S)::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;z-index:-1}
+.gc.C::after{box-shadow:0 0 6px 1px color-mix(in srgb,var(--glow,var(--acc)) 30%,transparent)}
+.gc.B::after{box-shadow:0 0 11px 2px color-mix(in srgb,var(--glow,var(--acc)) 42%,transparent)}
+.gc.A::after{box-shadow:0 0 18px 4px color-mix(in srgb,var(--glow,var(--acc)) 55%,transparent),0 0 0 1px color-mix(in srgb,var(--glow,var(--acc)) 60%,transparent)}
+.gc.S::after{box-shadow:0 0 28px 8px color-mix(in srgb,var(--glow,var(--acc)) 68%,transparent),0 0 10px 2px color-mix(in srgb,var(--glow,var(--acc)) 80%,transparent),0 0 0 2px var(--glow,var(--acc));animation:gcGlow 2.4s ease-in-out infinite}
+.gc.S .gr{text-shadow:0 0 14px color-mix(in srgb,var(--glow,var(--acc)) 55%,transparent)}
+@keyframes gcGlow{50%{opacity:.62}}
+@media (prefers-reduced-motion:reduce){.gc.S::after{animation:none}}
+/* 앞서 붙였던 A·S 외곽선은 빛 테두리로 대신함 */
+.gc:is(.A,.S){box-shadow:var(--raise)}
+
+/* 마도서 지도: 노드는 책 사이에 끼운 쪽지, 경로는 손으로 그은 잉크선 */
+html[data-skin=grimoire] .map .ln{stroke:#6b4a2b;stroke-width:1.7;stroke-dasharray:none;opacity:.78;filter:none}
+html[data-skin=grimoire] .map .ln.walk{stroke:#5a2b1c;stroke-width:3;stroke-dasharray:none;opacity:.95}
+html[data-skin=grimoire] .map .ln.open{stroke:#8f3a1f;stroke-width:2.4;stroke-dasharray:none;opacity:.92}
+html[data-skin=grimoire] .map .ln.paid{stroke:#9b8667;stroke-width:1.3;stroke-dasharray:none;opacity:.75}
+html[data-skin=grimoire] .mapin .node{--tilt:-2deg;transform:translate(-50%,-50%) rotate(var(--tilt));gap:1px;min-width:66px;padding:7px 9px 5px;
+ background:linear-gradient(225deg,#ead6a8 0 7px,#c9ab73 7px 8px,transparent 8px) top right/100% 100% no-repeat,linear-gradient(178deg,#fdf6e2,#f1e1bb);
+ border:1px solid rgba(132,92,48,.5);border-radius:2px 3px 2px 4px;box-shadow:1px 2px 0 rgba(255,255,255,.5) inset,1px 3px 4px rgba(72,42,16,.28)}
+html[data-skin=grimoire] .mapin .node:nth-of-type(3n+1){--tilt:1.6deg}
+html[data-skin=grimoire] .mapin .node:nth-of-type(3n+2){--tilt:-.6deg}
+html[data-skin=grimoire] .mapin .node:nth-of-type(4n){--tilt:2.6deg}
+/* 쪽지 윗변에 걸친 책갈피 끈 */
+html[data-skin=grimoire] .mapin .node::before{content:"";position:absolute;top:-6px;left:9px;width:7px;height:13px;background:#8e2f24;clip-path:polygon(0 0,100% 0,100% 100%,50% 76%,0 100%);opacity:.85}
+html[data-skin=grimoire] .mapin .node span{width:30px;height:26px;background:none;border:0;border-radius:0;box-shadow:none;transform:none;outline:none;animation:none;color:#5a3820}
+html[data-skin=grimoire] .mapin .node small{margin:0;padding:1px 2px 0;background:none;border:0;border-top:1px solid rgba(132,92,48,.28);border-radius:0;box-shadow:none;color:#4a2e1b;font:600 12px/1.35 var(--display)}
+/* 갈 수 있는 쪽지: 금빛으로 들뜬 종이 + 금색 끈 */
+html[data-skin=grimoire] .mapin .node.can{background:linear-gradient(225deg,#efd9a4 0 7px,#c39a55 7px 8px,transparent 8px) top right/100% 100% no-repeat,linear-gradient(178deg,#fffbee,#f6e7c2);border-color:#b07a38;box-shadow:0 0 0 2px rgba(214,170,96,.55),0 0 16px rgba(196,132,46,.42),1px 3px 5px rgba(72,42,16,.3);animation:noteFloat 1.8s ease-in-out infinite}
+html[data-skin=grimoire] .mapin .node.can::before{background:#c8923e;opacity:1}
+html[data-skin=grimoire] .mapin .node.can span,html[data-skin=grimoire] .mapin .node.can small{color:#3d2312;background:none;outline:none}
+@keyframes noteFloat{50%{box-shadow:0 0 0 2px rgba(214,170,96,.35),0 0 8px rgba(196,132,46,.25),1px 3px 5px rgba(72,42,16,.3)}}
+@media (prefers-reduced-motion:reduce){html[data-skin=grimoire] .mapin .node.can{animation:none}}
+/* 지금 있는 쪽지: 붉은 끈이 길게 */
+html[data-skin=grimoire] .mapin .node.cur{background:linear-gradient(178deg,#f8e6bf,#e9cf98);border-color:#85522b}
+html[data-skin=grimoire] .mapin .node.cur::before{height:18px;top:-9px;background:#a3261b;opacity:1}
+html[data-skin=grimoire] .mapin .node.cur span{background:none;color:#3d2517}
+/* 지나온 쪽지: 바랜 종이 */
+html[data-skin=grimoire] .mapin .node.done{opacity:.55;filter:sepia(.35)}
+html[data-skin=grimoire] .mapin .node.done span{opacity:1}
+html[data-skin=grimoire] .mapin .node.cur.done{opacity:1;filter:none}
+/* 옆길(마석): 점선 테두리 쪽지 */
+html[data-skin=grimoire] .mapin .node.pay{border-style:dashed;border-color:#8a6a3f}
+html[data-skin=grimoire] .mapin .node.pay span{background:none;border:0}
+/* 보스: 밀랍 인장이 찍힌 큰 쪽지 */
+html[data-skin=grimoire] .mapin .node.t-boss{--tilt:-1deg;min-width:84px;padding:9px 12px 6px}
+html[data-skin=grimoire] .mapin .node.t-boss span{width:40px;height:40px;margin-bottom:2px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#c04a3a,#8e2419 62%,#6c160f);color:#f8dca0;box-shadow:0 0 0 2px rgba(142,36,25,.35),1px 2px 2px rgba(60,20,10,.35)}
+html[data-skin=grimoire] .mapin .node.t-boss span .mi{width:22px;height:22px}
+html[data-skin=grimoire] .mapin .node.t-boss small{color:#7c1f15;font-weight:800}
+html[data-skin=grimoire] .mapin .node.t-elite span{outline:1px solid #6b4423;outline-offset:-3px;border-radius:3px}
 </style>
 </head>
 <body>
@@ -2643,6 +3111,8 @@ const EVENTS=[
 function gamble(n){const r=1+R(6);if(r>=4){S.gold+=n;say(`D6 = ${r}. 마석 ${n}을 땄습니다! (보유 ${S.gold})`)}else{S.gold-=n;say(`D6 = ${r}. 마석 ${n}을 잃었습니다. (보유 ${S.gold})`)}if(S.gold<=0)done(`D6 = ${r}. 마석이 바닥났습니다. 쫓겨났습니다.`);return'stay'}
 const evOpts=e=>typeof e.o==='function'?e.o():e.o;
 const lbl=o=>typeof o.n==='function'?o.n():o.n;
+/* 선택지 이름 뒤의 괄호 설명은 굵은 이름 아래 작은 글씨로 나눕니다. */
+const optLbl=t=>{const m=/^(.*?)\s*\((.+)\)$/s.exec(t);return m?`<b>${m[1]}</b><span class="mute small">${m[2]}</span>`:`<b>${t}</b>`};
 
 /* ---------- 아이템 그림: 64×64 2D 일러스트 (왼쪽 위 광원, 색조 외곽선, 부위별 입체 그라데이션) ---------- */
 const itemIllustration=(()=>{
@@ -3165,7 +3635,7 @@ function awakenScreen(){
  return saveBox()+head('각성 등급 판정','등급 1개 선택 · 최대 3번 판정.','SYSTEM')+`
  <div class="odds">${GRADES.filter(g=>TIERS[g].p>0).map(g=>`<span>${g} ${TIERS[g].p}%</span>`).join('')}</div>
  <h3 class="sub">${W.n}번째 판정</h3><div class="gacha">${W.opts.map((g,i)=>card(g,i,true)).join('')}</div>
- <div class="row c" style="flex-direction:column;gap:5px">${left>0?`<button class="btn" data-act="reroll">다시 뽑기 · 남은 ${left}회</button><span class="small mute">현재 선택지 포기</span>`:'<span class="small warn">마지막 판정</span>'}</div>
+ <div class="row c" style="flex-direction:column;gap:5px">${left>0?`<button class="ghost reroll" data-act="reroll">다시 뽑기 · 남은 ${left}회</button><span class="small mute">현재 선택지 포기</span>`:'<span class="small warn">마지막 판정</span>'}</div>
  ${W.past.length?`<div class="gone">${W.past.map((p,k)=>`<h3 class="sub">${k+1}번째 판정 · 포기함</h3><div class="gacha">${p.map(g=>card(g,0,false)).join('')}</div>`).join('')}</div>`:''}`;
 }
 function mini(u){return `<div class="mini ${u.isP?'me':''} ${alive(u)?'':'downed'}">${badge(u)}<div style="flex:1"><div><b>${esc(u.name)}</b> ${meTag(u)}${downTag(u)} <span class="t">${gname(u.tier)} · Lv${u.lvl}${canPromo(u)?' · <b class="prt">승급 가능</b>':''}</span></div><div class="t">${tags(u)}</div><div class="dline">${dstr(u.dice,u)} · EXP ${u.exp}/${expNeed(u.lvl)}</div>${hpb(u)}<div class="dline">HP ${u.hp} / ${u.maxHp}</div></div></div>`}
@@ -3177,7 +3647,14 @@ function mapPath(x1,y1,x2,y2,seed){
   case'subway':{const d=Math.min(3,Math.abs(y1-y2)/3);return `M${x1} ${y1}V${y1-d}L${x2} ${y2+d}V${y2}`}
   case'ops':case'receipt':case'blueprint':return `M${x1} ${y1}V${ym}H${x2}V${y2}`;
   case'message':case'channel':return `M${x1} ${y1}C${x1} ${ym} ${x2} ${ym} ${x2} ${y2}`;
-  case'grimoire':return `M${x1} ${y1}Q${(x1+x2)/2+(x2>=x1?-3:3)} ${ym-2} ${x2} ${y2}`;
+  case'grimoire':{
+   /* 펜으로 그은 듯 살짝 떨리는 잉크선: 완만한 곡선 위의 점들을 조금씩 흔들어 부드럽게 잇는다 */
+   let r=(seed*7919)%233280;const rnd=()=>(r=(r*9301+49297)%233280)/233280-.5;
+   const sway=((seed*19)%7-3)*.9,cx=(x1+x2)/2+sway,cy=ym-3-sway*.25,dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,N=7,P=[];
+   for(let i=0;i<=N;i++){const t=i/N,u=1-t,j=(i===0||i===N)?0:rnd()*.9;P.push([u*u*x1+2*u*t*cx+t*t*x2+nx*j,u*u*y1+2*u*t*cy+t*t*y2+ny*j])}
+   let d=`M${P[0][0].toFixed(2)} ${P[0][1].toFixed(2)}`;
+   for(let i=1;i<N;i++){const m=[(P[i][0]+P[i+1][0])/2,(P[i][1]+P[i+1][1])/2];d+=`Q${P[i][0].toFixed(2)} ${P[i][1].toFixed(2)} ${m[0].toFixed(2)} ${m[1].toFixed(2)}`}
+   return d+`L${x2} ${y2}`;}
   case'diary':{const o=((seed*37)%7-3)*.9;return `M${x1} ${y1}Q${(x1+x2)/2+o} ${ym-o/2} ${x2} ${y2}`}
   case'whiteboard':return `M${x1} ${y1}Q${(x1+x2)/2} ${ym+2.5} ${x2} ${y2}`;
   default:return `M${x1} ${y1}L${x2} ${y2}`;
@@ -3191,16 +3668,16 @@ function mapScreen(){
  const btns=ns.map((n,i)=>{const c=reach.includes(n.id),p=paid.includes(n.id),ok=p&&S.gold>=cost;
   return `<button class="node t-${n.type} L${n.id==='B'?'B':n.l} ${c?'can':''} ${p?'pay':''} ${M.visited.includes(n.id)?'done':''} ${M.cur===n.id?'cur':''}" style="left:${X(n)}%;top:${Y(n)}%" ${c?`data-act="go" data-v="${n.id}"`:ok?`data-act="go" data-v="${n.id}" data-pay="1"`:'disabled'} aria-label="${ntn(n.type)}${p?' 마석 '+cost:''}"><span>${NT[n.type].b}</span><small>${p?'마석 '+cost:ntn(n.type)}</small></button>`}).join('');
  return head(floorLabel(S.floor),`표시된 칸 중 다음 구역을 고르세요. 점선 칸은 마석 ${cost}을 내고 옆 경로로 건너가는 칸입니다. 탑은 끝없이 위로 이어집니다.`)+`<div class="mapgrid"><div>
- <div class="win map" data-t="경로도 — ${floorLabel(S.floor)}"><div class="mapsc"><div class="mapin" style="--mh:${(MR+1)*60+24}px;--mw:${ML*96}px"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${btns}</div></div></div>
- <div class="legend">${Object.keys(NT).map(k=>`<span data-tip="${NTD[k]}"><b>${NT[k].b}</b>${ntn(k)}</span>`).join('')}</div></div>
- <aside><div class="win" data-t="출전 파티 ${S.party.length}/${partyLimit()}">${S.party.map(mini).join('')}${resonanceSummary(S.party)}${S.bench.length?`<p class="small mute">대기실 ${S.bench.length}명: ${S.bench.map(u=>esc(u.name)).join(', ')}</p>`:''}</div>
- <div class="win" style="margin-top:12px" data-t="아티팩트">${artList()}</div></aside></div>`;
+ <div class="win map" data-t="경로도 — ${floorLabel(S.floor)}"><div class="mapsc"><div class="mapin" style="--mh:${(MR+1)*60+24}px;--mw:${ML*96}px"><svg viewBox="0 0 100 100" preserveAspectRatio="none">${lines}</svg>${btns}</div></div></div></div>
+ <aside><div class="aside-scroll"><div class="win" data-t="출전 파티 ${S.party.length}/${partyLimit()}">${S.party.map(mini).join('')}${resonanceSummary(S.party)}${S.bench.length?`<p class="small mute">대기실 ${S.bench.length}명: ${S.bench.map(u=>esc(u.name)).join(', ')}</p>`:''}</div>
+ <div class="win" style="margin-top:12px" data-t="아티팩트">${artList()}</div></div>
+ <div class="win map-legend-win" data-t="지도 범례"><div class="legend">${Object.keys(NT).map(k=>`<span data-tip="${NTD[k]}"><b>${NT[k].b}</b>${ntn(k)}</span>`).join('')}</div></div></aside></div>`;
 }
 function card(u){
  const g=u.guardBy&&unitC(B,u.guardBy);
  const st=[resonanceBadge(B,u),stanceAmount(u)?`<i class="tp stance-state" data-tip="${esc(GL.stance)}">방어 태세 ${stanceAmount(u)}</i>`:'',shieldAmount(u)?`<i class="tp shield-state" data-tip="${esc(GL.shield)}">보호막 ${shieldAmount(u)}</i>`:'',u.marks?TS(`각인 ${u.marks}`,'marks'):'',u.pat?TS(`인내 +${u.pat}`,'pat'):'',u.grind?TS(`근면 +${u.grind}`,'grind'):'',u.feast?TS(`포식 +${u.feast}`,'feast'):'',Object.keys(u.deb||{}).map(k=>DEBN[k]?`<i class="tp" data-tip="${esc((GL[k]||DEBN[k])+(u.debFrom?.[k]?' · 부여자: '+u.debFrom[k]:''))}">${DEBN[k]}</i>`:'').join(''),g&&liveU(g)?TS(`보호: ${esc(g.name)}`,'guard'):''].join('');
  const now=B.cur===u.id,sel=B.sel&&B.sel.a!=='def'&&B.sel.t===u.id;
- return `<div class="card ${alive(u)?'':'dead'} ${u.isP?'me':''} ${now?'now':''} ${sel?'aim':''}"><div class="hd">${badge(u)}<div><div class="nm">${esc(u.name)}${u.isP?' <span class="me-t">나</span>':''}${now?' <span class="nowt">차례</span>':''}</div><div class="tg">${tJob(u.job)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}${u.side==='a'?' · Lv'+u.lvl:''}</div></div></div>
+ return `<div class="card ${alive(u)?'':'dead'} ${u.isP?'me':''} ${now?'now':''} ${sel?'aim':''}"><div class="hd">${badge(u)}<div class="card-name"><div class="nm">${esc(u.name)}${u.isP?' <span class="me-t">나</span>':''}${now?' <span class="nowt">차례</span>':''}</div><div class="tg">${tJob(u.job)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}</div>${u.side==='a'?`<div class="card-lv">Lv${u.lvl}</div>`:''}</div></div>
  <div class="dline">${dstr(u.dice,u)}</div>${hpb(u,false)}<div class="hpn"><span>HP</span><span>${u.hp}/${u.maxHp}</span></div>${alive(u)?pips(u):''}${st?`<div class="st">${st}</div>`:''}</div>`;
 }
 function side(units,s){const order=s==='a'?[2,1,0]:[0,1,2];return `<div class="win side s-${s}" data-t="${s==='a'?'아군 '+units.filter(alive).length+'명 — 후열 · 중열 · 전열':'적 '+units.filter(alive).length+'체 — 전열 · 중열 · 후열'}">${order.map(p=>`<div class="col"><h4>${posIc(p,13)} ${POS[p].n}</h4>${units.filter(u=>u.pos===p).map(card).join('')||'<p class="nobody">—</p>'}</div>`).join('')}</div>`}
@@ -3262,8 +3739,8 @@ function rewardScreen(){
  ${r.revive?`<p class="msg">${r.revive}</p>`:''}
  ${r.lost.length?`<p class="msg">쓰러진 동료: ${r.lost.map(esc).join(', ')}. HP 0으로 파티에 남아 있습니다. 안전 지대에서 휴식하거나 의무실을 이용해 부활할 수 있습니다. HP 0인 채로는 전투에 나서지 못합니다.</p>`:''}
   ${r.kind==='red'&&r.specialNpc?`<section class="win redgate-ss-encounter" data-t="특별 헌터 발견"><div class="prof">${avatar({...r.specialNpc,side:'a'},68)}<div><h3>${esc(r.specialNpc.name)} · SS급</h3><p class="small mute">${esc(JOBS[r.specialNpc.job].n)} · ${esc(POS[r.specialNpc.pos].n)} · ${esc(ROLES[r.specialNpc.role].n)} · ${esc(AT[r.specialNpc.attr].n)} · 균형형</p></div></div><div class="row c" style="margin-top:12px"><button class="btn" data-act="recruitred" ${spaceLeft()?'':'disabled'}>백무진 영입</button></div>${spaceLeft()?'':'<p class="small mute center">파티·대기실에 자리가 없습니다.</p>'}</section>`:''}
- <div class="rwrap">${r.exps&&r.exps.length?`<div class="win" data-t="경험치">${r.exps.map(e=>`<div class="cnt">${px('exp',18)}${esc(e.name)} <b>+${e.xp}</b>${e.ups.length?` <span class="lvup">레벨 업! Lv${e.ups[e.ups.length-1]}</span>`:''}</div>`).join('')}</div>`:''}
- ${r.items&&r.items.length?`<div class="win" data-t="획득 아이템">${r.items.map(i=>`<div>${i}</div>`).join('')}</div>`:''}</div>
+ <div class="rwrap">${r.exps&&r.exps.length?`<div class="win reward-panel" data-t="경험치"><div class="reward-list">${r.exps.map(e=>`<div class="reward-entry"><span class="ae item-icon">${px('exp',18)}</span><span class="txt"><span>${esc(e.name)}</span><b>+${e.xp}</b>${e.ups.length?` <span class="lvup">레벨 업! Lv${e.ups[e.ups.length-1]}</span>`:''}</span></div>`).join('')}</div></div>`:''}
+ ${r.items&&r.items.length?`<div class="win reward-panel" data-t="획득 아이템"><div class="reward-list">${r.items.map(i=>`<div class="reward-entry"><span class="txt">${i}</span></div>`).join('')}</div></div>`:''}</div>
  ${r.opts.length?`<h3 class="sub">아티팩트를 고르세요</h3><div class="opts">${r.opts.map((o,i)=>`<button class="opt" data-act="art" data-v="${i}"><span class="ae">${artIc(o.k)}</span><b>${o.n}</b><span class="mute small">${o.d}</span></button>`).join('')}</div>`:''}
  <div class="row c"><button class="${r.opts.length?'ghost':'btn'}" data-act="cont">${r.opts.length?'고르지 않고 ':''}계속하기</button></div>`;
 }
@@ -3297,7 +3774,7 @@ function restScreen(){
 function eventScreen(){
  const E=S.event,e=E.e;
  return head(e.t,e.d,'돌발 퀘스트')+`${E.result?`<p class="msg">${E.result}</p>`:''}
- ${E.closed?`<div class="row c"><button class="btn" data-act="leave">계속하기</button></div>`:`<div class="opts">${evOpts(e).map((o,i)=>`<button class="opt" data-act="eopt" data-v="${i}" ${o.c&&!o.c()?'disabled':''}><b>${lbl(o)}</b></button>`).join('')}</div>`}`;
+ ${E.closed?`<div class="row c"><button class="btn" data-act="leave">계속하기</button></div>`:`<div class="opts">${evOpts(e).map((o,i)=>`<button class="opt" data-act="eopt" data-v="${i}" ${o.c&&!o.c()?'disabled':''}>${optLbl(lbl(o))}</button>`).join('')}</div>`}`;
 }
 function endScreen(){
  const E=S.end;
