@@ -241,6 +241,13 @@ summary{cursor:pointer;font-size:13px;padding:3px 0}
 .pl .info{flex:1 1 220px}
 .end{text-align:center;padding:24px 0}
 .end .big{font-size:56px;font-weight:900;line-height:1;margin-bottom:14px}
+/* 게임 오버: 최고 층수·전투 기록·전체 보유 헌터의 정렬 구분 */
+.end .end-best{display:flex;flex-wrap:wrap;gap:6px 9px;align-items:baseline;justify-content:center;max-width:100%;margin:14px auto 6px;text-align:center}
+.end .end-best b{font-size:20px}
+.end .end-stats{margin:0 auto 20px;text-align:center;color:var(--muted)}
+.end .end-party{max-width:760px;margin:0 auto 18px;padding:0 12px;text-align:center;line-height:1.8;word-break:keep-all;overflow-wrap:break-word}
+.end .end-party b{display:block;margin-bottom:4px}
+.end .end-party span{display:block}
 .em .sg{fill:var(--ink)}
 .mi{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mi .f{fill:currentColor;stroke:none}
@@ -1752,6 +1759,16 @@ html[data-skin=grimoire] .mapin .node.t-elite span{outline:1px solid #6b4423;out
 .dex-panel .trait-sum{display:block;font-weight:600}
 .dex-panel .trait-more{display:block;margin-top:4px}
 :is(#app,body) .dex-panel .dex-scroll .dx .small :is(.trait-sum,.trait-more){word-break:inherit;line-break:inherit;text-align:inherit;text-align-last:inherit}
+
+/* 헌터 생성/영입: 설명창은 원래 정렬을 유지하고 선택 버튼의 부가 설명만 중앙 정렬. */
+#app .mainwin .cr .chips .choice-chip .choice-sub{
+  display:block;
+  width:100%;
+  margin-inline:auto;
+  align-self:center;
+  text-align:center;
+  text-align-last:center;
+}
 </style>
 </head>
 <body>
@@ -2617,7 +2634,8 @@ function receiveHealing(u,amount){
 }
 const healText=r=>`HP +${r.hp}${r.shield?' · 보호막 +'+r.shield:''}`;
 
-const extraTurnChance=u=>combatClamp((agiScore(u)-14)*.0045+(u.side==='a'&&has('boots')?.04:0),0,.50);
+/* 민첩 기대값 14 초과분마다 연속 행동 확률 +1%p. 최대 50%, 신속의 부츠 +4%p. */
+const extraTurnChance=u=>combatClamp((agiScore(u)-14)*.01+(u.side==='a'&&has('boots')?.04:0),0,.50);
 /* 한 번의 공격에 대해 빗맞음, 완전 회피, 스침, 일반, 치명타 중 하나만 선택. */
 function attackQuality(c,u,t,opening,duplicate){
  const a=agiScore(u),d=agiScore(t),rollDiff=(t._g||0)-(u._g||0);
@@ -3635,7 +3653,7 @@ function awakenScreen(){
  <div class="odds">${GRADES.filter(g=>TIERS[g].p>0).map(g=>`<span>${g} ${TIERS[g].p}%</span>`).join('')}</div>
  <h3 class="sub">${W.n}번째 판정</h3><div class="gacha">${W.opts.map((g,i)=>card(g,i,true)).join('')}</div>
  <div class="row c" style="flex-direction:column;gap:5px">${left>0?`<button class="ghost reroll" data-act="reroll">다시 뽑기 · 남은 ${left}회</button><span class="small mute">현재 선택지 포기</span>`:'<span class="small warn">마지막 판정</span>'}</div>
- ${W.past.length?`<div class="gone">${W.past.map((p,k)=>`<h3 class="sub">${k+1}번째 판정 · 포기함</h3><div class="gacha">${p.map(g=>card(g,0,false)).join('')}</div>`).join('')}</div>`:''}`;
+ ${W.past.length?`<div class="gone">${W.past.slice().reverse().map((p,k)=>`<h3 class="sub">${W.n-1-k}번째 판정 · 포기함</h3><div class="gacha">${p.map(g=>card(g,0,false)).join('')}</div>`).join('')}</div>`:''}`;
 }
 function mini(u){return `<div class="mini ${u.isP?'me':''} ${alive(u)?'':'downed'}">${badge(u)}<div style="flex:1"><div><b>${esc(u.name)}</b> ${meTag(u)}${downTag(u)} <span class="t">${gname(u.tier)} · Lv${u.lvl}${canPromo(u)?' · <b class="prt">승급 가능</b>':''}</span></div><div class="t">${tags(u)}</div><div class="dline">${dstr(u.dice,u)} · EXP ${u.exp}/${expNeed(u.lvl)}</div>${hpb(u)}<div class="dline">HP ${u.hp} / ${u.maxHp}</div></div></div>`}
 function artList(){return S.arts.length?S.arts.map(k=>`<div class="rel"><span class="ae">${artIc(k)}</span><div><b>${AR[k].n}</b><br><span class="mute">${AR[k].d}</span></div></div>`).join(''):'<p class="small mute">보유한 아티팩트가 없습니다.</p>'}
@@ -3710,7 +3728,7 @@ const RULES=`<details><summary>전투 규칙</summary><ul class="ev">
 <li><b>공격 범위</b>: 근접은 적의 가장 앞 열, 원거리는 모든 열 지정 가능.</li>
 <li><b>배치</b>: 전열 피격 시 자원 +1(30%)·공격 스탯의 5% 반사(20%), 중열 적중 시 자원 +1(30%)·일반/스침 치명타 전환(20%), 후열 기술 소모 -1·확률로 추가 -1(25%). 앞 열은 근접 공격을 저지합니다.</li>
 <li><b>역할</b>: 탱커 위협도 5(방어 시 7), 딜러 3, 서포터 2. 서포터는 자동 치유.</li><li><b>초과 회복</b>: 포션 외 회복량이 최대 HP를 넘으면 남은 양이 보호막으로 쌓입니다. 보호막은 HP보다 먼저 피해를 막습니다.</li>
-<li><b>주사위</b>: 민첩으로 행동 순서 결정. 스침 피해 35%, 치명타 150%, 추가 행동 확률 최대 50%.</li>
+<li><b>주사위</b>: 민첩 굴림으로 행동 순서 결정. 스침 피해 35%, 치명타 150%. 연속 행동 확률은 민첩 주사위 기대값의 14 초과분 × 1% (신속의 부츠 +4%p, 최대 50%).</li>
 <li><b>공명</b>: 상반된 특성의 생존자 2명씩 발동.</li>
 <li><b>역할 기술</b>: 아군 기본 3칸 소모(후열 2칸 · 확률로 1칸(25%)). 탱커: 대신 맞기, 서포터: 치유, 딜러: 기습.</li>
 <li><b>상태이상</b>: 유혹·저주·무기력·기절·화상·동상·중독·출혈. 기본 지속 3턴.</li>
@@ -3777,7 +3795,12 @@ function eventScreen(){
 }
 function endScreen(){
  const E=S.end;
- return `<div class="end"><div class="big">GAME OVER</div>${head('공략 종료',E.why)}<p>최고 도달 <b>${floorLabel(S.stats.best)}</b> · 전투 ${S.stats.battles}회 · 처치 ${S.stats.kills} · 아티팩트 ${S.arts.length}개</p><button class="btn" data-act="restart">새로 시작</button></div>`;
+ const partyNames=[...S.party,...S.bench].map(u=>u.name||'이름 없는 헌터').sort((a,b)=>a.localeCompare(b,'ko')).map(esc).join(', ');
+ return `<div class="end"><div class="big">GAME OVER</div>${head('공략 종료',E.why)}
+ <p class="end-best">최고 도달 <b>${floorLabel(S.stats.best)}</b></p>
+ <p class="end-stats">전투 ${S.stats.battles}회 · 처치 ${S.stats.kills} · 아티팩트 ${S.arts.length}개</p>
+ <p class="end-party"><b>협회에서 당신을 기억할 것입니다.</b><span>${partyNames||'없음'}</span></p>
+ <button class="btn" data-act="restart">새로 시작</button></div>`;
 }
 const currentPartySort=()=>['grade','stats','name'].includes(S.partySort)?S.partySort:'name';
 const srt=l=>{
