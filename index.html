@@ -241,13 +241,6 @@ summary{cursor:pointer;font-size:13px;padding:3px 0}
 .pl .info{flex:1 1 220px}
 .end{text-align:center;padding:24px 0}
 .end .big{font-size:56px;font-weight:900;line-height:1;margin-bottom:14px}
-/* 게임 오버: 최고 층수·전투 기록·전체 보유 헌터의 정렬 구분 */
-.end .end-best{display:flex;flex-wrap:wrap;gap:6px 9px;align-items:baseline;justify-content:center;max-width:100%;margin:14px auto 6px;text-align:center}
-.end .end-best b{font-size:20px}
-.end .end-stats{margin:0 auto 20px;text-align:center;color:var(--muted)}
-.end .end-party{max-width:760px;margin:0 auto 18px;padding:0 12px;text-align:center;line-height:1.8;word-break:keep-all;overflow-wrap:break-word}
-.end .end-party b{display:block;margin-bottom:4px}
-.end .end-party span{display:block}
 .em .sg{fill:var(--ink)}
 .mi{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mi .f{fill:currentColor;stroke:none}
@@ -1769,6 +1762,23 @@ html[data-skin=grimoire] .mapin .node.t-elite span{outline:1px solid #6b4423;out
   text-align:center;
   text-align-last:center;
 }
+
+/* ========== 19. 게임 오버 화면 ========== */
+/* 화면 가운데에 한 덩어리로 모으고, 기록은 4칸 타일, 헌터 이름은 이름표로 */
+#app .mainwin .end{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:100%;padding:28px 16px;text-align:center;text-align-last:auto}
+#app .mainwin .end .head{margin:0 auto 22px;text-align:center}
+#app .mainwin .end .head :is(h1,p){text-align:center;text-align-last:center;margin-inline:auto}
+#app .mainwin .end .end-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(560px,100%);margin:0 auto 22px}
+#app .mainwin .end .end-stat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 11px;border:1px solid color-mix(in srgb,var(--ink) 18%,transparent);border-radius:var(--r,6px);background:color-mix(in srgb,var(--ink) 4%,transparent)}
+#app .mainwin .end .end-stat small{font-size:12px;color:var(--muted);text-align:center;text-align-last:center}
+#app .mainwin .end .end-stat b{font:800 20px/1.1 var(--display);white-space:nowrap}
+#app .mainwin .end .end-stat:first-child{border-color:color-mix(in srgb,var(--acc) 55%,transparent);background:color-mix(in srgb,var(--acc) 9%,transparent)}
+#app .mainwin .end .end-party{width:min(600px,100%);margin:0 auto 24px;text-align:center;text-align-last:center}
+#app .mainwin .end .end-party>b{display:block;margin-bottom:10px;font-size:14px}
+#app .mainwin .end .end-party ul{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0;padding:0;list-style:none}
+#app .mainwin .end .end-party li{padding:3px 10px;border:1px solid color-mix(in srgb,var(--ink) 16%,transparent);border-radius:999px;font-size:13px;white-space:nowrap}
+#app .mainwin .end>.btn{min-width:150px}
+@media (max-width:560px){#app .mainwin .end .end-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -3795,11 +3805,11 @@ function eventScreen(){
 }
 function endScreen(){
  const E=S.end;
- const partyNames=[...S.party,...S.bench].map(u=>u.name||'이름 없는 헌터').sort((a,b)=>a.localeCompare(b,'ko')).map(esc).join(', ');
+ const names=[...S.party,...S.bench].map(u=>u.name||'이름 없는 헌터').sort((a,b)=>a.localeCompare(b,'ko')).map(esc);
+ const stat=(k,v)=>`<div class="end-stat"><small>${k}</small><b>${v}</b></div>`;
  return `<div class="end"><div class="big">GAME OVER</div>${head('공략 종료',E.why)}
- <p class="end-best">최고 도달 <b>${floorLabel(S.stats.best)}</b></p>
- <p class="end-stats">전투 ${S.stats.battles}회 · 처치 ${S.stats.kills} · 아티팩트 ${S.arts.length}개</p>
- <p class="end-party"><b>협회에서 당신을 기억할 것입니다.</b><span>${partyNames||'없음'}</span></p>
+ <div class="end-stats">${stat('최고 도달',floorLabel(S.stats.best))}${stat('전투',S.stats.battles+'회')}${stat('처치',S.stats.kills)}${stat('아티팩트',S.arts.length+'개')}</div>
+ <div class="end-party"><b>협회에서 당신을 기억할 것입니다.</b><ul>${names.length?names.map(n=>`<li>${n}</li>`).join(''):'<li>없음</li>'}</ul></div>
  <button class="btn" data-act="restart">새로 시작</button></div>`;
 }
 const currentPartySort=()=>['grade','stats','name'].includes(S.partySort)?S.partySort:'name';
