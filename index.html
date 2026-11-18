@@ -1747,6 +1747,11 @@ html[data-skin=grimoire] .mapin .node.t-boss span{width:40px;height:40px;margin-
 html[data-skin=grimoire] .mapin .node.t-boss span .mi{width:22px;height:22px}
 html[data-skin=grimoire] .mapin .node.t-boss small{color:#7c1f15;font-weight:800}
 html[data-skin=grimoire] .mapin .node.t-elite span{outline:1px solid #6b4423;outline-offset:-3px;border-radius:3px}
+
+/* 도감 고유 특성: 요약 아래 상세 설명 */
+.dex-panel .trait-sum{display:block;font-weight:600}
+.dex-panel .trait-more{display:block;margin-top:4px}
+:is(#app,body) .dex-panel .dex-scroll .dx .small :is(.trait-sum,.trait-more){word-break:inherit;line-break:inherit;text-align:inherit;text-align-last:inherit}
 </style>
 </head>
 <body>
@@ -1778,6 +1783,8 @@ const ROLES={
  tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 방어 +5 · 같은 열 엄호 · 결의 +1'},
  support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -30% · 자동 치유 · 은총 +1'}
 };
+/* 역할 선택지 표시 순서 */
+const ROLE_ORDER=['tank','dealer','support'];
 const ATTRS=[
  {k:'pride',n:'오만',sin:1,ab:'HP 80% 이상: 공격값 +8'},
  {k:'wrath',n:'분노',sin:1,ab:'잃은 HP 10%마다 공격값 +2 (최대 +12)'},
@@ -1788,13 +1795,32 @@ const ATTRS=[
  {k:'sloth',n:'나태',sin:1,ab:'HP 피해 시 무기력 (3턴간 민첩 -6·연속 행동 불가)'},
  {k:'humil',n:'겸손',sin:0,ab:'공격 피해 -10% · 받는 피해 -20%'},
  {k:'patience',n:'인내',sin:0,ab:'HP 피해 없는 라운드마다 방어 +4 (최대 +12), 피해 시 초기화'},
- {k:'chaste',n:'순결',sin:0,ab:'디버프·각인 면역 · 방어 시 HP +4'},
+ {k:'chaste',n:'순결',sin:0,ab:'디버프·각인 면역 · 디버프를 막을 때마다 HP +4'},
  {k:'kind',n:'친절',sin:0,ab:'매 라운드 HP 비율 최저 동료 +5'},
  {k:'temper',n:'절제',sin:0,ab:'주사위 눈 40~80% 범위 보정'},
  {k:'charity',n:'자선',sin:0,ab:'HP 60% 이상: HP 4 소모, 동료 HP +10'},
  {k:'dilig',n:'근면',sin:0,ab:'자기 차례마다 공격·방어 +1 (최대 +8)'}
 ];
 const AT=Object.fromEntries(ATTRS.map(a=>[a.k,a]));
+/* 도감용 고유 특성 상세 설명 (실제 판정과 같은 내용) */
+const TRAIT_DETAIL={
+ pride:'공격할 때 현재 HP가 최대 HP의 80% 이상이면 공격값에 8을 더합니다. HP가 80% 아래로 떨어지면 다시 회복할 때까지 적용되지 않습니다.',
+ wrath:'공격할 때 잃은 HP 10%마다 공격값이 2씩 올라갑니다. HP가 40% 이하로 내려가면 최대치인 +12가 되며, 회복하면 그만큼 다시 줄어듭니다.',
+ envy:'공격이 빗맞거나 완전 회피되지 않았을 때, 대상에게 보호막이 있으면 피해를 주기 전에 최대 12만큼 빼앗아 자신의 보호막으로 만듭니다. 대상의 남은 보호막이 줄어드는 만큼 피해가 HP에 더 잘 들어갑니다.',
+ greed:'공격으로 대상의 HP에 피해를 줄 때마다 자신의 보호막이 3 늘어납니다. 아군이라면 그때마다 마석 2도 함께 얻으며, 마석은 전투 하나에서 최대 20까지 얻습니다.',
+ lust:'공격으로 대상의 HP에 피해를 주면 3턴 동안 유혹을 겁니다. 유혹에 걸린 대상은 공격할 때 확률로 빗맞힙니다(35%). 다시 걸면 지속 시간이 새로 시작됩니다.',
+ glut:'적을 쓰러뜨리면 최대 HP의 20%를 회복하고, 그 전투 동안 공격값이 3씩 쌓입니다(최대 +9). 쌓인 공격값은 전투가 끝나면 사라집니다.',
+ sloth:'공격으로 대상의 HP에 피해를 주면 3턴 동안 무기력을 겁니다. 무기력에 걸린 대상은 민첩 굴림이 6 줄고 연속 행동을 할 수 없습니다.',
+ humil:'자신이 주는 공격 피해가 10% 줄어드는 대신, 받는 모든 피해가 20% 줄어듭니다. 줄어든 피해는 보호막보다 먼저 계산되며, 최소 1의 피해는 받습니다.',
+ patience:'두 번째 라운드부터, 직전 라운드 동안 HP 피해를 받지 않았다면 라운드 시작 때 인내가 4씩 쌓입니다(최대 +12). 쌓인 인내는 방어 태세 값에 더해지고, HP 피해를 한 번이라도 받으면 바로 0이 됩니다.',
+ chaste:'기절·화상·동상·중독·출혈·유혹·저주·무기력 같은 디버프와 침식자의 각인에 걸리지 않습니다. 디버프를 막아낼 때마다 HP를 4 회복합니다.',
+ kind:'매 라운드 시작 때, 자신을 제외하고 살아 있는 동료 중 HP 비율이 가장 낮은 1명의 HP를 5 회복합니다.',
+ temper:'공격·방어·민첩 주사위의 눈이 항상 면 수의 40~80% 범위 안으로 맞춰집니다. 예를 들어 D12는 5~9, D6은 3~4만 나옵니다. 큰 실패가 없는 대신 최고 눈도 나오지 않습니다.',
+ charity:'매 라운드 시작 때 자신의 HP가 60% 이상이면, HP 4를 내어 자신을 제외하고 HP 비율이 가장 낮은 동료 1명의 HP를 10 회복합니다.',
+ dilig:'자기 차례가 올 때마다 꾸준함이 1씩 쌓여(최대 +8) 공격값과 방어 태세 값에 모두 더해집니다. 쌓인 꾸준함은 전투가 끝나면 사라집니다.'
+};
+const TRAIT_RULE='고유 특성은 캐릭터마다 하나씩이며, 출전한 전투에서만 발동합니다. 회복량이 최대 HP를 넘으면 남는 양은 보호막이 됩니다. 디버프는 같은 편에게는 걸리지 않습니다. 보스는 항상, 다른 몬스터는 셋 중 하나꼴로 고유 특성을 가집니다.';
+
 /* 공명은 캐릭터 본래의 고유 특성끼리만 판정한다. */
 const RESONANCES=[
  {k:'crown',sin:'pride',virt:'humil',n:'왕관의 서약',ab:'양쪽 모두 공격 피해 +10% · 받는 피해 -10%'},
@@ -3590,7 +3616,7 @@ function creator(mode){
  <div class="grp"><h3>헌터 이름 ${fixed?'<small>고정 NPC · 변경 불가</small>':mode==='npc'?'<small>바꿀 수 있습니다</small>':''}</h3><input type="text" id="nm" maxlength="12" placeholder="이름을 입력하세요" value="${esc(d.name)}" ${fixed?'readonly':''}></div>
  <div class="grp"><h3>직업 <small>공격 유형·사거리</small></h3>${chips('job',Object.entries(JOBS).map(([k,v])=>({k,n:v.n,sub:v.sub,ic:jobIc(k)})),d.job,'','pick',!!fixed)}<p class="desc"><b>${J.n}</b> ${J.tr}<br>${J.ab}</p></div>
  <div class="grp"><h3>포지션 <small>배치 효과</small></h3>${chips('pos',POS.map(p=>({...p,ic:posIc(p.k)})),d.pos,'','pick',fullFixed)}<p class="desc"><b>${POS[d.pos].n}</b> ${POS[d.pos].ab}</p></div>
- <div class="grp"><h3>역할 <small>역할 효과</small></h3>${chips('role',Object.values(ROLES).map(r=>({...r,ic:roleIc(r.k)})),d.role,'','pick',fullFixed)}<p class="desc"><b>${ROLES[d.role].n}</b> ${ROLES[d.role].ab}</p></div>
+ <div class="grp"><h3>역할 <small>역할 효과</small></h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(r=>({...r,ic:roleIc(r.k)})),d.role,'','pick',fullFixed)}<p class="desc"><b>${ROLES[d.role].n}</b> ${ROLES[d.role].ab}</p></div>
  <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3><p class="small mute">상반된 특성끼리 공명</p>${traitChoices(d.attr,'pick',fullFixed)}${traitDescription(d.attr)}</div>
  </div>
  <aside class="win side-sticky" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · 스탯 총량 ${totalBudget(d)} · HP ${Math.round(T.hp*(d.role==='tank'?1.2:1))+(mode==='npc'&&has('leaf')?15:0)}</div><p class="small mute" style="margin:6px 0 0">${tags(d)}</p></div></div>
@@ -3791,7 +3817,7 @@ function respecHTML(E,u){
  return `<div class="rebox"><p class="small warn">마석 ${c} 소모 · 1회 한정</p>
  <div class="grp"><h3>직업</h3>${chips('job',Object.entries(JOBS).map(([k,v])=>({k,n:v.n,sub:v.sub,ic:jobIc(k)})),r.job,'','rpick')}</div>
  <div class="grp"><h3>배치</h3>${chips('pos',POS.map(p=>({...p,ic:posIc(p.k)})),r.pos,'','rpick')}</div>
- <div class="grp"><h3>역할</h3>${chips('role',Object.values(ROLES).map(x=>({...x,ic:roleIc(x.k)})),r.role,'','rpick')}</div>
+ <div class="grp"><h3>역할</h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(x=>({...x,ic:roleIc(x.k)})),r.role,'','rpick')}</div>
  <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(r.attr,'rpick')}${traitDescription(r.attr)}</div>
  <div class="row"><button class="ghost" data-act="reclose">변경 취소</button>${reDiff(E,u)?`<span class="small">바뀜: ${['job','pos','role','attr'].filter(k=>r[k]!==u[k]).map(k=>({job:'직업',pos:'배치',role:'역할',attr:'특성'})[k]).join(', ')}</span>`:'<span class="small mute">아직 바뀐 것이 없습니다.</span>'}</div></div>`;
 }
@@ -3821,7 +3847,7 @@ function dexOv(){
   body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시</p><div class="dxg">${ARTS.map(one).join('')}</div>`}
  else if(tab==='item')body=`<div class="dxg">${seen('potion')?ent(px('potion'),'회복 포션','HP 40% 회복 · 전투 중 행동 1회 소모'):unk()}${seen('ticket')?ent(px('ticket'),'영입권','지정 등급 헌터 1명 무료 영입'):unk()}${ent(px('gold'),'마석','영입·상점·강화 등에 사용')}${ent(px('exp'),'경험치','출전 인원 획득 · 레벨 업 시 HP +8, 스탯 +'+LVB+' (자동 분배).')}</div>`;
  else if(tab==='role')body=`<h3 class="sub l">직업 효과 · 4종</h3><div class="dxg">${Object.entries(JOBS).map(([r,k])=>ent(jobIc(r,26),`${k.n} — ${k.sub}`,`${k.tr}<br><b>고유 효과:</b> ${k.ab}`)).join('')}</div><h3 class="sub l">포지션 · 3종</h3><div class="dxg">${POS.map(p=>ent(posIc(p.k,26),`${p.n} — ${p.sub}`,p.ab)).join('')}</div><p class="small mute">위협도: 탱커 5(방어 시 7) · 딜러 3 · 서포터 2</p><h3 class="sub l">역할 기술 · 3종</h3><div class="dxg">${Object.entries(SKILL).map(([r,k])=>ent(roleIc(r,26),`${ROLES[r].n} — ${k.n}`,`${ROLES[r].ab}<br><b>${k.r}</b> 기본 소모 ${RMAX}칸(후열 ${RMAX-1}칸 · 확률로 ${RMAX-2}칸(25%) · 적은 기본 ${RMAX_E}칸) · ${k.d}`)).join('')}</div>`;
- else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].ab)).join('')}</div></section>`).join('')}</div>`;
+ else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,`<span class="trait-sum">${AT[k].ab}</span><span class="trait-more">${TRAIT_DETAIL[k]}</span>`)).join('')}</div></section>`).join('')}</div>`;
  return `<div class="ov" data-k="dex"><div class="win common-modal dex-panel" data-t="도감"><div class="common-modal-bar"><strong>도감</strong><button class="ghost" data-act="dex">닫기</button></div>
  <div class="seg dxtab">${Object.entries(DEXT).map(([k,v])=>`<button class="${tab===k?'on':''}" data-act="dextab" data-v="${k}">${v}</button>`).join('')}</div><div class="dex-scroll" tabindex="0" role="region" aria-label="도감 내용">${body}</div></div></div>`;
 }
