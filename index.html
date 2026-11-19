@@ -807,6 +807,10 @@ html[data-skin=receipt] .mainwin>main.wrap.scr-map{padding-bottom:10px}
 .trait-pairs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
 .trait-pairs .chips.choice-attr{grid-template-columns:minmax(0,1fr);gap:5px}
 html[data-skin] .chips .choice-chip.pair-match{outline:none;background:color-mix(in srgb,var(--acc) 28%,var(--face,transparent))}
+/* 모던 채널: 회색 알약 위에 빨강 글자와 가는 빨강 링 */
+html[data-skin=channel] .chips .choice-chip.pair-match{background:color-mix(in srgb,var(--acc) 10%,var(--face));color:var(--acc);box-shadow:inset 0 0 0 2px var(--acc)}
+/* 팝아트 만화: 먹선 위에 빨강 망점 느낌의 붉은 칸과 크림 글자 */
+html[data-skin=comic] .chips .choice-chip.pair-match{background:color-mix(in srgb,var(--acc) 62%,var(--face));color:#fff6e6}
 .resonance-detail,.resonance-summary{border:1px solid var(--line);border-radius:var(--rad);background:var(--paper);color:var(--ink)}
 .resonance-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
 .resonance-heading>span{font-size:12px;font-weight:700}
@@ -2000,10 +2004,11 @@ body>.win.turn.turn-pop{position:fixed;z-index:40;width:min(480px,calc(100vw - 1
 .hunter-story-button{
   position:relative;display:inline-flex;align-items:center;justify-content:center;
   gap:6px;flex:none;width:max-content;max-width:100%;height:34px;min-height:32px;
-  padding:5px 12px;font-size:12px;font-weight:700;line-height:1.25;
+  padding:5.9px 12px 4.1px;font-size:12px;font-weight:700;line-height:1.25;
   white-space:nowrap;vertical-align:middle;isolation:isolate;
 }
 .hunter-story-button::before,.hunter-story-button::after{pointer-events:none;flex:none}
+.pl .hunter-story-button{height:36px;box-sizing:border-box}
 .hunter-story-button:hover:not(:disabled){filter:brightness(1.06)}
 .mini .hunter-story-button{margin-top:7px;font-size:12px}
 /* 윈도우 98: 눌리는 고전 시스템 명령 버튼 */
@@ -2014,14 +2019,14 @@ html[data-skin=w98] .hunter-story-button{
              inset -1px -1px 0 color-mix(in srgb,var(--ink) 25%,transparent);
   font-family:'IBM Plex Sans KR',var(--bf)
 }
-html[data-skin=w98] .hunter-story-button::before{content:'▤';font-size:16px;line-height:1}
+html[data-skin=w98] .hunter-story-button::before{content:'';display:inline-block;width:16px;height:16px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='3' width='16' height='18'/%3E%3Cpath d='M4 9h16M4 15h16'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='3' width='16' height='18'/%3E%3Cpath d='M4 9h16M4 15h16'/%3E%3C/svg%3E") center/contain no-repeat;}
 html[data-skin=w98] .hunter-story-button:active:not(:disabled){border-color:var(--ink) var(--paper) var(--paper) var(--ink);box-shadow:inset 1px 1px 1px var(--soft)}
 /* 아이메시지: 오른쪽 꼬리가 달린 메신저 말풍선 */
 html[data-skin=message] .hunter-story-button{
   background:var(--acc);color:var(--acc-ink);border:1px solid color-mix(in srgb,var(--acc) 80%,var(--ink));
   border-radius:19px 19px 7px 19px;box-shadow:0 2px 6px color-mix(in srgb,var(--ink) 15%,transparent)
 }
-html[data-skin=message] .hunter-story-button::before{content:'•••';font-size:11px;letter-spacing:1px;line-height:1}
+html[data-skin=message] .hunter-story-button::before{content:'';display:inline-block;width:18px;height:6px;background:radial-gradient(circle,currentColor 1.7px,transparent 2.1px) 0 0/6px 6px repeat-x}
 html[data-skin=message] .hunter-story-button::after{
   content:'';position:absolute;right:1px;bottom:-4px;width:9px;height:9px;
   background:var(--acc);clip-path:polygon(0 0,100% 0,100% 100%);
@@ -2032,7 +2037,7 @@ html[data-skin=diary] .hunter-story-button{
   border-radius:2px 7px 4px 2px;box-shadow:2px 2px 0 color-mix(in srgb,var(--acc) 25%,transparent);
   transform:rotate(-1deg);font-family:'Gowun Batang',var(--bf)
 }
-html[data-skin=diary] .hunter-story-button::before{content:'✎';font-size:16px;color:var(--acc)}
+html[data-skin=diary] .hunter-story-button::before{content:'';display:inline-block;width:17px;height:17px;background:var(--acc);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20l1-5L16 4l4 4L9 19z'/%3E%3Cpath d='M14 6l4 4'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20l1-5L16 4l4 4L9 19z'/%3E%3Cpath d='M14 6l4 4'/%3E%3C/svg%3E") center/contain no-repeat;}
 html[data-skin=diary] .hunter-story-button::after{
   content:'';position:absolute;top:-5px;right:9px;width:19px;height:8px;
   background:color-mix(in srgb,var(--acc) 36%,var(--paper));opacity:.9;transform:rotate(8deg)
@@ -2044,7 +2049,7 @@ html[data-skin=ops] .hunter-story-button{
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 16%,transparent);
   font-family:'IBM Plex Sans KR',var(--bf);letter-spacing:.025em
 }
-html[data-skin=ops] .hunter-story-button::before{content:'▸';color:var(--acc);font-size:18px;line-height:1}
+html[data-skin=ops] .hunter-story-button::before{content:'';display:inline-block;width:10px;height:12px;background:var(--acc);clip-path:polygon(0 0,100% 50%,0 100%)}
 html[data-skin=ops] .hunter-story-button::after{content:'LOG';font:700 9px/1 monospace;color:var(--acc);opacity:.85;letter-spacing:.07em}
 /* 영수증: 절취선이 있는 기록 조회 쿠폰 */
 html[data-skin=receipt] .hunter-story-button{
@@ -2052,8 +2057,8 @@ html[data-skin=receipt] .hunter-story-button{
   border-left:4px double var(--acc);border-radius:0;box-shadow:none;
   font-family:'IBM Plex Sans KR',var(--bf);letter-spacing:.02em
 }
-html[data-skin=receipt] .hunter-story-button::before{content:'№';font-size:13px;color:var(--acc)}
-html[data-skin=receipt] .hunter-story-button::after{content:'···';font-size:15px;line-height:0;color:var(--muted);letter-spacing:1px}
+html[data-skin=receipt] .hunter-story-button::before{content:'';display:inline-block;width:16px;height:16px;background:var(--acc);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h9l4 4v14H6z'/%3E%3Cpath d='M9 12h7M9 16h7M9 8h3'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 3h9l4 4v14H6z'/%3E%3Cpath d='M9 12h7M9 16h7M9 8h3'/%3E%3C/svg%3E") center/contain no-repeat}
+html[data-skin=receipt] .hunter-story-button::after{content:'';display:inline-block;width:18px;height:6px;background:radial-gradient(circle,var(--muted) 1.7px,transparent 2.1px) 0 0/6px 6px repeat-x}
 /* 모던 채널: 재생 아이콘과 콘텐츠 칩 */
 html[data-skin=channel] .hunter-story-button{
   background:var(--paper);color:var(--ink);border:1px solid var(--soft);
@@ -2070,8 +2075,9 @@ html[data-skin=comic] .hunter-story-button{
   border-radius:4px;box-shadow:3px 3px 0 var(--acc);transform:rotate(-2deg);
   font-family:'Jua',var(--bf);font-size:13px;letter-spacing:.01em
 }
-html[data-skin=comic] .hunter-story-button::before{content:'★';color:var(--acc);font-size:17px;-webkit-text-stroke:.5px var(--ink)}
-html[data-skin=comic] .hunter-story-button::after{content:'!';font-size:14px;color:var(--acc);font-weight:900}
+html[data-skin=comic] .hunter-story-button{padding:5.8px 12px 4.2px}
+html[data-skin=comic] .hunter-story-button::before{content:'';display:inline-block;width:18px;height:18px;background:var(--acc);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2l3 7 7 .6-5.4 4.6 1.7 7.3L12 17.8 5.7 21.5l1.7-7.3L2 9.6 9 9z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2l3 7 7 .6-5.4 4.6 1.7 7.3L12 17.8 5.7 21.5l1.7-7.3L2 9.6 9 9z'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 0 .6px var(--ink))}
+html[data-skin=comic] .hunter-story-button::after{content:'';display:inline-block;width:4px;height:14px;background:var(--acc);-webkit-mask:radial-gradient(circle at 50% 87%,#000 1.9px,transparent 2.2px),linear-gradient(#000,#000) 0 0/100% 9px no-repeat;mask:radial-gradient(circle at 50% 87%,#000 1.9px,transparent 2.2px),linear-gradient(#000,#000) 0 0/100% 9px no-repeat;clip-path:none}
 /* 유리 온실: 잎사귀를 넣은 곡선 유리 라벨 */
 html[data-skin=greenhouse] .hunter-story-button{
   background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 23%,var(--paper)),var(--paper));
@@ -2080,7 +2086,7 @@ html[data-skin=greenhouse] .hunter-story-button{
              0 0 7px color-mix(in srgb,var(--acc) 22%,transparent);
   font-family:'Gothic A1',var(--bf);letter-spacing:.02em
 }
-html[data-skin=greenhouse] .hunter-story-button::before{content:'❧';font-size:20px;line-height:1;color:var(--acc)}
+html[data-skin=greenhouse] .hunter-story-button::before{content:'';display:inline-block;width:18px;height:18px;background:var(--acc);-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 19C5 10 11 4 20 4c0 9-6 15-15 15z'/%3E%3Cpath d='M5 19L14 10'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 19C5 10 11 4 20 4c0 9-6 15-15 15z'/%3E%3Cpath d='M5 19L14 10'/%3E%3C/svg%3E") center/contain no-repeat}
 
 @media(max-width:480px){.hunter-story-talk{flex-direction:column}.hunter-story-talk button{width:100%}.hunter-story-bond meter{max-width:none}}
 
@@ -2215,6 +2221,11 @@ html[data-skin] .trait-opts .trait-opt:disabled{opacity:.75;cursor:default}
 /* 전투 화면: 내려서 볼 수는 있지만 스크롤바는 표시하지 않음 */
 #app .mainwin main.wrap.scr-battle{scrollbar-width:none;-ms-overflow-style:none}
 #app .mainwin main.wrap.scr-battle::-webkit-scrollbar{display:none;width:0;height:0}
+#app .pl .pl-open{all:unset;box-sizing:border-box;cursor:pointer;display:inline-block;color:inherit;font:inherit}
+#app .pl .pl-ic{line-height:0;border-radius:50%}
+#app .pl .pl-nm:hover b{text-decoration:underline}
+#app .pl .pl-open:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+#app .pl .pl-ic:hover{filter:brightness(1.12)}
 </style>
 </head>
 <body>
@@ -2244,50 +2255,50 @@ const POS=[
 const ROLES={
  dealer:{k:'dealer',n:'딜러',threat:3,sub:'화력 집중',ab:'위협도 3 · 공격 피해 +15% · 처치 시 살기 +1 · 기습'},
  tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 방어 주사위 +12% · 같은 열 엄호 · 결의 +1'},
- support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -30% · 자동 치유 · 은총 +1'}
+ support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -20% · 자동 치유 · 은총 +1'}
 };
 /* 역할 선택지 표시 순서 */
 const ROLE_ORDER=['tank','dealer','support'];
 const ATTRS=[
  {k:'pride',n:'오만',sin:1,opts:[
-  {n:'고고한 일격',ab:'HP 80% 이상: 공격 주사위 +45%',d:'공격할 때 현재 HP가 최대 HP의 80% 이상이면 굴린 공격 주사위 합이 45% 늘어납니다.'},
-  {n:'첫 수의 위엄',ab:'전투 첫 공격: 공격 주사위 +90% · 적중 시 저주',d:'전투에서 처음 하는 공격의 공격 주사위 합이 90% 늘어나고, HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다.'}]},
+  {n:'고고',ab:'HP 80% 이상: 공격 주사위 +45%',d:'공격할 때 현재 HP가 최대 HP의 80% 이상이면 굴린 공격 주사위 합이 45% 늘어납니다.'},
+  {n:'기선',ab:'전투 첫 공격: 공격 주사위 +90% · 적중 시 저주',d:'전투에서 처음 하는 공격의 공격 주사위 합이 90% 늘어나고, HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다.'}]},
  {k:'wrath',n:'분노',sin:1,opts:[
   {n:'역린',ab:'잃은 HP 10%마다 공격 주사위 +12% (최대 +60%)',d:'잃은 HP가 최대 HP의 10%씩 늘 때마다 공격 주사위 합이 12% 늘어납니다. HP 50% 이하에서 최대치 +60%가 됩니다.'},
   {n:'보복',ab:'HP 피해를 받은 뒤 다음 공격: 공격 주사위 +50% · 출혈',d:'HP 피해를 받으면 보복이 준비되어, 다음 공격의 공격 주사위 합이 50% 늘어나고 HP 피해를 주면 출혈(3턴, 차례마다 최대 HP 3%)을 겁니다.'}]},
  {k:'envy',n:'시기',sin:1,opts:[
-  {n:'끌어내림',ab:'대상 HP 비율이 나보다 높으면 공격 주사위 +45%',d:'공격 대상의 HP 비율이 자신의 HP 비율보다 높으면 공격 주사위 합이 45% 늘어납니다.'},
-  {n:'빼앗는 손',ab:'HP 피해 시 저주 · 저주 걸린 대상 공격 주사위 +40%',d:'HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다. 이미 저주에 걸린 대상을 공격할 때는 공격 주사위 합이 40% 늘어납니다.'}]},
+  {n:'시샘',ab:'대상 HP 비율이 나보다 높으면 공격 주사위 +45%',d:'공격 대상의 HP 비율이 자신의 HP 비율보다 높으면 공격 주사위 합이 45% 늘어납니다.'},
+  {n:'강탈',ab:'HP 피해 시 저주 · 저주 걸린 대상 공격 주사위 +40%',d:'HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다. 이미 저주에 걸린 대상을 공격할 때는 공격 주사위 합이 40% 늘어납니다.'}]},
  {k:'greed',n:'탐욕',sin:1,opts:[
   {n:'착복',ab:'HP 피해의 15%를 보호막으로 · 마석 +2 (전투당 최대 20)',d:'공격으로 HP 피해를 줄 때마다 그 피해의 15%(올림)만큼 보호막을 얻습니다. 아군이라면 마석 2도 함께 얻으며, 전투 하나에서 최대 20까지입니다.'},
   {n:'수집가',ab:'대상의 디버프 1종마다 공격 주사위 +20% (최대 +70%)',d:'공격 대상에게 걸린 디버프 종류 하나마다 공격 주사위 합이 20% 늘어납니다(최대 +70%).'}]},
  {k:'lust',n:'색욕',sin:1,opts:[
   {n:'매혹',ab:'HP 피해 시 유혹 (3턴간 빗맞음 35%)',d:'HP 피해를 주면 3턴 동안 유혹을 겁니다. 유혹에 걸린 대상은 공격할 때 확률로 빗맞힙니다(35%).'},
-  {n:'홀리는 몸놀림',ab:'민첩 주사위 +45% · HP 피해 시 확률로 유혹(30%)',d:'민첩 주사위 합이 45% 늘어 먼저 움직이기 쉽고, HP 피해를 주면 확률로(30%) 유혹을 겁니다.'}]},
+  {n:'요염',ab:'민첩 주사위 +45% · HP 피해 시 확률로 유혹(30%)',d:'민첩 주사위 합이 45% 늘어 먼저 움직이기 쉽고, HP 피해를 주면 확률로(30%) 유혹을 겁니다.'}]},
  {k:'glut',n:'폭식',sin:1,opts:[
   {n:'포식',ab:'처치 시 최대 HP 20% 회복 · 공격 주사위 +20% 누적 (최대 +70%)',d:'적을 쓰러뜨리면 최대 HP의 20%를 회복하고, 그 전투 동안 공격 주사위 합이 20%씩 누적해 늘어납니다(최대 +70%).'},
   {n:'탐식',ab:'HP 피해의 10% 흡혈 · 중독',d:'HP 피해를 주면 그 피해의 10%(올림)만큼 회복하고, 대상에게 중독(3턴, 라운드마다 최대 HP 4%)을 겁니다.'}]},
  {k:'sloth',n:'나태',sin:1,opts:[
   {n:'늘어짐',ab:'HP 피해 시 무기력 (3턴간 민첩 주사위 -20%·연속 행동 불가)',d:'HP 피해를 주면 3턴 동안 무기력을 겁니다. 무기력에 걸린 대상은 민첩 주사위 합이 20% 줄고 연속 행동을 할 수 없습니다.'},
-  {n:'느긋한 한 방',ab:'민첩 주사위 -20% · 공격 주사위 +50%',d:'느긋하게 움직여 민첩 주사위 합이 20% 줄지만, 공격 주사위 합이 50% 늘어납니다.'}]},
+  {n:'여유',ab:'민첩 주사위 -20% · 공격 주사위 +50%',d:'느긋하게 움직여 민첩 주사위 합이 20% 줄지만, 공격 주사위 합이 50% 늘어납니다.'}]},
  {k:'humil',n:'겸손',sin:0,opts:[
-  {n:'낮은 자세',ab:'받는 피해 -20% · 공격 주사위 -10%',d:'받는 모든 피해가 20% 줄어드는 대신 공격 주사위 합이 10% 줄어듭니다. 최소 1의 피해는 받습니다.'},
-  {n:'받드는 손',ab:'방어 주사위 +20% · 같은 열 동료가 받는 피해 -10%',d:'방어 주사위 합이 20% 늘어나고, 살아 있는 동안 같은 열에 선 다른 동료가 받는 피해가 10% 줄어듭니다(여럿이어도 중복되지 않음).'}]},
+  {n:'저자세',ab:'받는 피해 -20% · 공격 주사위 -10%',d:'받는 모든 피해가 20% 줄어드는 대신 공격 주사위 합이 10% 줄어듭니다. 최소 1의 피해는 받습니다.'},
+  {n:'받듦',ab:'방어 주사위 +20% · 같은 열 동료가 받는 피해 -10%',d:'방어 주사위 합이 20% 늘어나고, 살아 있는 동안 같은 열에 선 다른 동료가 받는 피해가 10% 줄어듭니다(여럿이어도 중복되지 않음).'}]},
  {k:'patience',n:'인내',sin:0,opts:[
   {n:'버티기',ab:'HP 피해 없는 라운드마다 방어 주사위 +20% (최대 +70%), 피해 시 초기화',d:'두 번째 라운드부터, 직전 라운드에 HP 피해를 받지 않았다면 방어 주사위 합이 20%씩 쌓여 늘어납니다(최대 +70%). HP 피해를 받으면 바로 초기화됩니다.'},
-  {n:'굳은 의지',ab:'HP 50% 이하: 방어 주사위 +70% · 받는 피해 -10%',d:'HP가 최대 HP의 50% 이하로 떨어지면 방어 주사위 합이 70% 늘어나고 받는 피해가 10% 줄어듭니다.'}]},
+  {n:'강단',ab:'HP 50% 이하: 방어 주사위 +70% · 받는 피해 -10%',d:'HP가 최대 HP의 50% 이하로 떨어지면 방어 주사위 합이 70% 늘어나고 받는 피해가 10% 줄어듭니다.'}]},
  {k:'chaste',n:'순결',sin:0,opts:[
   {n:'정결',ab:'디버프·각인 면역 · 막을 때마다 최대 HP 4% 회복',d:'모든 디버프와 침식자의 각인에 걸리지 않으며, 디버프를 막아낼 때마다 최대 HP의 4%(올림)를 회복합니다.'},
-  {n:'정화의 빛',ab:'라운드 시작: 디버프 걸린 동료 1명 정화 · 방어 주사위 +20%',d:'라운드가 시작될 때 디버프에 걸린 동료(자신 포함) 중 1명의 디버프를 모두 지웁니다. 방어 주사위 합도 20% 늘어납니다.'}]},
+  {n:'광휘',ab:'라운드 시작: 디버프 걸린 동료 1명 정화 · 방어 주사위 +20%',d:'라운드가 시작될 때 디버프에 걸린 동료(자신 포함) 중 1명의 디버프를 모두 지웁니다. 방어 주사위 합도 20% 늘어납니다.'}]},
  {k:'kind',n:'친절',sin:0,opts:[
   {n:'보살핌',ab:'라운드 시작: HP 비율 최저 동료 최대 HP 6% 회복',d:'라운드가 시작될 때 자신을 제외하고 HP 비율이 가장 낮은 동료 1명이 그 동료 최대 HP의 6%(올림)를 회복합니다.'},
   {n:'격려',ab:'동료 전원 민첩 주사위 +20%',d:'살아 있는 동안 자신을 포함한 같은 편 전원의 민첩 주사위 합이 20% 늘어납니다. 격려가 여럿이어도 중복되지 않습니다.'}]},
  {k:'temper',n:'절제',sin:0,opts:[
-  {n:'균형',ab:'주사위 눈 40~80% 범위 보정',d:'공격·방어·민첩 주사위의 눈이 항상 면 수의 40~80% 범위 안으로 맞춰집니다. 예를 들어 D12는 5~9만 나옵니다.'},
+  {n:'중용',ab:'주사위 눈 40~80% 범위 보정',d:'공격·방어·민첩 주사위의 눈이 항상 면 수의 40~80% 범위 안으로 맞춰집니다. 예를 들어 D12는 5~9만 나옵니다.'},
   {n:'침착',ab:'방어·민첩 주사위 +30%',d:'방어 주사위 합과 민첩 주사위 합이 각각 30% 늘어납니다.'}]},
  {k:'charity',n:'자선',sin:0,opts:[
   {n:'나눔',ab:'HP 60% 이상: 최대 HP 4%를 내어 최저 동료 최대 HP 10% 회복',d:'라운드가 시작될 때 자신의 HP가 60% 이상이면, 자기 최대 HP의 4%를 내어 HP 비율이 가장 낮은 동료 1명이 그 동료 최대 HP의 10%를 회복합니다.'},
-  {n:'베푸는 방패',ab:'라운드 시작: 최저 동료에게 내 최대 HP 8% 보호막',d:'라운드가 시작될 때 자신을 제외하고 HP 비율이 가장 낮은 동료 1명에게 자기 최대 HP의 8%(올림)만큼 보호막을 씌웁니다.'}]},
+  {n:'가호',ab:'라운드 시작: 최저 동료에게 내 최대 HP 8% 보호막',d:'라운드가 시작될 때 자신을 제외하고 HP 비율이 가장 낮은 동료 1명에게 자기 최대 HP의 8%(올림)만큼 보호막을 씌웁니다.'}]},
  {k:'dilig',n:'근면',sin:0,opts:[
   {n:'꾸준함',ab:'자기 차례마다 공격·방어 주사위 +6% 누적 (최대 +48%)',d:'자기 차례가 올 때마다 꾸준함이 쌓여 공격·방어 주사위 합이 6%씩 늘어납니다(최대 +48%). 전투가 끝나면 사라집니다.'},
   {n:'솔선',ab:'동료 전원 방어 주사위 +20%',d:'살아 있는 동안 자신을 포함한 같은 편 전원의 방어 주사위 합이 20% 늘어납니다. 솔선이 여럿이어도 중복되지 않습니다.'}]}
@@ -2953,12 +2964,15 @@ function encounterRange(f,partySize){
 }
 /* 한 전투의 최대 몬스터 수: 일반 6 · 정예 8 · 레드 게이트 10 */
 const MAX_FOES={normal:6,elite:8,red:10};
+/* 승강장이 올라갈수록 몬스터가 강해지는 정도 (1=기존, 낮을수록 완만) */
+const FLOOR_GROW=.75;
 function mkEnemy(f,kind,partySize=1){
  const boss=kind==='boss',m=boss?BOSS[(f-1)%5]:pick(MON),cyc=Math.floor((f-1)/5);
  const members=Math.max(1,Math.min(PARTY_MAX,partySize));
  // 승강장 번호에 따른 기존 성장에 출전 인원 1명당 체력 +9%, 스탯 총량 +5%를 더한다.
- const hp0={normal:16+f*26,elite:100+f*36,red:230+f*44,boss:110+f*82}[kind];
- const b0={normal:22+f*10,elite:38+f*12,red:72+f*14,boss:52+f*18}[kind];
+ const fg=1+(f-1)*FLOOR_GROW;
+ const hp0={normal:16+fg*26,elite:100+fg*36,red:230+fg*44,boss:110+fg*82}[kind];
+ const b0={normal:22+fg*10,elite:38+fg*12,red:72+fg*14,boss:52+fg*18}[kind];
  const hp=Math.round(hp0*(1+.09*(members-1)));
  const b=roundEven(b0*(1+.05*(members-1)));
  const role=boss?'dealer':pick(['dealer','dealer','tank','support']);
@@ -3172,8 +3186,8 @@ const dtxt=p=>p.dice.map(d=>`<span class="dz" title="D${d.s}">${d.v}</span>`).jo
 const combatClamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const agiScore=u=>sum((u.dice.agi||[]).filter(Number.isFinite).map(n=>(n+1)/2))+statBonus(u.dice,'agi');
 const powerScore=u=>Math.max(...['atk','def','agi'].map(k=>statSum(u,k)));
-const supportRegen=(u,t)=>Math.ceil(t.maxHp*.04)+Math.floor(powerScore(u)*.22);
-const supportBurst=(u,t)=>Math.ceil(t.maxHp*.12)+Math.floor(powerScore(u)*.5);
+const supportRegen=(u,t)=>Math.ceil(t.maxHp*.07)+Math.floor(powerScore(u)*.3);
+const supportBurst=(u,t)=>Math.ceil(t.maxHp*.18)+Math.floor(powerScore(u)*.65);
 /* 회복/보호막 공통 계산. 포지션에 따른 증폭은 없습니다. */
 const positionAmount=(u,amount)=>Math.max(0,amount);
 const positionHeal=(u,amount)=>Math.min(Math.max(0,u.maxHp-u.hp),positionAmount(u,amount)); // 포션 전용: 초과 회복 소멸
@@ -3420,7 +3434,7 @@ function doAction(c,u,a){
   }
   c.rec.rows.push(row);return;
  }
- const pcts=[];if(JOBS[u.job].melee)pcts.push([20,'근거리']);if(u.role==='dealer')pcts.push([15,'역할 딜러']);if(u.role==='support')pcts.push([-30,'역할 서포터']);if(amb)pcts.push([30,'역할 기술 기습']);if(opening)pcts.push([u.side==='a'&&has('horn')?15:10,'선제공격']);
+ const pcts=[];if(JOBS[u.job].melee)pcts.push([20,'근거리']);if(u.role==='dealer')pcts.push([15,'역할 딜러']);if(u.role==='support')pcts.push([-20,'역할 서포터']);if(amb)pcts.push([30,'역할 기술 기습']);if(opening)pcts.push([u.side==='a'&&has('horn')?15:10,'선제공격']);
  if(u.side==='a'&&extraTotal('pct',u))pcts.push([extraTotal('pct',u),'추가 아티팩트']);
  if(u.side==='a'){if(has('triple')&&maxSame>=3)pcts.push([100,AR.triple.n]);if(has('straight')&&best>=3)pcts.push([25,AR.straight.n]);if(has('parity'))pcts.push(pool.sum%2===0?[20,AR.parity.n+' 짝']:[-10,AR.parity.n+' 홀'])}
  if(u.side==='a'){if(has('prism')&&JOBS[u.job].magic)pcts.push([12,AR.prism.n]);if(has('mask')&&u.hp<=u.maxHp*.5)pcts.push([15,AR.mask.n]);if(has('chain')&&c.qi>0&&c.queue[c.qi-1]===u.id)pcts.push([15,AR.chain.n])}
@@ -4961,7 +4975,7 @@ const TS=(label,k)=>`<i class="tp" data-tip="${esc(GL[k])}">${label}</i>`;
 const tJob=k=>tp(JOBS[k].n,`${JOBS[k].n} (${JOBS[k].sub}) — ${JOBS[k].tr}. ${JOBS[k].ab}`);
 const tPos=p=>tp(POS[p].n,`${POS[p].n} — ${POS[p].ab}`);
 const tRole=r=>tp(ROLES[r].n,`${ROLES[r].n} — ${ROLES[r].ab}. 역할 기술 「${SKILL[r].n}」(${SKILL[r].r}${JO(SKILL[r].r,'가')} 다 차면): ${SKILL[r].d}`);
-const tAttr=(k,v)=>tp(AT[k].n+(v!=null?' · '+attrOpt(k,v).n:''),`${AT[k].n} (${AT[k].sin?'7대죄':'7주선'}) — ${v!=null?attrAb(k,v):AT[k].opts.map((o,i)=>attrAb(k,i)).join(' / ')} / 공명 ${resonanceText(k)}`);
+const tAttr=(k,v)=>tp(AT[k].n+(v!=null?' · '+attrOpt(k,v).n:''),`${AT[k].n} (${AT[k].sin?'7대죄':'7주선'}) — ${v!=null?attrAb(k,v):AT[k].opts.map((o,i)=>attrAb(k,i)).join(' / ')}`);
 const tags=u=>`${tJob(u.job)} · ${tPos(u.pos)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr,abOf(u)):''}`;
 const head=(t,d,kick)=>`<header class="head">${kick?`<div class="kick">${kick}</div>`:''}<h1>${t}</h1>${d?`<p>${d}</p>`:''}</header>`;
 const SCN={prologue:'시작 안내',awaken:'각성 등급 판정',create:'각성자 등록',map:'지도',battle:'전투',reward:'보상',recruit:'헌터 영입',shop:'협회 상점',rest:'안전 지대',event:'돌발 퀘스트',end:'결과'};
@@ -5217,9 +5231,9 @@ const srt=l=>{
 };
 const canUsePromotionArt=u=>!B&&S.arts.includes('diploma')&&S.party.includes(u)&&!isLockedNpc(u)&&GRADES.indexOf(u.tier)>=0&&u.tier!=='S';
 function partyOv(){
- const row=(u,w)=>`<div class="pl ${u.isP?'me':''} ${alive(u)?'':'downed'}">${badge(u)}<div class="info"><b>${esc(u.name)}</b> ${meTag(u)} <b>${gname(u.tier)}</b> ${downTag(u)} <span class="small mute">Lv${u.lvl} · EXP ${u.exp}/${expNeed(u.lvl)} · HP ${u.hp}/${u.maxHp}</span><div class="small mute">${tags(u)}</div><div class="dline">${dstr(u.dice,u)} = ${totalBudget(u)} · ${presetTxt(u)}</div></div>
+ const row=(u,w)=>`<div class="pl ${u.isP?'me':''} ${alive(u)?'':'downed'}"><button type="button" class="pl-open pl-ic" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기" aria-label="${esc(u.name)} 프로필·스탯 보기">${badge(u)}</button><div class="info"><button type="button" class="pl-open pl-nm" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기"><b>${esc(u.name)}</b></button> ${meTag(u)} <b>${gname(u.tier)}</b> ${downTag(u)} <span class="small mute">Lv${u.lvl} · EXP ${u.exp}/${expNeed(u.lvl)} · HP ${u.hp}/${u.maxHp}</span><div class="small mute">${tags(u)}</div><div class="dline">${dstr(u.dice,u)} = ${totalBudget(u)} · ${presetTxt(u)}</div></div>
 
- ${hunterStoryButton(u)}<button class="ghost" data-act="editopen" data-v="${u.id}">프로필·스탯</button>${promoHTML(u)}
+ ${hunterStoryButton(u)}${promoHTML(u)}
  ${u.isP?'':`${w==='p'?`<button class="ghost" data-act="tobench" data-v="${u.id}">대기실로</button>`:`<button class="ghost" data-act="deploy" data-v="${u.id}" ${S.party.length>=partyLimit()?'disabled title="출전 파티가 가득 찼습니다."':''}>출전</button>`}<button class="ghost ${S.confirm==u.id?'on':''}" data-act="release" data-v="${u.id}">${S.confirm==u.id?'정말 방출':'방출'}</button>`}</div>`;
  return `<div class="ov" data-k="party"><div class="win common-modal" data-t="파티 관리"><div class="common-modal-bar"><strong>파티 관리 · 최대 ${partyLimit()}명 출전</strong><button class="ghost" data-act="party">닫기</button></div>
  <p class="small">회복 포션 <b>${S.potions}</b>개 · 영입권 ${S.tickets.length?S.tickets.map((g,i)=>`<span class="tk-t" data-tip="헌터 영입에서 사용">${gname(g)}</span>`).join(' '):'<b>0</b>장'}</p>
