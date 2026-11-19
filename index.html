@@ -10,7 +10,7 @@
 /*
   LOST ver.2 — 스타일시트
   가운데 고정 창(지도·전투·상점·영입) + 옮기고 크기를 바꿀 수 있는 작은 창(출전 파티·아티팩트·가방).
-  가운데 창 기본 폭 880px(양옆 가장자리를 끌어 넓힐 수 있음), 높이는 화면에 맞춤.
+  가운데 창 기본 폭 940px(양옆 가장자리를 끌어 넓힐 수 있음), 높이는 화면에 맞춤.
   테마 8종: w98 윈도우 98 · message 아이메시지 · diary 다이어리 · ops 전술 관제실 · receipt 영수증
             · channel 모던 채널 · comic 팝아트 만화 · greenhouse 유리 온실
   색은 설정에서 테마색·강조색·배경색으로 고릅니다('추천'은 원래 테마 색, 흑백은 흑 → 백으로 바뀜).
@@ -1515,7 +1515,8 @@ body>.map-popup-layer .map-popup-body .head .kick{display:none}
 /* 도감 고유 특성: 요약 아래 상세 설명 */
 .dex-panel .trait-sum{display:block;font-weight:600}
 .dex-panel .trait-more{display:block;margin-top:4px}
-:is(#app,body) .dex-panel .dex-scroll .dx .small :is(.trait-sum,.trait-more){word-break:inherit;line-break:inherit;text-align:inherit;text-align-last:inherit}
+.dex-panel .trait-one{display:block}.dex-panel .trait-one+.trait-one{margin-top:8px}
+:is(#app,body) .dex-panel .dex-scroll .dx .small :is(.trait-sum,.trait-more,.trait-one){word-break:inherit;line-break:inherit;text-align:inherit;text-align-last:inherit}
 
 /* 헌터 생성/영입: 설명창은 원래 정렬을 유지하고 선택 버튼의 부가 설명만 중앙 정렬. */
 #app .mainwin .cr .chips .choice-chip .choice-sub{
@@ -1564,7 +1565,7 @@ body>.map-popup-layer>.dock-win .mini:last-of-type{margin-bottom:6px}
 
 /* ========== 21. 좁은 큰 화면 · 가로 지도 · 작은 창 크기 조절 ========== */
 /* 큰 화면(고정)은 폭을 줄여 양옆에 작은 창을 띄워 둘 자리를 남깁니다. */
-html .mainwin,html[data-skin=receipt] .mainwin{width:880px}
+html .mainwin,html[data-skin=receipt] .mainwin{width:940px}
 /* 가로 지도: 왼쪽 시작 → 오른쪽 보스 */
 .win.map>.mapsc>.mapin.map-h{max-height:max(var(--mh),min(100%,calc(var(--mh) * 1.35)))}
 .win.map>.mapsc{display:flex;align-items:center}
@@ -1625,8 +1626,6 @@ body>.map-popup-layer.ov-open>.dock-win{pointer-events:none;opacity:.72;filter:s
 
 /* ========== 23. 가방(지갑) 창 · 보상 표시 ========== */
 body>.map-popup-layer>.dock-win[data-dock=bag]{width:300px;max-height:min(78dvh,720px)}
-body>.map-popup-layer>.dock-win[data-dock=bag].has-reward{z-index:3;box-shadow:0 0 0 2px var(--acc),0 10px 30px rgba(0,0,0,.35)}
-body>.map-popup-layer>.dock-win[data-dock=bag].has-reward.popup-sized{width:auto}
 .dock-win .bag{display:flex;flex-direction:column;gap:6px}
 .dock-win .bag-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--soft);background:var(--paper)}
 .dock-win .bag-row .ae{display:grid;place-items:center}
@@ -1681,6 +1680,11 @@ html:is([data-skin=w98],[data-skin=message],[data-skin=receipt],[data-skin=ops],
 /* 첫 헌터 등록: 오른쪽 프로필 칸을 왼쪽 열 높이에 맞춰 늘리지 않고, 내용 끝에서 등록 버튼이 이어지게 한다 */
 .cr.cr-split>.cr-side:has(>.cr-actions>[data-act=start]){align-self:start}
 .cr.cr-split>.cr-side:has(>.cr-actions>[data-act=start])>.cr-actions{margin-top:12px}
+/* 프로필 칸 윗선을 이름 입력칸 윗선에 맞춘다(제목 줄 높이만큼 내림). 좁은 화면(한 열)에서는 적용하지 않는다 */
+@media (min-width:901px){
+.cr.cr-split>.cr-side:has(>.cr-actions>[data-act=start]){margin-top:23px}
+.cr.cr-split>.cr-side:has(>.cr-actions>[data-act=hire]){margin-top:28px}
+}
 /* 영입 화면: 영입·등급 다시 고르기 버튼을 한 줄에 */
 .cr.cr-split>.cr-side>.cr-actions:has(>[data-act=hire]){display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px;align-items:stretch}
 .cr.cr-split>.cr-side>.cr-actions:has(>[data-act=hire])>*{margin:0;min-width:0}
@@ -2168,7 +2172,6 @@ html[data-skin] .trait-opts .trait-opt:disabled{opacity:.75;cursor:default}
  body>.map-popup-layer>.dock-win .map-popup-body{overflow:auto;max-height:none;flex:1 1 auto}
  body>.map-popup-layer>.dock-win .map-popup-resize,body>.map-popup-layer>.dock-win .popup-grip{display:none}
  body>.map-popup-layer>.dock-win .map-popup-titlebar{cursor:default}
- body>.map-popup-layer>.dock-win.has-reward{max-height:calc(100vh - var(--tbh,52px) - 70px)}
  body>.map-popup-layer.ov-open>.dock-win,body>.map-popup-layer.ov-open~.win.turn.turn-pop{display:none!important}
  /* 지도 위에 뜨는 창(보상·돌발 퀘스트·안전 지대·헌터 영입): 화면 폭을 채우는 창 */
  body>.map-popup-layer>.map-popup-window:not(.dock-win){position:fixed!important;left:6px!important;right:6px!important;top:62px!important;bottom:calc(var(--tbh,52px) + 6px)!important;width:auto!important;height:auto!important;max-height:none!important;transform:none!important;display:flex;flex-direction:column}
@@ -3207,8 +3210,11 @@ function receiveHealing(u,amount){
 }
 const healText=r=>`HP +${r.hp}${r.shield?' · 보호막 +'+r.shield:''}`;
 
-/* 민첩 기대값 14 초과분마다 연속 행동 확률 +1%p. 최대 50%, 신속의 부츠 +4%p. */
+/* 민첩 기대값 14 초과분마다 연속 행동 확률 +1%p. 1회 판정당 최대 50%, 신속의 부츠 +4%p. */
 const extraTurnChance=u=>combatClamp((agiScore(u)-14)*.01+(u.side==='a'&&has('boots')?.04:0),0,.50);
+/* 민첩이 월등히 빠르면 한 라운드에 추가 행동을 거듭 얻을 수 있다. 판정마다 같은 확률로 다시 굴리되, 라운드당 추가 행동은 최대 MAX_EXTRA_TURNS회로 제한해 무한 연속을 막는다. */
+const MAX_EXTRA_TURNS=2;
+function extraTurnCount(u){let n=0;while(n<MAX_EXTRA_TURNS&&Math.random()<extraTurnChance(u))n++;return n}
 /* 한 번의 공격에 대해 빗맞음, 완전 회피, 스침, 일반, 치명타 중 하나만 선택. */
 function attackQuality(c,u,t,opening,duplicate){
  const a=agiScore(u),d=agiScore(t),rollDiff=(t._g||0)-(u._g||0);
@@ -3259,8 +3265,8 @@ function startRound(c){
  if(has('banner')){const t=lv.filter(u=>u.side==='a'&&u.pos===0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){t.shield=(t.shield||0)+positionShield(t,Math.ceil(t.maxHp*.05));L(c,`아티팩트 ${AR.banner.n} → ${nm(t)} 보호막 +${positionShield(t,Math.ceil(t.maxHp*.05))}`)}}
  for(const u of lv){const ag=rollPool(u,u.dice.agi,'agi',c);let g=ag.sum;for(const [v] of diceBonus(c,u,'agi',ag.sum))g+=v;const ap=k=>Math.round(ag.sum*k/100);if(debOn(c,u,'leth'))g-=ap(20);if(debOn(c,u,'frost'))g-=ap(15);if(u.side==='a'&&has('boots'))g+=ap(10);if(u.side==='a')g+=ap(extraTotal('agi',u));if(c.round===1&&u.side==='a'&&has('whistle'))g+=ap(15);if(c.round===1&&u.side==='e'&&has('bell'))g-=ap(15);u._g=g;u._ag=ag}
  const ordered=lv.slice().sort((a,b)=>b._g-a._g||Math.random()-.5);
- c.queue=ordered.flatMap(u=>!debOn(c,u,'leth')&&!debOn(c,u,'frost')&&Math.random()<extraTurnChance(u)?[u.id,u.id]:[u.id]);c.qi=0;
- for(let i=1;i<c.queue.length;i++)if(c.queue[i]===c.queue[i-1]){const u=unitC(c,c.queue[i]);L(c,`민첩 보너스 → ${nm(u)} 이번 라운드 연속 행동 1회`)}
+ c.queue=ordered.flatMap(u=>{if(debOn(c,u,'leth')||debOn(c,u,'frost'))return[u.id];const extra=extraTurnCount(u);return extra?Array(extra+1).fill(u.id):[u.id]});c.qi=0;
+ {let i=0;while(i<c.queue.length){let j=i+1;while(j<c.queue.length&&c.queue[j]===c.queue[i])j++;const extra=j-i-1;if(extra>0){const u=unitC(c,c.queue[i]);L(c,`민첩 보너스 → ${nm(u)} 이번 라운드 연속 행동 ${extra}회`)}i=j}}
  c.rec.order=c.queue.map(id=>{const u=unitC(c,id);return{name:u.name,side:u.side,g:u._g}});
 }
 /* 내 차례가 다시 오면 방어 태세가 끝나며 남은 방어로 반격 */
@@ -5024,7 +5030,7 @@ function creator(mode){
  <div class="grp"><h3>역할 <small>역할 효과</small></h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(r=>({...r,ic:roleIc(r.k)})),d.role,'','pick',fullFixed)}<p class="desc"><b>${ROLES[d.role].n}</b> ${ROLES[d.role].ab}</p></div>
  <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(d.attr,'pick',fullFixed)}${traitDescription(d.attr,true,abOf(d),'pick',fullFixed)}</div>
  </div>
- <aside class="win side-sticky cr-side" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · 스탯 총량 ${totalBudget(d)} · HP ${Math.ceil(Math.round(T.hp*(d.role==='tank'?1.2:1))*(mode==='npc'&&has('leaf')?1.15:1))}</div><p class="small mute" style="margin:6px 0 0">${tags(d)}</p></div></div>
+ <aside class="win side-sticky cr-side" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · Lv1 · ${tJob(d.job)} · ${totalBudget(d)} · HP ${Math.ceil(Math.round(T.hp*(d.role==='tank'?1.2:1))*(mode==='npc'&&has('leaf')?1.15:1))}</div><p class="small mute" style="margin:6px 0 0">${tPos(d.pos)} · ${tRole(d.role)}${d.attr?' · '+tAttr(d.attr,abOf(d)):''}</p></div></div>
  ${fixed?'':imgCtl('draft',d.img)}
  ${mode==='npc'&&!fixed?storyPreview(d):''}
  <p class="small warn">${fixed?'고정 NPC · 설정 잠금 · 자동 성장':'스탯 재분배 시 마석 소모'}</p>
@@ -5048,7 +5054,7 @@ function prologueScreen(){
 }
 function awakenScreen(){
  const W=S.aw,left=3-W.n;
- const card=(g,i,live)=>`<button class="gc ${g}" ${live?`data-act="awpick" data-v="${i}"`:'disabled'}><span class="gr">${g}</span><span class="small">스탯 총량 <b>${TIERS[g].b}</b> · HP <b>${TIERS[g].hp}</b></span>${live?'<span class="small mute">이 등급으로 각성</span>':''}</button>`;
+ const card=(g,i,live)=>`<button class="gc ${g}" ${live?`data-act="awpick" data-v="${i}"`:'disabled'}><span class="gr">${g}</span><span class="small"><b>${TIERS[g].b}</b> · HP <b>${TIERS[g].hp}</b></span>${live?'<span class="small mute">이 등급으로 각성</span>':''}</button>`;
  return saveBox()+head('각성 등급 판정','등급 1개 선택 · 최대 3번 판정.','SYSTEM')+`
  <div class="odds">${GRADES.filter(g=>TIERS[g].p>0).map(g=>`<span>${g} ${TIERS[g].p}%</span>`).join('')}</div>
  <h3 class="sub">${W.n}번째 판정</h3><div class="gacha">${W.opts.map((g,i)=>card(g,i,true)).join('')}</div>
@@ -5106,7 +5112,7 @@ function card(u){
  const g=u.guardBy&&unitC(B,u.guardBy);
  const st=[resonanceBadge(B,u),stanceAmount(u)?`<i class="tp stance-state" data-tip="${esc(GL.stance)}">방어 태세 ${stanceAmount(u)}</i>`:'',shieldAmount(u)?`<i class="tp shield-state" data-tip="${esc(GL.shield)}">보호막 ${shieldAmount(u)}</i>`:'',u.marks?TS(`각인 ${u.marks}`,'marks'):'',u.pat?TS(`인내 +${u.pat}`,'pat'):'',u.grind?TS(`근면 +${u.grind}`,'grind'):'',u.feast?TS(`포식 +${u.feast}`,'feast'):'',Object.keys(u.deb||{}).map(k=>DEBN[k]?`<i class="tp" data-tip="${esc((GL[k]||DEBN[k])+(u.debFrom?.[k]?' · 부여자: '+u.debFrom[k]:''))}">${DEBN[k]}</i>`:'').join(''),g&&liveU(g)?TS(`보호: ${esc(g.name)}`,'guard'):''].join('');
  const now=B.cur===u.id,sel=B.sel&&B.sel.a!=='def'&&B.sel.t===u.id;
- return `<div class="card ${alive(u)?'':'dead'} ${u.isP?'me':''} ${now?'now':''} ${sel?'aim':''}"><div class="hd">${badge(u)}<div class="card-name"><div class="nm">${esc(u.name)}${u.isP?' <span class="me-t">나</span>':''}${now?' <span class="nowt">차례</span>':''}</div><div class="tg">${tJob(u.job)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}</div>${u.side==='a'?`<div class="card-lv">Lv${u.lvl}</div>`:''}</div></div>
+ return `<div class="card ${alive(u)?'':'dead'} ${u.isP?'me':''} ${now?'now':''} ${sel?'aim':''}"><div class="hd">${badge(u)}<div class="card-name"><div class="nm">${esc(u.name)}${u.isP?' <span class="me-t">나</span>':''}${now?' <span class="nowt">차례</span>':''}</div>${u.side==='a'?`<div class="card-lv">${gname(u.tier)} · Lv${u.lvl}</div>`:''}<div class="tg">${tJob(u.job)} · ${tPos(u.pos)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}</div></div></div>
  <div class="dline">${dstr(u.dice,u)}</div>${hpb(u,false)}<div class="hpn"><span>HP</span><span>${u.hp}/${u.maxHp}</span></div>${alive(u)?pips(u):''}${st?`<div class="st">${st}</div>`:''}</div>`;
 }
 /* 전투 배치: 위아래로 아군(후열·중열·전열) → 적(전열·중열·후열). 두 전열이 가운데에서 마주 봅니다. */
@@ -5142,7 +5148,7 @@ const RULES=`<details><summary>전투 규칙</summary><ul class="ev">
 <li><b>공격 범위</b>: 근접은 적의 가장 앞 열, 원거리는 모든 열 지정 가능.</li>
 <li><b>배치</b>: 전열 피격 시 자원 +1(30%)·공격 스탯의 5% 반사(20%), 중열 적중 시 자원 +1(30%)·일반/스침 치명타 전환(20%), 후열 기술 소모 -1·확률로 추가 -1(25%). 앞 열은 근접 공격을 저지합니다.</li>
 <li><b>역할</b>: 탱커 위협도 5(방어 시 7), 딜러 3, 서포터 2. 서포터는 자동 치유.</li><li><b>초과 회복</b>: 포션 외 회복량이 최대 HP를 넘으면 남은 양이 보호막으로 쌓입니다. 보호막은 HP보다 먼저 피해를 막습니다.</li>
-<li><b>주사위</b>: 민첩 굴림으로 행동 순서 결정. 스침 피해 35%, 치명타 150%. 연속 행동 확률은 민첩 주사위 기대값의 14 초과분 × 1% (신속의 부츠 +4%p, 최대 50%).</li>
+<li><b>주사위</b>: 민첩 굴림으로 행동 순서 결정. 스침 피해 35%, 치명타 150%. 연속 행동 확률은 민첩 주사위 기대값의 14 초과분 × 1% (신속의 부츠 +4%p, 1회 판정당 최대 50%). 민첩이 월등히 빠르면 라운드당 최대 2회까지 거듭 추가 행동.</li>
 <li><b>공명</b>: 상반된 특성의 생존자 2명씩 발동.</li>
 <li><b>신뢰 연계</b>: 신뢰 4 이상인 두 아군(플레이어는 항상 충족) 중 한 명의 공격이 적중하면, 다른 한 명이 같은 적을 이어서 공격합니다. 둘 중 낮은 신뢰 기준 4: 15%·공격 기대값 40% / 6: 25%·50% / 8: 35%·60%·역할 자원 +1. 각자 라운드당 1회.</li>
 <li><b>역할 기술</b>: 아군 기본 3칸 소모(후열 2칸 · 확률로 1칸(25%)). 탱커: 대신 맞기, 서포터: 치유, 딜러: 기습.</li>
@@ -5234,7 +5240,7 @@ const srt=l=>{
 };
 const canUsePromotionArt=u=>!B&&S.arts.includes('diploma')&&S.party.includes(u)&&!isLockedNpc(u)&&GRADES.indexOf(u.tier)>=0&&u.tier!=='S';
 function partyOv(){
- const row=(u,w)=>`<div class="pl ${u.isP?'me':''} ${alive(u)?'':'downed'}"><button type="button" class="pl-open pl-ic" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기" aria-label="${esc(u.name)} 프로필·스탯 보기">${badge(u)}</button><div class="info"><button type="button" class="pl-open pl-nm" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기"><b>${esc(u.name)}</b></button> ${meTag(u)} <b>${gname(u.tier)}</b> ${downTag(u)} <span class="small mute">Lv${u.lvl} · EXP ${u.exp}/${expNeed(u.lvl)} · HP ${u.hp}/${u.maxHp}</span><div class="small mute">${tags(u)}</div><div class="dline">${dstr(u.dice,u)} = ${totalBudget(u)} · ${presetTxt(u)}</div></div>
+ const row=(u,w)=>`<div class="pl ${u.isP?'me':''} ${alive(u)?'':'downed'}"><button type="button" class="pl-open pl-ic" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기" aria-label="${esc(u.name)} 프로필·스탯 보기">${badge(u)}</button><div class="info"><button type="button" class="pl-open pl-nm" data-act="editopen" data-v="${u.id}" title="프로필·스탯 보기"><b>${esc(u.name)}</b></button> ${meTag(u)} <b>${gname(u.tier)}</b> ${downTag(u)} <span class="small mute">Lv${u.lvl} · ${tJob(u.job)} · EXP ${u.exp}/${expNeed(u.lvl)} · HP ${u.hp}/${u.maxHp}</span><div class="small mute">${tPos(u.pos)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr,abOf(u)):''}</div><div class="dline">${dstr(u.dice,u)} = ${totalBudget(u)} · ${presetTxt(u)}</div></div>
 
  ${hunterStoryButton(u)}${promoHTML(u)}
  ${u.isP?'':`${w==='p'?`<button class="ghost" data-act="tobench" data-v="${u.id}">대기실로</button>`:`<button class="ghost" data-act="deploy" data-v="${u.id}" ${S.party.length>=partyLimit()?'disabled title="출전 파티가 가득 찼습니다."':''}>출전</button>`}<button class="ghost ${S.confirm==u.id?'on':''}" data-act="release" data-v="${u.id}">${S.confirm==u.id?'정말 방출':'방출'}</button>`}</div>`;
@@ -5268,8 +5274,8 @@ function editOv(){
  return `<div class="ov" data-k="edit${u.id}"><div class="win common-modal profwin ${u.isP?'me':''}" data-t="프로필 — ${esc(u.name)}"><div class="common-modal-bar"><strong>${esc(u.name)} ${meTag(u)}${downTag(u)}</strong>${E.must&&!locked?'':'<button class="ghost" data-act="editclose">닫기</button>'}</div>
  <div class="prof" style="margin-top:10px">${avatar({...u,img:E.img},104,'edit')}<div style="flex:1;min-width:0"><input type="text" id="ednm" maxlength="12" value="${esc(E.name!=null?E.name:u.name)}" aria-label="이름" ${locked?'readonly title="고정 NPC 이름은 변경할 수 없습니다."':''}>${locked?'':imgCtl('edit',E.img)}</div></div>
  <div class="pinfo">
-  <div><span class="mute">등급</span><b>${gname(u.tier)}</b></div><div><span class="mute">레벨</span><b>Lv ${u.lvl}</b> <small class="mute">EXP ${u.exp}/${expNeed(u.lvl)}</small></div><div><span class="mute">HP</span><b>${u.hp} / ${u.maxHp}</b></div><div><span class="mute">강화</span><b>${u.up}회</b> <small class="mute">총량 ${totalBudget(u)}</small></div>
-  <div><span class="mute">직업</span><b>${jobIc(u.job,16)} ${tJob(u.job)}</b></div><div><span class="mute">배치</span><b>${posIc(u.pos,15)} ${tPos(u.pos)}</b></div><div><span class="mute">역할</span><b>${roleIc(u.role,16)} ${tRole(u.role)}</b></div><div><span class="mute">특성</span><b>${sigSvg(u.attr)} ${tAttr(u.attr)}</b></div>
+  <div><span class="mute">등급</span><b>${gname(u.tier)}</b></div><div><span class="mute">레벨</span><b>Lv ${u.lvl}</b> <small class="mute">EXP ${u.exp}/${expNeed(u.lvl)}</small></div><div><span class="mute">직업</span><b>${jobIc(u.job,16)} ${tJob(u.job)}</b></div><div><span class="mute">HP</span><b>${u.hp} / ${u.maxHp}</b></div>
+  <div><span class="mute">배치</span><b>${posIc(u.pos,15)} ${tPos(u.pos)}</b></div><div><span class="mute">역할</span><b>${roleIc(u.role,16)} ${tRole(u.role)}</b></div><div><span class="mute">특성</span><b>${sigSvg(u.attr)} ${tAttr(u.attr)}</b></div><div><span class="mute">강화</span><b>${u.up}회</b> <small class="mute">총량 ${totalBudget(u)}</small></div>
   <div class="wide2"><span class="mute">분배형</span><b>${presetTxt(u)}</b> <small class="mute">${dstr(u.dice,u)}${lb?` · 레벨 업으로 총량 +${lb*LVB} (분배형에 맞춰 자동 재분배)`:''}</small></div>
  </div>
  <h3 class="sub l">기본 설정 변경</h3>${respecHTML(E,u)}
@@ -5288,7 +5294,7 @@ function dexOv(){
   body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시</p><div class="dxg">${ARTS.map(one).join('')}</div>`}
  else if(tab==='item')body=`<div class="dxg">${seen('potion')?ent(px('potion'),'회복 포션','HP 40% 회복 · 전투 중 행동 1회 소모'):unk()}${seen('ticket')?ent(px('ticket'),'영입권','지정 등급 헌터 1명 무료 영입'):unk()}${ent(px('gold'),'마석','영입·상점·강화 등에 사용')}${ent(px('exp'),'경험치','출전 인원 획득 · 레벨 업 시 HP +10, 스탯 +'+LVB+' (자동 분배).')}</div>`;
  else if(tab==='role')body=`<h3 class="sub l">직업 효과 · 4종</h3><div class="dxg">${Object.entries(JOBS).map(([r,k])=>ent(jobIc(r,26),`${k.n} — ${k.sub}`,`${k.tr}<br><b>고유 효과:</b> ${k.ab}`)).join('')}</div><h3 class="sub l">포지션 · 3종</h3><div class="dxg">${POS.map(p=>ent(posIc(p.k,26),`${p.n} — ${p.sub}`,p.ab)).join('')}</div><p class="small mute">위협도: 탱커 5(방어 시 7) · 딜러 3 · 서포터 2</p><h3 class="sub l">역할 기술 · 3종</h3><div class="dxg">${Object.entries(SKILL).map(([r,k])=>ent(roleIc(r,26),`${ROLES[r].n} — ${k.n}`,`${ROLES[r].ab}<br><b>${k.r}</b> 기본 소모 ${RMAX}칸(후열 ${RMAX-1}칸 · 확률로 ${RMAX-2}칸(25%) · 적은 기본 ${RMAX_E}칸) · ${k.d}`)).join('')}</div>`;
- else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].opts.map(o=>`<span class="trait-sum">「${o.n}」 ${o.ab}</span><span class="trait-more">${o.d}</span>`).join(''))).join('')}</div></section>`).join('')}</div>`;
+ else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].opts.map(o=>`<span class="trait-one"><b>「${o.n}」</b> ${o.d}</span>`).join(''))).join('')}</div></section>`).join('')}</div>`;
  return `<div class="ov" data-k="dex"><div class="win common-modal dex-panel" data-t="도감"><div class="common-modal-bar"><strong>도감</strong><button class="ghost" data-act="dex">닫기</button></div>
  <div class="seg dxtab">${Object.entries(DEXT).map(([k,v])=>`<button class="${tab===k?'on':''}" data-act="dextab" data-v="${k}">${v}</button>`).join('')}</div><div class="dex-scroll" tabindex="0" role="region" aria-label="도감 내용">${body}</div></div></div>`;
 }
@@ -5371,7 +5377,7 @@ const DOCK_KEY='afterglow-dock';
 const DOCKS={party:{t:()=>`출전 파티 ${S.party.length}/${partyLimit()}`,body:()=>`${S.party.map(mini).join('')}${resonanceSummary(S.party)}${S.bench.length?`<p class="small mute">대기실 ${S.bench.length}명: ${S.bench.map(u=>esc(u.name)).join(', ')}</p>`:''}`},
  arts:{t:()=>`아티팩트 ${S.arts.length}`,body:()=>artList()},
  /* 가방: 늘 떠 있는 창. 보상이 있으면 보상 창, 없으면 지갑·가방으로 씁니다. */
- bag:{t:()=>S.screen==='reward'?(S.reward?.kind==='chest'?'보물 상자':'전투 보상'):'가방',body:()=>S.screen==='reward'?`${S.msg?`<p class="msg">${S.msg}</p>`:''}${rewardScreen()}`:bagHTML()}};
+ bag:{t:()=>'가방',body:()=>bagHTML()}};
 function bagHTML(){
  const tk={};S.tickets.forEach(g=>tk[g]=(tk[g]||0)+1);
  const row=(ic,n,v,sub='',act='')=>`<${act?'button type="button"':'div'} class="bag-row${act?' bag-btn'+(dock.arts.open?' on':''):''}" ${act}><span class="ae">${ic}</span><span class="bag-n">${n}${sub?`<small>${sub}</small>`:''}</span><b>${v}</b></${act?'button':'div'}>`;
@@ -5380,16 +5386,16 @@ function bagHTML(){
 const BAG_ALWAYS_KEY='afterglow-bag-always';let bagAlways=false;try{bagAlways=localStorage.getItem(BAG_ALWAYS_KEY)==='1'}catch(e){}
 let bagPotOpen=false;
 /* 가방은 '항상 가방 켜기'가 ON이거나 보상을 받을 때 닫을 수 없습니다. */
-const dockFixed=k=>k==='bag'&&(bagAlways&&!isMob()||S.screen==='reward');
+const dockFixed=k=>k==='bag'&&bagAlways&&!isMob();
 let dock={party:{open:true,x:null,y:null,w:0,h:0},arts:{open:true,x:null,y:null,w:0,h:0,placement:'below-party'},bag:{open:true,x:null,y:null,w:0,h:0}},dockDrag=null;
 /* 저장된 창 상태가 없고 큰 화면 양옆에 자리가 없으면(태블릿 등) 작은 창은 닫힌 채 시작합니다. 파티 목록 버튼·가방 버블로 엽니다. */
-if(typeof window!=='undefined'&&typeof window.innerWidth==='number'&&window.innerWidth<880*1+2*312&&!(()=>{try{return localStorage.getItem(DOCK_KEY)}catch(e){return null}})())for(const k in dock)dock[k].open=false;
+if(typeof window!=='undefined'&&typeof window.innerWidth==='number'&&window.innerWidth<940*1+2*312&&!(()=>{try{return localStorage.getItem(DOCK_KEY)}catch(e){return null}})())for(const k in dock)dock[k].open=false;
 try{const v=JSON.parse(localStorage.getItem(DOCK_KEY)||'null');if(v)for(const k in dock)if(v[k]){dock[k]={open:v[k].open!==false,x:Number.isFinite(v[k].x)?v[k].x:null,y:Number.isFinite(v[k].y)?v[k].y:null,w:+v[k].w||0,h:+v[k].h||0};if(k==='arts')dock[k].placement=v[k].placement==='free'?'free':'below-party'}}catch(e){}
 const saveDock=()=>{try{localStorage.setItem(DOCK_KEY,JSON.stringify(dock))}catch(e){}};
 const BAG_ICON='<svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><path d="M11 10V8a5 5 0 0 1 10 0v2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M6.5 11h19l-1.6 14.2A3 3 0 0 1 20.9 28H11.1a3 3 0 0 1-3-2.8L6.5 11Z" fill="currentColor" opacity=".9"/><path d="M12 16.5h8" stroke="var(--face,#fff)" stroke-width="2" stroke-linecap="round"/></svg>';
 const dockAvail=()=>!!S.map&&(['map','battle','shop','recruit'].includes(S.screen)||isMapPopup());
 function dockHTML(){
- return Object.keys(DOCKS).filter(k=>dock[k].open||dockFixed(k)).map(k=>`<section class="map-popup-window dock-win ${k==='bag'&&S.screen==='reward'?'has-reward':''}" data-dock="${k}" ${k==='bag'&&S.screen==='reward'?'data-screen="reward"':''} role="dialog" aria-modal="false" aria-label="${DOCKS[k].t()}">
+ return Object.keys(DOCKS).filter(k=>dock[k].open||dockFixed(k)).map(k=>`<section class="map-popup-window dock-win" data-dock="${k}" role="dialog" aria-modal="false" aria-label="${DOCKS[k].t()}">
  <div class="map-popup-titlebar" aria-label="${DOCKS[k].t()} 창 이동"><span class="popup-grip" aria-hidden="true">⠿</span><span class="popup-caption">${DOCKS[k].t()}</span>${k==='party'?`<button class="popup-gear" type="button" data-act="party" aria-label="파티원 관리" title="파티원 관리">${GEAR}</button>`:''}${dockFixed(k)?'':`<button class="popup-close" type="button" data-act="dock" data-v="${k}" aria-label="창 닫기" title="닫기">×</button>`}</div>
  <div class="map-popup-body">${DOCKS[k].body()}</div>
  <div class="map-popup-resize" title="창 크기 조절" aria-label="창 크기 조절" role="separator" tabindex="0"><span aria-hidden="true">◢</span></div></section>`).join('');
@@ -5463,10 +5469,10 @@ function updatePopupPosition(){
 }
 
 const MAINW_KEY='afterglow-main-width';let mainW=0;try{mainW=+localStorage.getItem(MAINW_KEY)||0}catch(e){}
-/* 가운데 큰 창은 옮길 수 없고, 양옆 가장자리를 끌어 가로 폭만 넓힐 수 있습니다(기본 880px보다 좁아지지 않음). 안의 칸들은 폭에 비례해 함께 넓어집니다. */
+/* 가운데 큰 창은 옮길 수 없고, 양옆 가장자리를 끌어 가로 폭만 넓힐 수 있습니다(기본 940px보다 좁아지지 않음). 안의 칸들은 폭에 비례해 함께 넓어집니다. */
 const uiSc=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale'))||1;
-const maxMainW=()=>Math.max(880,Math.floor((window.innerWidth-16)/uiSc()));
-function applyMainW(){const m=document.querySelector('#app .mainwin');if(!m)return;const w=mainW?Math.min(Math.max(880,mainW),maxMainW()):0;if(w>880){m.style.width=w+'px';m.classList.add('mw-sized')}else{m.style.width='';m.classList.remove('mw-sized')}m.style.setProperty('--mw-extra',Math.max(0,(w||880)-880)+'px');for(const k in SPLIT_DEF)m.style.setProperty('--sp-'+k,String(splits[k]??SPLIT_DEF[k]));try{placeBagDefault()}catch(_){}}
+const maxMainW=()=>Math.max(940,Math.floor((window.innerWidth-16)/uiSc()));
+function applyMainW(){const m=document.querySelector('#app .mainwin');if(!m)return;const w=mainW?Math.min(Math.max(940,mainW),maxMainW()):0;if(w>880){m.style.width=w+'px';m.classList.add('mw-sized')}else{m.style.width='';m.classList.remove('mw-sized')}m.style.setProperty('--mw-extra',Math.max(0,(w||880)-880)+'px');for(const k in SPLIT_DEF)m.style.setProperty('--sp-'+k,String(splits[k]??SPLIT_DEF[k]));try{placeBagDefault()}catch(_){}}
 /* 넓힌 폭(기본보다 늘어난 만큼)을 두 칸이 나눠 갖는 비율. 0이면 늘어난 폭을 모두 오른쪽, 1이면 모두 왼쪽에. 각 칸은 기본 크기보다 작아지지 않습니다. */
 const SPLIT_KEY='afterglow-splits',SPLIT_DEF={battle:.668,cr:.57},SPLIT_MIN={battle:270,cr:350};let splits={};try{splits=JSON.parse(localStorage.getItem(SPLIT_KEY)||'{}')||{}}catch(e){}
 let splitDrag=null;
@@ -5482,12 +5488,12 @@ function render(){
  const ov0=document.querySelector('.ov .win'),ovK=ov0&&ov0.parentNode.dataset.k,ovT=ov0?ov0.scrollTop:0,dx0=ovK==='dex'?ov0.querySelector('.dex-scroll'):null,dxT=dx0?dx0.scrollTop:0,settingsBody0=ovK==='set'?ov0.querySelector('.settings-body'):null,settingsScroll= settingsBody0?settingsBody0.scrollTop:0,oldDexTab=ovK==='dex'?(S.dexTab||'art'):null,w0=document.querySelector('main.wrap'),wT=w0?w0.scrollTop:0;
  const priorPop=document.querySelector('.map-popup-window:not(.dock-win) .map-popup-body'),priorPopScroll=priorPop?.scrollTop||0;
  const ms0=document.querySelector('.win.map>.mapsc'),mapScrollKey=S.map?S.floor+':'+S.screen:'',mapScroll0=ms0&&ms0.dataset.k===String(S.floor)?ms0.scrollLeft:null,mapScrollT0=ms0&&ms0.dataset.k===String(S.floor)?ms0.scrollTop:null;
- const dockScroll={};(document.querySelectorAll?document.querySelectorAll('.dock-win'):[]).forEach(w=>{if(w.dataset.dock==='bag'&&w.classList.contains('has-reward')!==(S.screen==='reward'))return;dockScroll[w.dataset.dock]=w.querySelector('.map-popup-body')?.scrollTop||0});
+ const dockScroll={};(document.querySelectorAll?document.querySelectorAll('.dock-win'):[]).forEach(w=>{dockScroll[w.dataset.dock]=w.querySelector('.map-popup-body')?.scrollTop||0});
  const key=popupIdentity(),samePopup=!!key&&lastPopupKey===key;
  if(key!==lastPopupKey)lastPopupKey=key;
  const popup=isMapPopup(),content=sc(),mainContent=popup?mapScreen():content;
  document.querySelector('body>.map-popup-layer')?.remove();
- document.getElementById('app').innerHTML=CREST_DEFS+`<div class="mainwin"><div class="mw-handle" data-side="l" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div><div class="mw-handle" data-side="r" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div>${top()}<main class="wrap scr-${popup?'map':S.screen} ${popup?'map-behind-popup':''}">${!popup&&S.msg?`<p class="msg">${S.msg}</p>`:''}${mainContent}</main><div class="status">${dockAvail()?`<button class="status-party ${dock.party.open?'on':''}" data-act="dock" data-v="party" title="출전 파티 창 ${dock.party.open?'닫기':'열기'}">${mi('recruit')} <span class="tb-l">파티 목록</span><span class="tb-s">파티</span></button><button class="status-party tb-mob ${dock.bag.open||dockFixed('bag')?'on':''}" data-act="dock" data-v="bag" title="가방">${BAG_ICON.replace('width="26" height="26"','width="18" height="18"')} 가방</button><button class="status-party tb-mob ${dock.arts.open?'on':''}" data-act="dock" data-v="arts" title="아티팩트">${px('artifact',18)} 유물 ${S.arts.length}</button>`:`<span>${SCN[S.screen]}</span>`}<span>${S.party.length?esc(P().name)+' · '+gname(P().tier)+' · Lv'+P().lvl:'LOST'}</span><span>최고 ${floorLabel(S.stats.best)}${lastSave?' · 자동 저장 '+hhmm(lastSave):''}</span></div>${popup&&S.screen!=='reward'?popupHTML(content):''}${S.showSet?settingsOv():S.showDex?dexOv():S.showStory?storyOv():S.edit?editOv():S.showParty?partyOv():''}</div>`;
+ document.getElementById('app').innerHTML=CREST_DEFS+`<div class="mainwin"><div class="mw-handle" data-side="l" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div><div class="mw-handle" data-side="r" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div>${top()}<main class="wrap scr-${popup?'map':S.screen} ${popup?'map-behind-popup':''}">${!popup&&S.msg?`<p class="msg">${S.msg}</p>`:''}${mainContent}</main><div class="status">${dockAvail()?`<button class="status-party ${dock.party.open?'on':''}" data-act="dock" data-v="party" title="출전 파티 창 ${dock.party.open?'닫기':'열기'}">${mi('recruit')} <span class="tb-l">파티 목록</span><span class="tb-s">파티</span></button><button class="status-party tb-mob ${dock.bag.open||dockFixed('bag')?'on':''}" data-act="dock" data-v="bag" title="가방">${BAG_ICON.replace('width="26" height="26"','width="18" height="18"')} 가방</button><button class="status-party tb-mob ${dock.arts.open?'on':''}" data-act="dock" data-v="arts" title="아티팩트">${px('artifact',18)} 유물 ${S.arts.length}</button>`:`<span>${SCN[S.screen]}</span>`}<span>${S.party.length?esc(P().name)+' · '+gname(P().tier)+' · Lv'+P().lvl:'LOST'}</span><span>최고 ${floorLabel(S.stats.best)}${lastSave?' · 자동 저장 '+hhmm(lastSave):''}</span></div>${popup?popupHTML(content):''}${S.showSet?settingsOv():S.showDex?dexOv():S.showStory?storyOv():S.edit?editOv():S.showParty?partyOv():''}</div>`;
  {const w1=document.querySelector('main.wrap');if(w1)w1.scrollTop=SCROLL0?0:wT;SCROLL0=false}
  {const ov1=document.querySelector('.ov .win');if(ov1&&ovK&&ov1.parentNode.dataset.k===ovK){ov1.scrollTop=ovT;const dx1=ov1.querySelector('.dex-scroll');if(dx0&&dx1&&oldDexTab===(S.dexTab||'art'))dx1.scrollTop=dxT;const settingsBody1=ov1.querySelector('.settings-body');if(settingsBody0&&settingsBody1)settingsBody1.scrollTop=settingsScroll}}
  if(popup){
@@ -5707,7 +5713,7 @@ document.addEventListener('pointerup',e=>{if(splitDrag&&e.pointerId===splitDrag.
 document.addEventListener('dblclick',e=>{const h=e.target.closest&&e.target.closest('.split-h');if(!h)return;delete splits[h.dataset.split];try{localStorage.setItem(SPLIT_KEY,JSON.stringify(splits))}catch(_){};applyMainW()});
 document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.mw-handle');if(!h||e.button!==0)return;const m=document.querySelector('#app .mainwin');mainDrag={id:e.pointerId,x:e.clientX,w:m.offsetWidth,sc:uiSc(),side:h.dataset.side};try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
 document.addEventListener('pointermove',e=>{
- if(mainDrag&&e.pointerId===mainDrag.id){const dx=(e.clientX-mainDrag.x)/mainDrag.sc*(mainDrag.side==='l'?-1:1)*2;mainW=Math.round(Math.max(880,Math.min(maxMainW(),mainDrag.w+dx)));applyMainW();return}
+ if(mainDrag&&e.pointerId===mainDrag.id){const dx=(e.clientX-mainDrag.x)/mainDrag.sc*(mainDrag.side==='l'?-1:1)*2;mainW=Math.round(Math.max(940,Math.min(maxMainW(),mainDrag.w+dx)));applyMainW();return}
  if(dockDrag&&e.pointerId===dockDrag.id){const d=dock[dockDrag.k],W=dockDrag.win;
   if(dockDrag.mode==='resize'){const z=clampDockSize(dockDrag.w+e.clientX-dockDrag.x,dockDrag.h+e.clientY-dockDrag.y);d.w=z.w;d.h=z.h;W.classList.add('popup-sized');W.style.width=z.w+'px';W.style.height=z.h+'px';return}
   if(dockDrag.k==='arts'&&(e.clientX!==dockDrag.x||e.clientY!==dockDrag.y))d.placement='free';
