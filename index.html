@@ -806,7 +806,7 @@ html[data-skin=receipt] .mainwin>main.wrap.scr-map{padding-bottom:10px}
 /* 공명: 선택·편성·전투에 공통으로 쓰는 특성 정보 */
 .trait-pairs{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
 .trait-pairs .chips.choice-attr{grid-template-columns:minmax(0,1fr);gap:5px}
-.chips .choice-chip.pair-match{outline:1px dashed currentColor;outline-offset:-4px}
+html[data-skin] .chips .choice-chip.pair-match{outline:none;background:color-mix(in srgb,var(--acc) 28%,var(--face,transparent))}
 .resonance-detail,.resonance-summary{border:1px solid var(--line);border-radius:var(--rad);background:var(--paper);color:var(--ink)}
 .resonance-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
 .resonance-heading>span{font-size:12px;font-weight:700}
@@ -2130,7 +2130,7 @@ html[data-skin=channel] #app .mainwin>main.wrap.scr-battle .bt-log .bt-fin{borde
 .trait-opts .trait-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:7px 9px;white-space:normal;line-height:1.35;height:auto}
 .trait-opts .trait-opt b{font-size:13px}
 .trait-opts .trait-opt span{font-size:12px;opacity:.9;text-align:left;word-break:keep-all}
-html[data-skin] .trait-opts .trait-opt.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 35%,transparent)}
+html[data-skin] .trait-opts .trait-opt.on{box-shadow:inset 0 0 0 2px currentColor}
 html[data-skin] .trait-opts .trait-opt:disabled{opacity:.75;cursor:default}
 @media(max-width:520px){.trait-opts{grid-template-columns:1fr}}
 
@@ -2212,6 +2212,9 @@ html[data-skin] .trait-opts .trait-opt:disabled{opacity:.75;cursor:default}
  #app .mainwin>main.wrap .win.map>.mapsc{overflow-x:auto;max-width:100%}
 
 }
+/* 전투 화면: 내려서 볼 수는 있지만 스크롤바는 표시하지 않음 */
+#app .mainwin main.wrap.scr-battle{scrollbar-width:none;-ms-overflow-style:none}
+#app .mainwin main.wrap.scr-battle::-webkit-scrollbar{display:none;width:0;height:0}
 </style>
 </head>
 <body>
@@ -2228,8 +2231,8 @@ const HAS_DOM=typeof document.querySelectorAll==='function';
 const DICE=[2,4,6,8,12,20,24,30,48,60];
 const PO={atk:{n:5,l:'공격'},def:{n:5,l:'방어'},agi:{n:3,l:'민첩'}};
 const JOBS={
- warrior:{n:'집행자',sub:'근접 물리',melee:1,magic:0,tr:'근접 물리 · 피해 +20% · 공격값 +3',ab:'연격: 같은 눈 2개 이상·HP 피해 시 최고 눈만큼 추가 피해'},
- spell:{n:'침식자',sub:'근접 마법',melee:1,magic:1,tr:'근접 마법 · 피해 +20% · 방어 태세 소모 ×2',ab:'마력 각인: HP 피해마다 1중첩, 3중첩 시 피해 +20'},
+ warrior:{n:'집행자',sub:'근접 물리',melee:1,magic:0,tr:'근접 물리 · 피해 +20% · 공격 주사위 +6%',ab:'연격: 같은 눈 2개 이상·HP 피해 시 최고 눈만큼 추가 피해'},
+ spell:{n:'침식자',sub:'근접 마법',melee:1,magic:1,tr:'근접 마법 · 피해 +20% · 방어 태세 소모 ×2',ab:'마력 각인: HP 피해마다 1중첩, 3중첩 시 대상 최대 HP 10% 피해'},
  archer:{n:'추적자',sub:'원거리 물리',melee:0,magic:0,tr:'원거리 물리 · 전열 저지 무시',ab:'관통: 방어 태세 흡수량의 25% 추가 피해'},
  mage:{n:'구현자',sub:'원거리 마법',melee:0,magic:1,tr:'원거리 마법 · 전열 저지 무시 · 방어 태세 소모 ×2',ab:'광역: 공격값 35 이상 시 같은 열 다른 적에게 1/3 피해'}
 };
@@ -2240,7 +2243,7 @@ const POS=[
 ];
 const ROLES={
  dealer:{k:'dealer',n:'딜러',threat:3,sub:'화력 집중',ab:'위협도 3 · 공격 피해 +15% · 처치 시 살기 +1 · 기습'},
- tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 방어 +5 · 같은 열 엄호 · 결의 +1'},
+ tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 방어 주사위 +12% · 같은 열 엄호 · 결의 +1'},
  support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -30% · 자동 치유 · 은총 +1'}
 };
 /* 역할 선택지 표시 순서 */
@@ -2248,13 +2251,13 @@ const ROLE_ORDER=['tank','dealer','support'];
 const ATTRS=[
  {k:'pride',n:'오만',sin:1,opts:[
   {n:'고고한 일격',ab:'HP 80% 이상: 공격 주사위 +45%',d:'공격할 때 현재 HP가 최대 HP의 80% 이상이면 굴린 공격 주사위 합이 45% 늘어납니다.'},
-  {n:'첫 수의 위엄',ab:'전투 첫 공격: 공격 주사위 +90% · 적중 시 저주',d:'전투에서 처음 하는 공격의 공격 주사위 합이 90% 늘어나고, HP 피해를 주면 대상에게 저주(3턴간 공격 -5)를 겁니다.'}]},
+  {n:'첫 수의 위엄',ab:'전투 첫 공격: 공격 주사위 +90% · 적중 시 저주',d:'전투에서 처음 하는 공격의 공격 주사위 합이 90% 늘어나고, HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다.'}]},
  {k:'wrath',n:'분노',sin:1,opts:[
   {n:'역린',ab:'잃은 HP 10%마다 공격 주사위 +12% (최대 +60%)',d:'잃은 HP가 최대 HP의 10%씩 늘 때마다 공격 주사위 합이 12% 늘어납니다. HP 50% 이하에서 최대치 +60%가 됩니다.'},
   {n:'보복',ab:'HP 피해를 받은 뒤 다음 공격: 공격 주사위 +50% · 출혈',d:'HP 피해를 받으면 보복이 준비되어, 다음 공격의 공격 주사위 합이 50% 늘어나고 HP 피해를 주면 출혈(3턴, 차례마다 최대 HP 3%)을 겁니다.'}]},
  {k:'envy',n:'시기',sin:1,opts:[
   {n:'끌어내림',ab:'대상 HP 비율이 나보다 높으면 공격 주사위 +45%',d:'공격 대상의 HP 비율이 자신의 HP 비율보다 높으면 공격 주사위 합이 45% 늘어납니다.'},
-  {n:'빼앗는 손',ab:'HP 피해 시 저주 · 저주 걸린 대상 공격 주사위 +40%',d:'HP 피해를 주면 대상에게 저주(3턴간 공격 -5)를 겁니다. 이미 저주에 걸린 대상을 공격할 때는 공격 주사위 합이 40% 늘어납니다.'}]},
+  {n:'빼앗는 손',ab:'HP 피해 시 저주 · 저주 걸린 대상 공격 주사위 +40%',d:'HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다. 이미 저주에 걸린 대상을 공격할 때는 공격 주사위 합이 40% 늘어납니다.'}]},
  {k:'greed',n:'탐욕',sin:1,opts:[
   {n:'착복',ab:'HP 피해의 15%를 보호막으로 · 마석 +2 (전투당 최대 20)',d:'공격으로 HP 피해를 줄 때마다 그 피해의 15%(올림)만큼 보호막을 얻습니다. 아군이라면 마석 2도 함께 얻으며, 전투 하나에서 최대 20까지입니다.'},
   {n:'수집가',ab:'대상의 디버프 1종마다 공격 주사위 +20% (최대 +70%)',d:'공격 대상에게 걸린 디버프 종류 하나마다 공격 주사위 합이 20% 늘어납니다(최대 +70%).'}]},
@@ -2265,7 +2268,7 @@ const ATTRS=[
   {n:'포식',ab:'처치 시 최대 HP 20% 회복 · 공격 주사위 +20% 누적 (최대 +70%)',d:'적을 쓰러뜨리면 최대 HP의 20%를 회복하고, 그 전투 동안 공격 주사위 합이 20%씩 누적해 늘어납니다(최대 +70%).'},
   {n:'탐식',ab:'HP 피해의 10% 흡혈 · 중독',d:'HP 피해를 주면 그 피해의 10%(올림)만큼 회복하고, 대상에게 중독(3턴, 라운드마다 최대 HP 4%)을 겁니다.'}]},
  {k:'sloth',n:'나태',sin:1,opts:[
-  {n:'늘어짐',ab:'HP 피해 시 무기력 (3턴간 민첩 -6·연속 행동 불가)',d:'HP 피해를 주면 3턴 동안 무기력을 겁니다. 무기력에 걸린 대상은 민첩 굴림이 6 줄고 연속 행동을 할 수 없습니다.'},
+  {n:'늘어짐',ab:'HP 피해 시 무기력 (3턴간 민첩 주사위 -20%·연속 행동 불가)',d:'HP 피해를 주면 3턴 동안 무기력을 겁니다. 무기력에 걸린 대상은 민첩 주사위 합이 20% 줄고 연속 행동을 할 수 없습니다.'},
   {n:'느긋한 한 방',ab:'민첩 주사위 -20% · 공격 주사위 +50%',d:'느긋하게 움직여 민첩 주사위 합이 20% 줄지만, 공격 주사위 합이 50% 늘어납니다.'}]},
  {k:'humil',n:'겸손',sin:0,opts:[
   {n:'낮은 자세',ab:'받는 피해 -20% · 공격 주사위 -10%',d:'받는 모든 피해가 20% 줄어드는 대신 공격 주사위 합이 10% 줄어듭니다. 최소 1의 피해는 받습니다.'},
@@ -2316,8 +2319,8 @@ const DEBN={charm:'유혹',plunder:'저주',leth:'무기력',stun:'기절',burn:
 /* 역할 자원: 자기 차례마다 +1, 역할별 추가 획득. 3칸이 다 차면 역할 기술을 쓸 수 있다 */
 const RMAX=3,RMAX_E=5;
 const SKILL={
- tank:{a:'guard',n:'대신 맞기',r:'결의',d:'동료 1명 대신 피격 · 방어 주사위 +5.'},
- support:{a:'heal',n:'치유',r:'은총',d:'1명 HP 회복(15 + 공격·방어·민첩 주사위 면수 합 중 가장 큰 값 ×0.5) · 초과 회복은 보호막 · 정화.'},
+ tank:{a:'guard',n:'대신 맞기',r:'결의',d:'동료 1명 대신 피격 · 방어 주사위 +12%.'},
+ support:{a:'heal',n:'치유',r:'은총',d:'1명 HP 회복(대상 최대 HP 12% + 공격·방어·민첩 주사위 면수 합 중 가장 큰 값 ×0.5) · 초과 회복은 보호막 · 정화.'},
  dealer:{a:'ambush',n:'기습',r:'살기',d:'전열 저지·방어·엄호 무시 · 공격 피해 +30%.'}
 };
 const SKA=Object.fromEntries(Object.entries(SKILL).map(([r,v])=>[v.a,{...v,role:r}]));
@@ -2325,63 +2328,63 @@ const SKA=Object.fromEntries(Object.entries(SKILL).map(([r,v])=>[v.a,{...v,role:
 const ARTS=[
  {k:"lucky",n:"행운의 네잎클로버",d:"공격 주사위 최저 눈 재굴림. 높은 값 적용."},
  {k:"twin",n:"쌍둥이별",d:"공격 주사위에 같은 눈 2개 이상: 치명타 확률 +8%."},
- {k:"shieldf",n:"강철 방패",d:"전투 시작: 전열 보호막 +12."},
+ {k:"shieldf",n:"강철 방패",d:"전투 시작: 전열 보호막 +최대 HP 15%."},
  {k:"scope",n:"저격 스코프",d:"후열 치명타 확률 +6%."},
  {k:"mask",n:"광전사의 가면",d:"HP 50% 이하: 공격 피해 +15%."},
  {k:"vamp",n:"흡혈 반지",d:"HP 피해량의 8% 흡혈."},
- {k:"detector",n:"마석 탐지기",d:"승리 마석 +12%, 추가 +5."},
- {k:"barrier",n:"보호막 생성기",d:"전투 시작: 보호막 +(10 + 승강장 번호)."},
- {k:"boots",n:"신속의 부츠",d:"매 라운드 민첩 +3, 연속 행동 확률 +4% (최대 50%)."},
- {k:"doll",n:"저주 인형",d:"HP 피해 시 확률로 저주(35%) · 3턴간 공격 -5."},
+ {k:"detector",n:"마석 탐지기",d:"승리 마석 +17%."},
+ {k:"barrier",n:"보호막 생성기",d:"전투 시작: 보호막 +최대 HP 12%."},
+ {k:"boots",n:"신속의 부츠",d:"매 라운드 민첩 주사위 +10%, 연속 행동 확률 +4% (최대 50%)."},
+ {k:"doll",n:"저주 인형",d:"HP 피해 시 확률로 저주(35%) · 3턴간 공격 주사위 -15%."},
  {k:"crit",n:"치명타 칩",d:"치명타 피해 150% → 165%."},
  {k:"armor",n:"견고한 중갑",d:"탱커 받는 피해 -12%."},
- {k:"leaf",n:"세계수의 잎",d:"최대·현재 HP +15. 새 동료 최대 HP +15. 승리 시 생존자 HP 6% 회복."},
- {k:"reaper",n:"영혼 수확낫",d:"적 처치 시 HP +5, 역할 자원 +1."},
+ {k:"leaf",n:"세계수의 잎",d:"최대·현재 HP +15%. 새 동료 최대 HP +15%. 승리 시 생존자 HP 6% 회복."},
+ {k:"reaper",n:"영혼 수확낫",d:"적 처치 시 최대 HP 5% 회복, 역할 자원 +1."},
  {k:"horn",n:"돌격 나팔",d:"선제공격 민첩 차이 8 → 6, 선제공격 피해 +15%."},
- {k:"tome",n:"경험의 서",d:"승리 경험치 +16%, 추가 +2."},
+ {k:"tome",n:"경험의 서",d:"승리 경험치 +18%."},
  {k:"medkit",n:"야전 구급함",d:"포션 회복량 최대 HP 40% → 45%."},
  {k:"rally",n:"전술 무전기",d:"전투 시작·3라운드 시작: 역할 자원 +1."},
  {k:"phoenix",n:"불사조 깃털",d:"치명적 피해 시 1명 HP 15%로 생존. 발동 시 소멸."},
  {k:"bandage",n:"붕대 꾸러미",d:"승리 시 전투 불능 1명 HP 25%로 부활(플레이어 우선). 발동 시 소멸."},
- {k:"whet",n:"정밀 숫돌",d:"일반 명중 공격값 +5 (스침·치명타 제외)."},
+ {k:"whet",n:"정밀 숫돌",d:"일반 명중 공격 주사위 +15% (스침·치명타 제외)."},
  {k:"prism",n:"마력 프리즘",d:"마법 직업 공격 피해 +12%."},
- {k:"quiver",n:"강철 화살통",d:"추적자 방어 관통 피해 +4."},
+ {k:"quiver",n:"강철 화살통",d:"추적자 방어 관통 피해 +공격값의 10%."},
  {k:"focus",n:"약점 돋보기",d:"HP 50% 이하 대상 공격 시 치명타 확률 +6%."},
  {k:"chain",n:"질풍 사슬",d:"연속 행동 두 번째 공격 피해 +15%."},
- {k:"hymn",n:"치유의 악보",d:"매 라운드: HP 비율 최저 1명 HP +6."},
- {k:"banner",n:"수호 깃발",d:"매 라운드: 전열 HP 비율 최저 1명 보호막 +5."},
+ {k:"hymn",n:"치유의 악보",d:"매 라운드: HP 비율 최저 1명 최대 HP 5% 회복."},
+ {k:"banner",n:"수호 깃발",d:"매 라운드: 전열 HP 비율 최저 1명 보호막 +최대 HP 5%."},
  {k:"dagger",n:"암살 단검",d:"선제공격 치명타 확률 +7%."},
- {k:"salve",n:"정화의 성수병",d:"포션 사용 시 정화, HP 추가 +8."},
+ {k:"salve",n:"정화의 성수병",d:"포션 사용 시 정화, 회복량 최대 HP 7% 추가."},
  {k:"battery",n:"잔광 전지",d:"역할 기술 사용 후 역할 자원 1 유지."},
  {k:"bounty",n:"현상금 장부",d:"적 처치 시 마석 +6."},
  {k:"chart",n:"고대 지도",d:"옆 경로 이동 마석 -40%."},
  {k:"coupon",n:"협회 할인권",d:"상점 아티팩트 -18%, 포션 -25%."},
- {k:"whistle",n:"호루라기",d:"1라운드 민첩 +4."},
+ {k:"whistle",n:"호루라기",d:"1라운드 민첩 주사위 +15%."},
  {k:"helmet",n:"철모",d:"받는 치명타 피해 -25%."},
- {k:"thorn",n:"가시 갑옷",d:"HP 피해를 받으면 공격자에게 3 반사."},
- {k:"hglass",n:"수호 모래시계",d:"3라운드 시작: 보호막 +8."},
+ {k:"thorn",n:"가시 갑옷",d:"HP 피해를 받으면 받은 HP 피해의 20%(최소 1)를 공격자에게 반사."},
+ {k:"hglass",n:"수호 모래시계",d:"3라운드 시작: 보호막 +최대 HP 10%."},
  {k:"compass",n:"나침반",d:"상자 마석 +45%, 포션 추가 획득 40%."},
  {k:"lantern",n:"탐사 랜턴",d:"정예·변이·보스전 경험치 +20%."},
  {k:"contract",n:"용병 계약서",d:"헌터 영입 마석 -30%."},
  {k:"heart",n:"생존의 심장",d:"HP 40% 이하: 받는 피해 -20%."},
- {k:"bell",n:"둔화의 종",d:"1라운드 적 민첩 -4."},
+ {k:"bell",n:"둔화의 종",d:"1라운드 적 민첩 주사위 -15%."},
  {k:"triple",n:"삼중날 삼지창",d:"공격 주사위 같은 눈 3개 이상: 피해 +100%."},
- {k:"fullmoon",n:"보름달패",d:"최대 눈 주사위마다 공격값 +4."},
+ {k:"fullmoon",n:"보름달패",d:"최대 눈 주사위마다 공격 주사위 +10%."},
  {k:"snake",n:"쌍뱀 부적",d:"공격 주사위 눈 1이 2개 이상: 회피되지 않으면 치명타."},
  {k:"straight",n:"줄사다리",d:"공격 주사위 연속 눈 3개 이상: 피해 +25%."},
  {k:"parity",n:"쌍둥이 패",d:"공격 주사위 합 짝수 피해 +20%, 홀수 -10%."},
- {k:"mirror",n:"쌍눈 거울",d:"방어 주사위 같은 눈 2개 이상: 방어값 +8."}
+ {k:"mirror",n:"쌍눈 거울",d:"방어 주사위 같은 눈 2개 이상: 방어 주사위 +25%."}
 ];
 
 
 /* 추가 아티팩트 52종: 기존 효과와 별도로 계산하며 과도한 누적 보너스를 제한합니다. */
 ARTS.push(
- {k:"crossbow",n:"매사냥 석궁",d:"후열 물리 공격값 +2 (합산 최대 +12).",fx:{"type":"atk","v":2,"cond":"back","damageKind":"physical"}},
- {k:"waraxe",n:"선봉 전투도끼",d:"전열 물리 공격값 +2 (합산 최대 +12).",fx:{"type":"atk","v":2,"cond":"front","damageKind":"physical"}},
- {k:"fang",n:"맹수의 송곳니",d:"딜러 물리 공격값 +3 (합산 최대 +12).",fx:{"type":"atk","v":3,"cond":"dealer","damageKind":"physical"}},
+ {k:"crossbow",n:"매사냥 석궁",d:"후열 물리 공격 주사위 +8% (합산 최대 +40%).",fx:{"type":"atk","v":8,"cond":"back","damageKind":"physical"}},
+ {k:"waraxe",n:"선봉 전투도끼",d:"전열 물리 공격 주사위 +8% (합산 최대 +40%).",fx:{"type":"atk","v":8,"cond":"front","damageKind":"physical"}},
+ {k:"fang",n:"맹수의 송곳니",d:"딜러 물리 공격 주사위 +10% (합산 최대 +40%).",fx:{"type":"atk","v":10,"cond":"dealer","damageKind":"physical"}},
  {k:"baton",n:"길잡이의 지휘봉",d:"출전 인원 +1 (확장 유물 중 최대치만 적용).",fx:{"type":"party","v":1,"cond":"all"}},
- {k:"runestone",n:"마력 증폭석",d:"마법 공격값 +3 (합산 최대 +12).",fx:{"type":"atk","v":3,"cond":"all","damageKind":"magic"}},
- {k:"laurel",n:"마나 월계관",d:"HP 70% 이상: 마법 공격값 +2 (합산 최대 +12).",fx:{"type":"atk","v":2,"cond":"healthy","damageKind":"magic"}},
+ {k:"runestone",n:"마력 증폭석",d:"마법 공격 주사위 +10% (합산 최대 +40%).",fx:{"type":"atk","v":10,"cond":"all","damageKind":"magic"}},
+ {k:"laurel",n:"마나 월계관",d:"HP 70% 이상: 마법 공격 주사위 +8% (합산 최대 +40%).",fx:{"type":"atk","v":8,"cond":"healthy","damageKind":"magic"}},
  {k:"emberjar",n:"잿불 항아리",d:"HP 피해 시 확률로 적군 화상(20%) · 3턴간 라운드 시작 시 HP 3% 피해.",fx:{type:"inflict",v:20,cond:"all",debuff:"burn"}},
  {k:"toxcenser",n:"독안개 향로",d:"HP 피해 시 확률로 적군 중독(20%) · 3턴간 라운드 시작 시 HP 4% 피해.",fx:{type:"inflict",v:20,cond:"all",debuff:"poison"}},
  {k:"needle",n:"출혈 바늘",d:"HP 피해 시 확률로 적군 출혈(22%) · 3턴간 행동 시작 시 HP 3% 피해.",fx:{type:"inflict",v:22,cond:"all",debuff:"bleed"}},
@@ -2390,27 +2393,27 @@ ARTS.push(
  {k:"signet",n:"원정대장의 인장",d:"출전 인원 +3 (확장 유물 중 최대치만 적용).",fx:{"type":"party","v":3,"cond":"all"}},
  {k:"talisman",n:"역전의 부적",d:"HP 50% 이하: 공격 피해 +7% (합산 최대 +25%).",fx:{type:"pct",v:7,cond:"low"}},
  {k:"victorymedal",n:"승전 훈장",d:"HP 70% 이상: 공격 피해 +5% (합산 최대 +25%).",fx:{type:"pct",v:5,cond:"healthy"}},
- {k:"frostfan",n:"빙정 부채",d:"HP 피해 시 확률로 적군 동상(20%) · 민첩 -4, 연속 행동 불가.",fx:{type:"inflict",v:20,cond:"all",debuff:"frost"}},
+ {k:"frostfan",n:"빙정 부채",d:"HP 피해 시 확률로 적군 동상(20%) · 민첩 주사위 -15%, 연속 행동 불가.",fx:{type:"inflict",v:20,cond:"all",debuff:"frost"}},
  {k:"powercell",n:"전술 축전지",d:"전투 시작: 역할 자원 +1.",fx:{"type":"rstart","v":1,"cond":"all"}},
  {k:"stunbell",n:"기절 방울",d:"HP 피해 시 확률로 적군 기절(12%) · 3턴 행동 불가.",fx:{type:"inflict",v:12,cond:"all",debuff:"stun"}},
  {k:"manaflask",n:"확장된 마력 용기",d:"역할 자원 최대치 +1 (기술 비용 3 유지).",fx:{"type":"rmax","v":1,"cond":"all"}},
  {k:"rehglass",n:"재충전 모래시계",d:"3라운드 시작: 역할 자원 +1.",fx:{"type":"rthird","v":1,"cond":"all"}},
  {k:"handmirror",n:"현혹의 손거울",d:"HP 피해 시 확률로 적군 유혹(20%) · 공격이 확률로 빗맞음(35%).",fx:{type:"inflict",v:20,cond:"all",debuff:"charm"}},
- {k:"omenbell",n:"불길한 금종",d:"HP 피해 시 확률로 적군 저주(20%) · 공격값 -5.",fx:{type:"inflict",v:20,cond:"all",debuff:"plunder"}},
- {k:"clockwall",n:"태엽 방벽",d:"중열 전투 시작 보호막 +4 (합산 최대 +20).",fx:{type:"shield",v:4,cond:"middle"}},
- {k:"frostmirror",n:"서리 거울",d:"후열 전투 시작 보호막 +4 (합산 최대 +20).",fx:{type:"shield",v:4,cond:"back"}},
- {k:"brooch",n:"별빛 브로치",d:"서포터 전투 시작 보호막 +4 (합산 최대 +20).",fx:{type:"shield",v:4,cond:"support"}},
+ {k:"omenbell",n:"불길한 금종",d:"HP 피해 시 확률로 적군 저주(20%) · 공격 주사위 -15%.",fx:{type:"inflict",v:20,cond:"all",debuff:"plunder"}},
+ {k:"clockwall",n:"태엽 방벽",d:"중열 전투 시작 보호막 +최대 HP 5% (합산 최대 15%).",fx:{type:"shield",v:5,cond:"middle"}},
+ {k:"frostmirror",n:"서리 거울",d:"후열 전투 시작 보호막 +최대 HP 5% (합산 최대 15%).",fx:{type:"shield",v:5,cond:"back"}},
+ {k:"brooch",n:"별빛 브로치",d:"서포터 전투 시작 보호막 +최대 HP 5% (합산 최대 15%).",fx:{type:"shield",v:5,cond:"support"}},
  {k:"diploma",n:"승급의 증서",d:"파티원 1명 즉시 1단계 승급 · 사용 후 소멸 (S급·고정 NPC 제외).",fx:{type:"promotion",v:1,cond:"all"}},
- {k:"moss",n:"불멸의 이끼",d:"탱커 매 라운드 HP +2 (합산 최대 +10).",fx:{type:"heal",v:2,cond:"tank"}},
- {k:"healcenser",n:"재생 향로",d:"서포터 매 라운드 HP +2 (합산 최대 +10).",fx:{type:"heal",v:2,cond:"support"}},
- {k:"lotus",n:"치유 연꽃",d:"후열 매 라운드 HP +2 (합산 최대 +10).",fx:{type:"heal",v:2,cond:"back"}},
- {k:"herbs",n:"응급 약초첩",d:"HP 50% 이하: 매 라운드 HP +2 (합산 최대 +10).",fx:{type:"heal",v:2,cond:"low"}},
- {k:"lilypot",n:"은방울꽃 화분",d:"중열 매 라운드 HP +2 (합산 최대 +10).",fx:{type:"heal",v:2,cond:"middle"}},
- {k:"bracer",n:"철벽 팔찌",d:"전열 방어값 +2 (합산 최대 +10).",fx:{type:"def",v:2,cond:"front"}},
- {k:"guardbell",n:"수호의 종",d:"중열 방어값 +2 (합산 최대 +10).",fx:{type:"def",v:2,cond:"middle"}},
- {k:"shieldpin",n:"청동 방패핀",d:"후열 방어값 +2 (합산 최대 +10).",fx:{type:"def",v:2,cond:"back"}},
- {k:"knightmedal",n:"기사 훈장",d:"탱커 방어값 +3 (합산 최대 +10).",fx:{type:"def",v:3,cond:"tank"}},
- {k:"breastplate",n:"백철 흉갑",d:"HP 70% 이상: 방어값 +2 (합산 최대 +10).",fx:{type:"def",v:2,cond:"healthy"}},
+ {k:"moss",n:"불멸의 이끼",d:"탱커 매 라운드 최대 HP 2% 회복 (합산 최대 10%).",fx:{type:"heal",v:2,cond:"tank"}},
+ {k:"healcenser",n:"재생 향로",d:"서포터 매 라운드 최대 HP 2% 회복 (합산 최대 10%).",fx:{type:"heal",v:2,cond:"support"}},
+ {k:"lotus",n:"치유 연꽃",d:"후열 매 라운드 최대 HP 2% 회복 (합산 최대 10%).",fx:{type:"heal",v:2,cond:"back"}},
+ {k:"herbs",n:"응급 약초첩",d:"HP 50% 이하: 매 라운드 최대 HP 2% 회복 (합산 최대 10%).",fx:{type:"heal",v:2,cond:"low"}},
+ {k:"lilypot",n:"은방울꽃 화분",d:"중열 매 라운드 최대 HP 2% 회복 (합산 최대 10%).",fx:{type:"heal",v:2,cond:"middle"}},
+ {k:"bracer",n:"철벽 팔찌",d:"전열 방어 주사위 +8% (합산 최대 +35%).",fx:{type:"def",v:8,cond:"front"}},
+ {k:"guardbell",n:"수호의 종",d:"중열 방어 주사위 +8% (합산 최대 +35%).",fx:{type:"def",v:8,cond:"middle"}},
+ {k:"shieldpin",n:"청동 방패핀",d:"후열 방어 주사위 +8% (합산 최대 +35%).",fx:{type:"def",v:8,cond:"back"}},
+ {k:"knightmedal",n:"기사 훈장",d:"탱커 방어 주사위 +10% (합산 최대 +35%).",fx:{type:"def",v:10,cond:"tank"}},
+ {k:"breastplate",n:"백철 흉갑",d:"HP 70% 이상: 방어 주사위 +8% (합산 최대 +35%).",fx:{type:"def",v:8,cond:"healthy"}},
  {k:"coral",n:"산호 갑각",d:"후열 받는 피해 -4% (합산 최대 24%).",fx:{type:"reduce",v:4,cond:"back"}},
  {k:"blackhelm",n:"흑철 갑주",d:"탱커 받는 피해 -5% (합산 최대 24%).",fx:{type:"reduce",v:5,cond:"tank"}},
  {k:"cloak",n:"그림자 망토",d:"중열 받는 피해 -4% (합산 최대 24%).",fx:{type:"reduce",v:4,cond:"middle"}},
@@ -2420,16 +2423,16 @@ ARTS.push(
  {k:"piggybank",n:"역무원의 저금통",d:"비전투 노드 첫 방문: 마석 +12 (합산 최대 +20).",fx:{"type":"nodecoin","v":12,"cond":"all"}},
  {k:"stunhammer",n:"기절 망치",d:"HP 피해 시 확률로 적군 기절(18%) · 3턴 행동 불가.",fx:{"type":"inflict","v":18,"cond":"all","debuff":"stun"}},
  {k:"embervase",n:"불씨 화병",d:"HP 피해 시 확률로 적군 화상(24%) · 3턴간 라운드 시작 시 최대 HP 3% 피해.",fx:{"type":"inflict","v":24,"cond":"all","debuff":"burn"}},
- {k:"frostvial",n:"서리 약병",d:"HP 피해 시 확률로 적군 동상(24%) · 민첩 -4, 연속 행동 불가.",fx:{"type":"inflict","v":24,"cond":"all","debuff":"frost"}},
+ {k:"frostvial",n:"서리 약병",d:"HP 피해 시 확률로 적군 동상(24%) · 민첩 주사위 -15%, 연속 행동 불가.",fx:{"type":"inflict","v":24,"cond":"all","debuff":"frost"}},
  {k:"venombangle",n:"독침 팔찌",d:"HP 피해 시 확률로 적군 중독(24%) · 3턴간 라운드 시작 시 최대 HP 4% 피해.",fx:{"type":"inflict","v":24,"cond":"all","debuff":"poison"}},
  {k:"thornwhip",n:"가시 채찍",d:"HP 피해 시 확률로 적군 출혈(24%) · 3턴간 행동 시작 시 최대 HP 3% 피해.",fx:{"type":"inflict","v":24,"cond":"all","debuff":"bleed"}},
  {k:"monocle",n:"매의눈 단안경",d:"후열 치명타 확률 +3% (합산 최대 +12%).",fx:{type:"crit",v:3,cond:"back"}},
  {k:"scabbard",n:"날선 검집",d:"물리 직업 치명타 확률 +3% (합산 최대 +12%).",fx:{type:"crit",v:3,cond:"physical"}},
  {k:"perfume",n:"매혹의 향수",d:"HP 피해 시 확률로 적군 유혹(22%) · 3턴간 공격이 확률로 빗맞음(35%).",fx:{type:"inflict",v:22,cond:"all",debuff:"charm"}},
- {k:"ebonybell",n:"흑단 주술종",d:"HP 피해 시 확률로 적군 저주(22%) · 3턴간 공격값 -5.",fx:{type:"inflict",v:22,cond:"all",debuff:"plunder"}},
+ {k:"ebonybell",n:"흑단 주술종",d:"HP 피해 시 확률로 적군 저주(22%) · 3턴간 공격 주사위 -15%.",fx:{type:"inflict",v:22,cond:"all",debuff:"plunder"}},
  {k:"obsidianeye",n:"흑요석 눈알",d:"HP 50% 이하: 치명타 확률 +3% (합산 최대 +12%).",fx:{type:"crit",v:3,cond:"low"}}
 );
-const EXTRA_CAP={atk:12,pct:25,agi:8,shield:20,heal:10,def:10,reduce:24,crit:12,nodecoin:20,nodevisit:5,rstart:1,rmax:1,rthird:1};
+const EXTRA_CAP={atk:40,pct:25,agi:30,shield:15,heal:10,def:35,reduce:24,crit:12,nodecoin:20,nodevisit:5,rstart:1,rmax:1,rthird:1};
 function extraActive(fx,u){
  if(!u)return fx.cond==='all';
  const cond=fx.cond;
@@ -2453,52 +2456,52 @@ function extraTotal(type,u){
 const ART_DETAIL_BASE = {
  "lucky": "공격할 때 굴린 주사위 중 실제 눈이 가장 낮은 주사위 하나를 다시 굴립니다. 기존 눈과 다시 나온 눈 중 더 높은 값을 적용합니다. 공격 주사위에만 발동합니다.",
  "twin": "공격 주사위 결과에 같은 숫자가 2개 이상 있으면 해당 공격의 치명타 확률이 8% 증가합니다. 눈이 같은 주사위가 없으면 발동하지 않습니다.",
- "shieldf": "전투가 시작될 때 전열에 배치된 각 아군에게 보호막 12를 부여합니다. 보호막은 HP 피해를 받기 전에 먼저 소모됩니다.",
+ "shieldf": "전투가 시작될 때 전열에 배치된 각 아군에게 자기 최대 HP의 15%만큼 보호막을 부여합니다. 보호막은 HP 피해를 받기 전에 먼저 소모됩니다.",
  "scope": "후열에 배치한 아군이 공격할 때 치명타 확률이 6% 증가합니다. 다른 위치에서는 적용되지 않습니다.",
  "mask": "공격하는 아군의 현재 HP가 최대 HP의 50% 이하라면 공격 피해가 15% 증가합니다. HP가 회복되어 기준을 초과하면 효과가 적용되지 않습니다.",
  "vamp": "공격으로 적의 실제 HP를 깎았을 때, 입힌 HP 피해의 8%만큼 공격자가 회복합니다(올림). 보호막에만 피해를 준 경우에는 회복되지 않으며 최대 HP를 넘지 않습니다.",
- "detector": "전투 승리로 지급되는 기본 마석을 12% 증가시키고, 보상 계산 후 마석을 추가로 5 지급합니다. 다른 획득 방식의 마석에는 적용되지 않습니다.",
- "barrier": "전투 시작 시 살아 있는 출전 아군 전원에게 보호막을 부여합니다. 보호막 수치는 10 + 현재 승강장 번호이며, 피해를 받으면 HP보다 먼저 소모됩니다.",
- "boots": "전투 중 아군 민첩 계산값이 3 증가합니다. 연속 행동 확률도 4% 증가하며, 연속 행동 확률에는 최대 50% 제한이 있습니다.",
- "doll": "아군의 공격이 적에게 명중한 뒤 확률로 저주를 시도합니다(35%). 저주에 걸린 적은 3턴 동안 공격값이 5 감소합니다.",
+ "detector": "전투 승리로 지급되는 기본 마석을 17% 증가시킵니다. 다른 획득 방식의 마석에는 적용되지 않습니다.",
+ "barrier": "전투 시작 시 살아 있는 출전 아군 전원에게 보호막을 부여합니다. 보호막 수치는 각자 최대 HP의 12%이며, 피해를 받으면 HP보다 먼저 소모됩니다.",
+ "boots": "전투 중 아군 민첩 주사위 합이 10% 늘어납니다. 연속 행동 확률도 4% 증가하며, 연속 행동 확률에는 최대 50% 제한이 있습니다.",
+ "doll": "아군의 공격이 적에게 명중한 뒤 확률로 저주를 시도합니다(35%). 저주에 걸린 적은 3턴 동안 공격 주사위 합이 15% 줄어듭니다.",
  "crit": "치명타가 발생했을 때 피해 배율이 기본 150%에서 165%로 증가합니다. 치명타가 아닌 공격의 피해는 바꾸지 않습니다.",
  "armor": "탱커 역할의 아군이 공격받으면 들어오는 피해를 12% 줄입니다. 딜러·서포터 역할에는 적용되지 않습니다.",
- "leaf": "획득하는 순간 현재 보유한 모든 파티원의 최대 HP를 15 늘리고, 생존자의 현재 HP도 15 회복합니다. 이후 영입하는 동료도 최대 HP가 15 증가합니다. 전투 승리 시 살아 있는 출전 아군은 자신의 최대 HP의 6%를 회복하며, 초과 회복량은 보호막이 됩니다.",
- "reaper": "이 아티팩트를 보유한 상태에서 아군이 적을 직접 처치하면, 처치한 캐릭터가 HP를 최대 5 회복하고 역할 자원을 1 얻습니다. 최대 HP를 초과하는 회복량은 보호막이 됩니다.",
+ "leaf": "획득하는 순간 현재 보유한 모든 파티원의 최대 HP를 15% 늘리고(올림), 생존자의 현재 HP도 같은 양만큼 회복합니다. 이후 영입하는 동료도 최대 HP가 15% 증가합니다. 전투 승리 시 살아 있는 출전 아군은 자신의 최대 HP의 6%를 회복하며, 초과 회복량은 보호막이 됩니다.",
+ "reaper": "이 아티팩트를 보유한 상태에서 아군이 적을 직접 처치하면, 처치한 캐릭터가 최대 HP의 5%(올림)를 회복하고 역할 자원을 1 얻습니다. 최대 HP를 초과하는 회복량은 보호막이 됩니다.",
  "horn": "1라운드 선제공격 판정에 필요한 민첩 우위가 8에서 6으로 완화됩니다. 선제공격의 추가 피해도 기본 10% 대신 15%가 적용됩니다.",
- "tome": "전투 승리로 얻는 경험치에 16% 보정을 적용하고 계산이 끝난 뒤 경험치 2를 추가합니다. 경험치는 출전 캐릭터 각각에게 지급됩니다.",
+ "tome": "전투 승리로 얻는 경험치에 18% 보정을 적용합니다. 경험치는 출전 캐릭터 각각에게 지급됩니다.",
  "medkit": "전투 중 회복 포션의 기본 회복량이 최대 HP의 40%에서 45%로 증가합니다. 포션은 그대로 1개 소모하며 행동 1회를 사용합니다.",
  "rally": "전투가 시작될 때 아군 각자의 역할 자원을 1 지급합니다. 3라운드가 시작될 때 살아 있는 아군에게 역할 자원을 추가로 1 지급합니다. 최대 보유량은 넘지 않습니다.",
  "phoenix": "전투에서 아군 한 명이 치명적인 피해를 받아 HP가 0이 되는 순간 한 번 발동합니다. 해당 캐릭터는 최대 HP의 15%(올림), 최소 1 HP로 살아남으며 깃털은 즉시 소멸합니다.",
  "bandage": "전투 승리 후 출전 파티에 쓰러진 동료가 있으면 한 명을 최대 HP의 25%로 부활시킵니다. 플레이어 캐릭터가 쓰러졌다면 우선 선택하며, 실제 부활에 사용되었을 때 소멸합니다.",
- "whet": "명중 결과가 일반 공격일 때 공격값에 5를 추가합니다. 스침과 치명타 공격에서는 발동하지 않습니다.",
+ "whet": "명중 결과가 일반 공격일 때 공격 주사위 합의 15%를 공격값에 더합니다. 스침과 치명타 공격에서는 발동하지 않습니다.",
  "prism": "마법 공격을 사용하는 직업의 공격 피해가 12% 증가합니다. 물리 공격 직업에는 적용되지 않습니다.",
- "quiver": "추적자 직업의 공격이 적 방어를 계산한 뒤 추가로 방어 관통 피해 4를 가합니다. 다른 직업에는 적용되지 않습니다.",
+ "quiver": "추적자 직업의 공격이 적 방어를 계산한 뒤 공격값의 10%만큼 방어 관통 피해를 더합니다. 다른 직업에는 적용되지 않습니다.",
  "focus": "공격 대상의 현재 HP가 최대 HP의 50% 이하일 때 치명타 확률이 6% 증가합니다. 공격자의 HP와는 무관합니다.",
  "chain": "같은 아군이 연속 행동으로 두 번째 공격을 할 때 해당 공격의 피해가 15% 증가합니다. 첫 번째 공격에는 적용되지 않습니다.",
- "hymn": "매 라운드 시작 시 현재 HP 비율이 가장 낮은 부상 아군 한 명의 HP를 6 회복합니다. 부상자가 없으면 발동하지 않으며 초과 회복량은 보호막이 됩니다.",
- "banner": "매 라운드 시작 시 전열의 살아 있는 아군 중 HP 비율이 가장 낮은 한 명에게 보호막 5를 부여합니다. 전열 아군이 없으면 발동하지 않습니다.",
+ "hymn": "매 라운드 시작 시 현재 HP 비율이 가장 낮은 부상 아군 한 명의 HP를 그 아군 최대 HP의 5%(올림)만큼 회복합니다. 부상자가 없으면 발동하지 않으며 초과 회복량은 보호막이 됩니다.",
+ "banner": "매 라운드 시작 시 전열의 살아 있는 아군 중 HP 비율이 가장 낮은 한 명에게 그 아군 최대 HP의 5%만큼 보호막을 부여합니다. 전열 아군이 없으면 발동하지 않습니다.",
  "dagger": "1라운드에 민첩 우위를 이용한 선제공격을 할 때 치명타 확률이 7% 증가합니다. 일반 공격에는 추가되지 않습니다.",
- "salve": "회복 포션을 사용하면 기존 회복량에 HP 8을 추가하고, 회복 대상을 정화합니다. 포션 1개와 행동 1회는 그대로 소모됩니다.",
+ "salve": "회복 포션을 사용하면 기존 회복량에 최대 HP의 7%를 추가하고, 회복 대상을 정화합니다. 포션 1개와 행동 1회는 그대로 소모됩니다.",
  "battery": "역할 기술을 사용하여 역할 자원을 소모한 후에도 역할 자원 1칸을 남깁니다. 다음 역할 기술에 필요한 자원을 더 빨리 모을 수 있습니다.",
  "bounty": "아군이 적을 직접 처치할 때마다 해당 전투의 마석 보상에 6을 추가합니다. 처치 수에 따라 여러 번 누적될 수 있습니다.",
  "chart": "지도에서 옆 경로로 이동할 때 지불하는 마석을 40% 줄입니다. 전투·헌터 영입·상점 비용에는 적용되지 않습니다.",
  "coupon": "협회 상점에서 아티팩트를 살 때 가격이 18% 할인되고, 포션 가격은 25% 할인됩니다. 헌터 영입과 강화 비용에는 적용되지 않습니다.",
- "whistle": "1라운드에 아군의 민첩 계산값이 4 증가합니다. 2라운드부터는 이 보너스를 받지 않습니다.",
+ "whistle": "1라운드에 아군의 민첩 주사위 합이 15% 늘어납니다. 2라운드부터는 이 보너스를 받지 않습니다.",
  "helmet": "아군이 치명타 공격을 받았을 때 해당 피해를 25% 줄입니다. 일반 공격이나 스침에는 적용되지 않습니다.",
- "thorn": "아군이 공격으로 실제 HP 피해를 받으면 공격자에게 고정 피해 3을 돌려줍니다. 공격자가 살아 있고 해당 공격이 기습 공격이 아닌 경우에 발동합니다.",
- "hglass": "3라운드가 시작될 때 살아 있는 출전 아군 전원에게 보호막 8을 부여합니다. 다른 라운드에서는 추가 보호막이 지급되지 않습니다.",
+ "thorn": "아군이 공격으로 실제 HP 피해를 받으면 공격자에게 받은 HP 피해의 20%(최소 1)를 돌려줍니다. 공격자가 살아 있고 해당 공격이 기습 공격이 아닌 경우에 발동합니다.",
+ "hglass": "3라운드가 시작될 때 살아 있는 출전 아군 전원에게 각자 최대 HP의 10%만큼 보호막을 부여합니다. 다른 라운드에서는 추가 보호막이 지급되지 않습니다.",
  "compass": "보물 상자에서 받는 마석이 45% 증가합니다. 상자를 열 때 확률로 회복 포션 1개를 추가로 얻습니다(40%). 이 확률은 상자의 기본 포션 획득 판정과 별개입니다.",
  "lantern": "정예전·레드 게이트·보스전에서 얻는 경험치가 20% 증가합니다. 일반 전투에는 적용되지 않습니다.",
  "contract": "헌터를 영입할 때 지불하는 마석 비용을 30% 할인합니다. 무료 영입과 다른 상점 구매에는 영향을 주지 않습니다.",
  "heart": "아군의 현재 HP가 최대 HP의 40% 이하일 때 받는 피해를 20% 줄입니다. HP가 기준을 넘으면 감소 효과가 적용되지 않습니다.",
- "bell": "1라운드에 적군 전체의 민첩 계산값을 4 낮춥니다. 2라운드부터는 적용되지 않습니다.",
+ "bell": "1라운드에 적군 전체의 민첩 주사위 합을 15% 낮춥니다. 2라운드부터는 적용되지 않습니다.",
  "triple": "공격 주사위에서 같은 눈이 3개 이상 나오면 해당 공격의 피해가 100% 증가합니다. 같은 숫자 3개 이상이 없으면 발동하지 않습니다.",
- "fullmoon": "공격 주사위 중 각 주사위의 최대 눈이 나온 횟수마다 공격값을 4 추가합니다. 최대 눈이 나온 주사위가 여러 개면 개수만큼 누적됩니다.",
+ "fullmoon": "공격 주사위 중 최대 눈이 나온 주사위 하나마다 공격 주사위 합이 10% 늘어납니다. 최대 눈이 나온 주사위가 여러 개면 개수만큼 누적됩니다.",
  "snake": "공격 주사위 결과에서 눈 1이 2개 이상 나오고 상대가 완전 회피하지 않았다면 공격 결과를 치명타로 바꿉니다. 완전 회피에는 적용되지 않습니다.",
  "straight": "공격 주사위 결과에 연속되는 숫자가 3개 이상 있으면 해당 공격 피해가 25% 증가합니다. 같은 숫자만 모인 경우는 연속 숫자로 세지 않습니다.",
  "parity": "공격 주사위 눈의 합계가 짝수일 때 공격 피해가 20% 증가합니다. 합계가 홀수이면 오히려 피해가 10% 감소합니다.",
- "mirror": "방어 주사위 결과에 같은 숫자가 2개 이상 있으면 그 방어 판정의 방어값이 8 증가합니다. 같은 숫자가 없으면 추가 방어를 얻지 못합니다."
+ "mirror": "방어 주사위 결과에 같은 숫자가 2개 이상 있으면 그 방어 판정의 방어 주사위 합이 25% 증가합니다. 같은 숫자가 없으면 추가 방어를 얻지 못합니다."
 };
 /* 조사: 앞말의 받침(숫자는 읽는 소리)에 맞춰 을/를·이/가·은/는·과/와·으로/로를 고릅니다. */
 const JO=(w,p)=>{const t=String(w).replace(/<[^>]*>/g,'').trim(),c=t.slice(-1);let f=false,r=false;
@@ -2516,25 +2519,25 @@ const ART_COND_TEXT={
 const ART_DEBUFF_TEXT={
  stun:'기절: 3턴 동안 행동할 수 없습니다.',
  burn:'화상: 3턴 동안 라운드 시작마다 최대 HP의 3%만큼 피해를 받습니다.',
- frost:'동상: 민첩이 4 감소하며 연속 행동을 할 수 없습니다.',
+ frost:'동상: 민첩 주사위 합이 15% 감소하며 연속 행동을 할 수 없습니다.',
  poison:'중독: 3턴 동안 라운드 시작마다 최대 HP의 4%만큼 피해를 받습니다.',
  bleed:'출혈: 3턴 동안 행동 시작마다 최대 HP의 3%만큼 피해를 받습니다.',
  charm:'유혹: 3턴 동안 공격이 확률로 빗맞습니다(35%).',
- plunder:'저주: 3턴 동안 공격값이 5 감소합니다.'
+ plunder:'저주: 3턴 동안 공격 주사위 합이 15% 감소합니다.'
 };
 function fullArtDescription(a){
  if(ART_DETAIL_BASE[a.k])return ART_DETAIL_BASE[a.k];
  const f=a.fx;if(!f)return a.d;
  const who=ART_COND_TEXT[f.cond]||'조건을 만족하는 아군';
  const cap=EXTRA_CAP[f.type];
- const sumCap=cap?` 동일한 효과 유형의 추가 수치는 합산하여 최대 ${cap}${['pct','crit','reduce'].includes(f.type)?'%':''}까지만 적용됩니다.`:'';
+ const sumCap=cap?` 동일한 효과 유형의 추가 수치는 합산하여 최대 ${cap}${['pct','crit','reduce','atk','def','agi','shield','heal'].includes(f.type)?'%':''}까지만 적용됩니다.`:'';
  switch(f.type){
-  case 'atk':return `${who}의 ${f.damageKind==='magic'?'마법':f.damageKind==='physical'?'물리':''} 공격값이 ${f.v} 증가합니다. 공격이 해당 유형일 때만 적용됩니다.${sumCap}`;
+  case 'atk':return `${who}의 ${f.damageKind==='magic'?'마법':f.damageKind==='physical'?'물리':''} 공격 주사위 합이 ${f.v}% 늘어납니다. 공격이 해당 유형일 때만 적용됩니다.${sumCap}`;
   case 'pct':return `${who}${JO(who,'가')} 적에게 공격할 때 공격 피해가 ${f.v}% 증가합니다. 조건을 만족하지 않는 동안에는 적용되지 않습니다.${sumCap}`;
   case 'crit':return `${who}${JO(who,'가')} 공격할 때 치명타 확률이 ${f.v}% 증가합니다. 다른 치명타 보너스와 함께 계산됩니다.${sumCap}`;
-  case 'shield':return `전투가 시작될 때 ${who}에게 보호막 ${f.v}${JO(f.v,'를')} 부여합니다. 보호막은 HP 대신 피해를 먼저 흡수합니다.${sumCap}`;
-  case 'heal':return `매 라운드 시작 시 살아 있는 ${who}의 HP를 ${f.v} 회복합니다. 초과 회복량은 보호막으로 전환됩니다.${sumCap}`;
-  case 'def':return `${who}의 방어 판정에서 방어값이 ${f.v} 증가합니다. 적에게서 받는 피해를 막는 데 사용됩니다.${sumCap}`;
+  case 'shield':return `전투가 시작될 때 ${who}에게 최대 HP의 ${f.v}%만큼 보호막을 부여합니다. 보호막은 HP 대신 피해를 먼저 흡수합니다.${sumCap}`;
+  case 'heal':return `매 라운드 시작 시 살아 있는 ${who}의 HP를 최대 HP의 ${f.v}%만큼 회복합니다. 초과 회복량은 보호막으로 전환됩니다.${sumCap}`;
+  case 'def':return `${who}의 방어 판정에서 방어 주사위 합이 ${f.v}% 늘어납니다. 적에게서 받는 피해를 막는 데 사용됩니다.${sumCap}`;
   case 'reduce':return `${who}${JO(who,'가')} 피해를 받을 때 피해량을 ${f.v}% 줄입니다. 조건을 만족하는 동안에만 적용됩니다.${sumCap}`;
   case 'inflict':return `아군의 공격이 적에게 실제 HP 피해를 입혔을 때 확률로 적에게 상태이상을 부여합니다(${f.v}%). ${ART_DEBUFF_TEXT[f.debuff]||''} 여러 상태이상 유물이 동시에 발동하더라도 공격 1회당 유물로 부여되는 상태이상은 최대 1종입니다.`;
   case 'party':return `출전 파티의 최대 편성 인원을 ${f.v}명 늘립니다. 기본 출전 가능 인원은 5명입니다. 편성 인원 증가 유물을 여러 개 보유했다면 수치를 더하지 않고 가장 높은 증가량 하나만 적용하며, 최대 8명까지 편성할 수 있습니다.`;
@@ -2588,7 +2591,7 @@ const KIND={normal:'일반 전투',elite:'정예 몬스터',red:'레드 게이�
 const MON=[['고블린','warrior'],['코볼트 투척병','archer'],['다이어울프','warrior'],['오크 돌격병','warrior'],['리자드맨 주술사','mage'],['스켈레톤 사수','archer'],['다크엘프 저주검사','spell'],['가고일','spell'],['트롤','warrior'],['임프','mage'],['하피','archer'],['거대 거미','warrior'],['망령','mage'],['골렘','warrior']];
 const BOSS=[['고블린 킹','warrior'],['오크 워치프','warrior'],['리치 나이트','mage'],['미노타우로스','warrior'],['심연의 군주','spell']];
 const BPRE=['','각성한 ','변이된 ','심연의 ','종말의 '];
-const NPCN=['김루아','이서하','박도윤','최하온','정시현','강 율','조지안','윤채원','장이안','임아윤','이로운','서은우','신도현','권예서','황하린','안준우','송지유','전아인','홍서준','문하은','양시안','배주원','손민아','조유준','백서아','노예원','곽시후','성채아','우민준','엄하진','채우주','방서진','현지호','함예나','표이엘','반온유','나지후','고태경','구소담','남유리','도하겸','류세빈','마준혁','민지완','봉수아','서라희','오현석','유채린','진유담','차가람'];
+const NPCN=['김루아','이서하','박도윤','최하온','서이겸','강 율','조지안','윤채원','장이안','임아윤','이로운','서은우','신도현','권예서','황하린','안준우','송지유','전아인','홍서준','문하은','양시안','배주원','손민아','조유준','백서아','차이솔','곽시후','성채아','우민준','엄하진','채우주','방서진','현지호','함예나','표이엘','반온유','나지후','고태경','구소담','남유리','도하겸','류세빈','마준혁','민지완','봉수아','서라희','오현석','유채린','진유담','차가람'];
 /* 고정 NPC 네 명은 파일에 내장됩니다. 백무진은 레드 게이트 클리어에서만 희귀하게 등장합니다. */
 const FIXED_NPC_RATE=.15; // 일반 고정 NPC 영입소 등장 확률 (15%)
 const RED_GATE_SS_RATE=.01; // 레드 게이트 승리 1회당 백무진 등장 확률 1%
@@ -2938,7 +2941,7 @@ function npcName(){
  return name;
 }
 function mkUnit(o){return Object.assign({id:uid++,lvl:1,exp:0,up:0,marks:0,deb:{},debFrom:{},shield:0,rs:0,guardBy:null,fled:false,act:null},o,{hp:o.maxHp})}
-function mkAlly(d,isP){return mkUnit({maxHpX:0,side:'a',isP:!!isP,img:d.img?{...d.img}:null,name:d.name,fixedNpcKey:d.fixedNpcKey||null,story:!isP&&!isLockedNpc(d)?JSON.parse(JSON.stringify(d.story||makeHunterStory())):null,tier:d.tier,job:d.job,pos:d.pos,role:d.role,attr:d.attr,ab:abOf(d),budget:d.budget,preset:d.preset||null,dice:cloneD(d.dice),maxHp:Math.round(TIERS[d.tier].hp*(d.role==='tank'?1.2:1))+(S&&S.arts&&S.arts.includes('leaf')?15:0)})}
+function mkAlly(d,isP){return mkUnit({maxHpX:0,side:'a',isP:!!isP,img:d.img?{...d.img}:null,name:d.name,fixedNpcKey:d.fixedNpcKey||null,story:!isP&&!isLockedNpc(d)?JSON.parse(JSON.stringify(d.story||makeHunterStory())):null,tier:d.tier,job:d.job,pos:d.pos,role:d.role,attr:d.attr,ab:abOf(d),budget:d.budget,preset:d.preset||null,dice:cloneD(d.dice),maxHp:Math.ceil(Math.round(TIERS[d.tier].hp*(d.role==='tank'?1.2:1))*(S&&S.arts&&S.arts.includes('leaf')?1.15:1))})}
 /* 승강장 번호가 높아질수록 적 수 증가. 출전 5~8명은 3번 승강장부터 추가 적이 나오며,
    기존 1~4인 파티에 대한 출현 규칙은 유지합니다. */
 function encounterRange(f,partySize){
@@ -3169,8 +3172,8 @@ const dtxt=p=>p.dice.map(d=>`<span class="dz" title="D${d.s}">${d.v}</span>`).jo
 const combatClamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
 const agiScore=u=>sum((u.dice.agi||[]).filter(Number.isFinite).map(n=>(n+1)/2))+statBonus(u.dice,'agi');
 const powerScore=u=>Math.max(...['atk','def','agi'].map(k=>statSum(u,k)));
-const supportRegen=u=>5+Math.floor(powerScore(u)*.22);
-const supportBurst=u=>15+Math.floor(powerScore(u)*.5);
+const supportRegen=(u,t)=>Math.ceil(t.maxHp*.04)+Math.floor(powerScore(u)*.22);
+const supportBurst=(u,t)=>Math.ceil(t.maxHp*.12)+Math.floor(powerScore(u)*.5);
 /* 회복/보호막 공통 계산. 포지션에 따른 증폭은 없습니다. */
 const positionAmount=(u,amount)=>Math.max(0,amount);
 const positionHeal=(u,amount)=>Math.min(Math.max(0,u.maxHp-u.hp),positionAmount(u,amount)); // 포션 전용: 초과 회복 소멸
@@ -3209,8 +3212,8 @@ function attackQuality(c,u,t,opening,duplicate){
 const ACTL={atk:'공격',def:'방어',guard:'대신 맞기',heal:'치유',ambush:'기습',potheal:'포션 사용'};
 const L=(c,x)=>{if(c.V)c.rec.ev.push(x)};
 
-/* 장기전 광폭: 40라운드부터 적의 공격값이 라운드마다 3씩 쌓여 오릅니다(40라운드 +3, 41라운드 +6 …). 끝나지 않는 전투를 막습니다. */
-const ENRAGE_ROUND=40,ENRAGE_STEP=3;
+/* 장기전 광폭: 40라운드부터 적의 공격 주사위 합이 라운드마다 7%씩 쌓여 오릅니다(40라운드 +7%, 41라운드 +14% …). 끝나지 않는 전투를 막습니다. */
+const ENRAGE_ROUND=40,ENRAGE_STEP=7;
 const enrageAtk=c=>c&&c.round>=ENRAGE_ROUND?(c.round-ENRAGE_ROUND+1)*ENRAGE_STEP:0;
 /* 라운드 시작: 민첩 굴림과 순서, 라운드 효과 */
 function startRound(c){
@@ -3224,10 +3227,10 @@ function startRound(c){
   if(HA(c,u,'patience',0)&&c.round>1){u.pat=u._patHit?0:Math.min(70,(u.pat||0)+20)}u._patHit=false;
  }
  startResonances(c);
- if(enrageAtk(c))L(c,`장기전 광폭 → ${c.round===ENRAGE_ROUND?'전투가 길어져 ':''}적 전원의 공격값 +${enrageAtk(c)}`);
+ if(enrageAtk(c))L(c,`장기전 광폭 → ${c.round===ENRAGE_ROUND?'전투가 길어져 ':''}적 전원의 공격 주사위 +${enrageAtk(c)}%`);
  const lv=units.filter(liveU);
- if(has('hymn')){const t=lv.filter(u=>u.side==='a'&&u.hp<u.maxHp).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){const h=receiveHealing(t,6);L(c,`아티팩트 ${AR.hymn.n} → ${nm(t)} ${healText(h)}`)}}
- if(c.round===3){for(const u of lv.filter(u=>u.side==='a')){if(has('hglass'))u.shield=(u.shield||0)+positionShield(u,8);if(has('rally'))gainR(c,u,1);if(extraTotal('rthird'))gainR(c,u,extraTotal('rthird'))}if(has('hglass'))L(c,`아티팩트 ${AR.hglass.n} → 보호막 +8`);if(has('rally'))L(c,`아티팩트 ${AR.rally.n} → 3라운드 아군 역할 자원 +1`)}
+ if(has('hymn')){const t=lv.filter(u=>u.side==='a'&&u.hp<u.maxHp).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`아티팩트 ${AR.hymn.n} → ${nm(t)} ${healText(h)}`)}}
+ if(c.round===3){for(const u of lv.filter(u=>u.side==='a')){if(has('hglass'))u.shield=(u.shield||0)+positionShield(u,Math.ceil(u.maxHp*.1));if(has('rally'))gainR(c,u,1);if(extraTotal('rthird'))gainR(c,u,extraTotal('rthird'))}if(has('hglass'))L(c,`아티팩트 ${AR.hglass.n} → 아군 보호막 +최대 HP 10%`);if(has('rally'))L(c,`아티팩트 ${AR.rally.n} → 3라운드 아군 역할 자원 +1`)}
  for(const u of lv){
   const low=()=>lv.filter(x=>x!==u&&x.side===u.side&&liveU(x)).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
   if(HA(c,u,'kind',0)){const t=low();if(t){const h=receiveHealing(t,Math.ceil(t.maxHp*.06));L(c,`특성 친절 → ${nm(u)}이(가) ${nm(t)}을(를) 보살핌 ${healText(h)}`)}}
@@ -3235,9 +3238,9 @@ function startRound(c){
   if(HA(c,u,'charity',1)){const t=low();if(t){const v=positionShield(t,Math.ceil(u.maxHp*.08));t.shield=(t.shield||0)+v;L(c,`특성 자선 → ${nm(u)}이(가) ${nm(t)}에게 보호막 +${v}`)}}
   if(HA(c,u,'chaste',1)){const t=lv.filter(x=>x.side===u.side&&liveU(x)&&hasDeb(x))[0];if(t){for(const k in t.deb)if(DEBN[k]){delete t.deb[k];if(t.debFrom)delete t.debFrom[k]}L(c,`특성 순결 → ${nm(u)}이(가) ${nm(t)}의 디버프를 정화`)}}
  }
- for(const u of lv.filter(u=>u.side==='a'))receiveHealing(u,extraTotal('heal',u));
- if(has('banner')){const t=lv.filter(u=>u.side==='a'&&u.pos===0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){t.shield=(t.shield||0)+positionShield(t,5);L(c,`아티팩트 ${AR.banner.n} → ${nm(t)} 보호막 +${positionShield(t,5)}`)}}
- for(const u of lv){const ag=rollPool(u,u.dice.agi,'agi',c);let g=ag.sum;for(const [v] of diceBonus(c,u,'agi',ag.sum))g+=v;if(debOn(c,u,'leth'))g-=6;if(debOn(c,u,'frost'))g-=4;if(u.side==='a'&&has('boots'))g+=3;if(u.side==='a')g+=extraTotal('agi',u);if(c.round===1&&u.side==='a'&&has('whistle'))g+=4;if(c.round===1&&u.side==='e'&&has('bell'))g-=4;u._g=g;u._ag=ag}
+ for(const u of lv.filter(u=>u.side==='a'))receiveHealing(u,Math.ceil(u.maxHp*extraTotal('heal',u)/100));
+ if(has('banner')){const t=lv.filter(u=>u.side==='a'&&u.pos===0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){t.shield=(t.shield||0)+positionShield(t,Math.ceil(t.maxHp*.05));L(c,`아티팩트 ${AR.banner.n} → ${nm(t)} 보호막 +${positionShield(t,Math.ceil(t.maxHp*.05))}`)}}
+ for(const u of lv){const ag=rollPool(u,u.dice.agi,'agi',c);let g=ag.sum;for(const [v] of diceBonus(c,u,'agi',ag.sum))g+=v;const ap=k=>Math.round(ag.sum*k/100);if(debOn(c,u,'leth'))g-=ap(20);if(debOn(c,u,'frost'))g-=ap(15);if(u.side==='a'&&has('boots'))g+=ap(10);if(u.side==='a')g+=ap(extraTotal('agi',u));if(c.round===1&&u.side==='a'&&has('whistle'))g+=ap(15);if(c.round===1&&u.side==='e'&&has('bell'))g-=ap(15);u._g=g;u._ag=ag}
  const ordered=lv.slice().sort((a,b)=>b._g-a._g||Math.random()-.5);
  c.queue=ordered.flatMap(u=>!debOn(c,u,'leth')&&!debOn(c,u,'frost')&&Math.random()<extraTurnChance(u)?[u.id,u.id]:[u.id]);c.qi=0;
  for(let i=1;i<c.queue.length;i++)if(c.queue[i]===c.queue[i-1]){const u=unitC(c,c.queue[i]);L(c,`민첩 보너스 → ${nm(u)} 이번 라운드 연속 행동 1회`)}
@@ -3249,7 +3252,7 @@ function beginTurn(c,u){
  if(debOn(c,u,'bleed')){const d=Math.max(1,Math.ceil(u.maxHp*.03));hit(c,null,u,d);L(c,`출혈 → ${nm(u)}에게 ${d} 기본 피해`);if(!liveU(u))return;}
  gainR(c,u,1);
  if(HA(c,u,'dilig',0)&&(u.grind||0)<8){u.grind=(u.grind||0)+1;L(c,`특성 근면 → ${nm(u)} 꾸준함 ${u.grind*6}%`)}
- if(u.role==='support'){const t=friendsC(c,u).sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0];if(t){const h=receiveHealing(t,supportRegen(u));gainR(c,u,1);L(c,`역할 서포터 (공격·방어·민첩 중 최고 능력치 기반) → ${nm(u)}이(가) ${nm(t)} ${healText(h)}`)}}
+ if(u.role==='support'){const t=friendsC(c,u).sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0];if(t){const h=receiveHealing(t,supportRegen(u,t));gainR(c,u,1);L(c,`역할 서포터 → ${nm(u)}이(가) ${nm(t)} ${healText(h)}`)}}
  if(u.role==='tank')[...c.allies,...c.enemies].forEach(x=>{if(x.guardBy===u.id)x.guardBy=null});
  const s=u.stance;if(!s)return;u.stance=null;
  if(s.left>0&&s.foes.length){const f=s.foes.map(x=>({u:unitC(c,x.id),p:x.p})).filter(x=>liveU(x.u)).sort((a,b)=>b.p-a.p)[0];
@@ -3277,7 +3280,7 @@ function hit(c,f,t,v){
  }
  if(t.hp<=0){t.stance=null;t.guardBy=null;L(c,`${nm(t)} 쓰러졌습니다!`);if(f&&f.role==='dealer')gainR(c,f,1);
   if(f&&liveU(f)&&HA(c,f,'glut',0)){const h=receiveHealing(f,Math.ceil(f.maxHp*.2));f.feast=Math.min(70,(f.feast||0)+20);L(c,`특성 폭식 → ${nm(f)} 포식 ${healText(h)}, 공격 주사위 +${f.feast}%`)}
-  if(f&&liveU(f)&&f.side==='a'){if(c.V){B.kills++;if(has('bounty'))B.gold+=6}if(has('reaper')){const h=receiveHealing(f,5);gainR(c,f,1);L(c,`아티팩트 ${AR.reaper.n} → ${nm(f)} ${healText(h)}, 역할 자원 +1`)}}}
+  if(f&&liveU(f)&&f.side==='a'){if(c.V){B.kills++;if(has('bounty'))B.gold+=6}if(has('reaper')){const h=receiveHealing(f,Math.ceil(f.maxHp*.05));gainR(c,f,1);L(c,`아티팩트 ${AR.reaper.n} → ${nm(f)} ${healText(h)}, 역할 자원 +1`)}}}
  return d;
 }
 const DEBUFF_TURNS=3;
@@ -3361,7 +3364,7 @@ function doAction(c,u,a){
  }
  if(a.a==='heal'){
   const t=unitC(c,a.t);if(!t||!liveU(t)){a={a:'def'};}else{
-  const h=receiveHealing(t,supportBurst(u));
+  const h=receiveHealing(t,supportBurst(u,t));
   let cl=false;for(const k in t.deb||{})if(DEBN[k]){delete t.deb[k];if(t.debFrom)delete t.debFrom[k];cl=true}
   Object.assign(row,{tgt:t.name,res:`${healText(h)}${cl?' · 정화':''}`});
   L(c,`역할 기술 <b>치유</b> → ${nm(u)}이(가) ${nm(t)} ${healText(h)}${cl?' · 정화':''}`);
@@ -3371,7 +3374,7 @@ function doAction(c,u,a){
  if(a.a==='guard'){const t=unitC(c,a.t);t.guardBy=u.id;row.tgt=t.name;L(c,`역할 기술 <b>대신 맞기</b> → ${nm(u)}이(가) 다음 차례까지 ${nm(t)}을(를) 노린 공격을 모두 대신 받습니다.`)}
  if(a.a==='def'||a.a==='guard'){
   const pool=rollPool(u,u.dice.def,'def',c);let p=pool.sum;const notes=[];const add=(v,t)=>{if(v){p+=v;notes.push(t+(v>0?' +':' ')+v)}};
-  if(u.side==='a'&&has('mirror')){const dv=pool.dice.map(d=>d.v);if(new Set(dv).size<dv.length)add(8,AR.mirror.n)}if(u.role==='tank')add(5,'역할 탱커');if(u.side==='a')add(extraTotal('def',u),'추가 아티팩트');for(const [v,n] of diceBonus(c,u,'def',pool.sum))add(v,n);
+  if(u.side==='a'&&has('mirror')){const dv=pool.dice.map(d=>d.v);if(new Set(dv).size<dv.length)add(Math.round(pool.sum*.25),AR.mirror.n+' +25%')}if(u.role==='tank')add(Math.round(pool.sum*.12),'역할 탱커 +12%');if(u.side==='a'&&extraTotal('def',u))add(Math.round(pool.sum*extraTotal('def',u)/100),`추가 아티팩트 +${extraTotal('def',u)}%`);for(const [v,n] of diceBonus(c,u,'def',pool.sum))add(v,n);
   
   p=Math.max(0,p);u.stance={left:p,p,foes:[]};
   Object.assign(row,{pool,p,notes,res:`방어 태세 ${p}`});if(a.a==='guard')row.res='대신 맞기 · '+row.res;
@@ -3388,14 +3391,14 @@ function doAction(c,u,a){
   else{const tk=friendsC(c,t).find(k=>k!==t&&k.role==='tank'&&k.pos===t.pos);if(tk){L(c,`역할 탱커 → ${nm(tk)}이(가) 같은 열의 ${nm(t)} 대신 공격을 받습니다.`);gainR(c,tk,1);t=tk}}}
  const pool=rollPool(u,u.dice.atk,'atk',c);let p=pool.sum;const notes=[];const add=(v,x)=>{if(v){p+=v;notes.push(x+(v>0?' +':' ')+v)}};
  const vs=pool.dice.map(d=>d.v),dup=new Set(vs).size<vs.length,mx=pool.dice.filter(d=>d.v===d.s).length;
- if(u.job==='warrior')add(3,'직업 집행자');if(u.side==='a')add(extraTotal('atk',u),'추가 아티팩트');
+ if(u.job==='warrior')add(Math.round(pool.sum*.06),'직업 집행자 +6%');if(u.side==='a'&&extraTotal('atk',u))add(Math.round(pool.sum*extraTotal('atk',u)/100),`추가 아티팩트 +${extraTotal('atk',u)}%`);
  const cnt={};vs.forEach(v=>cnt[v]=(cnt[v]||0)+1);const maxSame=Math.max(0,...Object.values(cnt)),ones=cnt[1]||0;
  const uq=[...new Set(vs)].sort((a,b)=>a-b);let run=uq.length?1:0,best=run;for(let i=1;i<uq.length;i++){run=uq[i]===uq[i-1]+1?run+1:1;best=Math.max(best,run)}
- if(u.side==='a'&&has('fullmoon'))add(4*mx,AR.fullmoon.n);
+ if(u.side==='a'&&has('fullmoon')&&mx)add(Math.round(pool.sum*.1*mx),AR.fullmoon.n+` +${10*mx}%`);
  for(const [v,n] of diceBonus(c,u,'atk',pool.sum,t))add(v,n);
  const firstAtk=!u._firstAtk,revenge=!!u._revenge;u._firstAtk=1;if(HA(c,u,'wrath',1))u._revenge=0;
- if(debOn(c,u,'plunder'))add(-5,'저주');
- if(u.side==='e')add(enrageAtk(c),'장기전 광폭');
+ if(debOn(c,u,'plunder'))add(-Math.round(pool.sum*.15),'저주 -15%');
+ if(u.side==='e'&&enrageAtk(c))add(Math.round(pool.sum*enrageAtk(c)/100),'장기전 광폭 +'+enrageAtk(c)+'%');
  
  // 선제공격은 새로운 스킬이 아닌 첫 라운드의 민첩 우위 보너스.
  const opening=c.round===1&&!u._opened&&(u._g||0)>=(t._g||0)+(u.side==='a'&&has('horn')?6:8);
@@ -3421,7 +3424,7 @@ function doAction(c,u,a){
  if(u.side==='a'&&extraTotal('pct',u))pcts.push([extraTotal('pct',u),'추가 아티팩트']);
  if(u.side==='a'){if(has('triple')&&maxSame>=3)pcts.push([100,AR.triple.n]);if(has('straight')&&best>=3)pcts.push([25,AR.straight.n]);if(has('parity'))pcts.push(pool.sum%2===0?[20,AR.parity.n+' 짝']:[-10,AR.parity.n+' 홀'])}
  if(u.side==='a'){if(has('prism')&&JOBS[u.job].magic)pcts.push([12,AR.prism.n]);if(has('mask')&&u.hp<=u.maxHp*.5)pcts.push([15,AR.mask.n]);if(has('chain')&&c.qi>0&&c.queue[c.qi-1]===u.id)pcts.push([15,AR.chain.n])}
- if(u.side==='a'&&quality==='normal'&&has('whet'))add(5,AR.whet.n);
+ if(u.side==='a'&&quality==='normal'&&has('whet'))add(Math.round(pool.sum*.15),AR.whet.n+' +15%');
  const tp=sum(pcts.map(x=>x[0]));if(tp){const before=p;p=Math.round(p*(1+tp/100));notes.push(pcts.map(x=>x[1]+(x[0]>0?' +':' ')+x[0]+'%').join(' · ')+` (${before}→${p})`)}
  p=Math.max(1,p);
  if(quality==='graze'){const rate=.35;p=Math.max(1,Math.round(p*rate));notes.push('스침 ×'+Math.round(rate*100)+'%')}
@@ -3430,7 +3433,7 @@ function doAction(c,u,a){
  const magic=JOBS[u.job].magic;let dd,txt;
  /* 마법 직업(침식자·구현자)은 적의 방어 태세를 2배로 깎습니다. */
  if(!amb&&t.stance&&t.stance.left>0){const s=t.stance,ab=magic?Math.min(p,Math.floor(s.left/2)):Math.min(p,s.left);s.left-=magic?ab*2:ab;s.foes.push({id:u.id,p});
-  const nativePierce=u.job==='archer'?Math.floor(ab/4):0;const artPierce=u.side==='a'&&has('quiver')&&u.job==='archer'?4:0;const pierce=nativePierce+artPierce;dd=p-ab+pierce;txt=`방어로 ${ab} 막음${nativePierce?', 직업 추적자 관통 +'+nativePierce:''}${artPierce?', 아티팩트 '+AR.quiver.n+' +'+artPierce:''}, 남은 방어 ${s.left}`}
+  const nativePierce=u.job==='archer'?Math.floor(ab/4):0;const artPierce=u.side==='a'&&has('quiver')&&u.job==='archer'?Math.round(p*.1):0;const pierce=nativePierce+artPierce;dd=p-ab+pierce;txt=`방어로 ${ab} 막음${nativePierce?', 직업 추적자 관통 +'+nativePierce:''}${artPierce?', 아티팩트 '+AR.quiver.n+' +'+artPierce:''}, 남은 방어 ${s.left}`}
  else{dd=p;if(t.stance&&!amb)t.stance.foes.push({id:u.id,p});txt=amb&&t.stance&&t.stance.left>0?'기습으로 방어 무시':'방어 없음'}
  t._incomingQuality=quality;
   const priorHp=t.hp;
@@ -3464,15 +3467,15 @@ function doAction(c,u,a){
    const status={warrior:'bleed',archer:'poison',mage:'frost',spell:'burn'}[u.job]||'stun';
    if(offensiveDebuff(c,u,t,status))L(c,`적 ${nm(u)}의 공격 → ${nm(t)} ${DEBN[status]} 적용`);
   }
-  if(u.side==='a'&&has('doll')&&liveU(t)&&Math.random()<.35&&offensiveDebuff(c,u,t,'plunder'))L(c,`아티팩트 ${AR.doll.n} → ${nm(t)} 저주: 공격값 -5`);
-  if(t.side==='a'&&has('thorn')&&hpDealt>0&&liveU(u)&&!amb){const v=hit(c,null,u,3);if(v)L(c,`아티팩트 ${AR.thorn.n} → ${nm(u)}에게 가시 피해 ${v}`)}
+  if(u.side==='a'&&has('doll')&&liveU(t)&&Math.random()<.35&&offensiveDebuff(c,u,t,'plunder'))L(c,`아티팩트 ${AR.doll.n} → ${nm(t)} 저주: 공격 주사위 -15%`);
+  if(t.side==='a'&&has('thorn')&&hpDealt>0&&liveU(u)&&!amb){const v=hit(c,null,u,Math.max(1,Math.round(hpDealt*.2)));if(v)L(c,`아티팩트 ${AR.thorn.n} → ${nm(u)}에게 가시 피해 ${v}`)}
   if(u.job==='warrior'&&dup&&liveU(t)){const v=Math.round(Math.max(...vs));L(c,`직업 집행자 연격 +${v}`);hit(c,u,t,v)}
-  if(u.job==='spell'&&!HA(c,t,'chaste',0)&&liveU(t)){t.marks=(t.marks||0)+1;if(t.marks>=3){t.marks=0;const bv=20;L(c,`직업 침식자 각인 폭발: ${nm(t)} ${bv}`);hit(c,u,t,bv)}}
+  if(u.job==='spell'&&!HA(c,t,'chaste',0)&&liveU(t)){t.marks=(t.marks||0)+1;if(t.marks>=3){t.marks=0;const bv=Math.max(1,Math.ceil(t.maxHp*.1));L(c,`직업 침식자 각인 폭발: ${nm(t)} ${bv}`);hit(c,u,t,bv)}}
   if(hpDealt>0&&(HA(c,u,'lust',0)||HA(c,u,'lust',1)&&Math.random()<.3)&&offensiveDebuff(c,u,t,'charm'))L(c,`특성 색욕 → ${nm(t)} 유혹: 공격 시 확률로 빗맞힘(35%)`);
-  if(hpDealt>0&&(HA(c,u,'pride',1)&&firstAtk||HA(c,u,'envy',1))&&offensiveDebuff(c,u,t,'plunder'))L(c,`특성 ${AT[u.attr].n} → ${nm(t)} 저주: 3턴간 공격 -5`);
+  if(hpDealt>0&&(HA(c,u,'pride',1)&&firstAtk||HA(c,u,'envy',1))&&offensiveDebuff(c,u,t,'plunder'))L(c,`특성 ${AT[u.attr].n} → ${nm(t)} 저주: 3턴간 공격 주사위 -15%`);
   if(hpDealt>0&&HA(c,u,'wrath',1)&&revenge&&offensiveDebuff(c,u,t,'bleed'))L(c,`특성 분노 보복 → ${nm(t)} 출혈`);
   if(hpDealt>0&&HA(c,u,'glut',1)&&liveU(u)){const h=receiveHealing(u,Math.ceil(hpDealt*.1));const p=offensiveDebuff(c,u,t,'poison');L(c,`특성 폭식 탐식 → ${nm(u)} ${healText(h)}${p?` · ${nm(t)} 중독`:''}`)}
-  if(hpDealt>0&&HA(c,u,'sloth',0)&&offensiveDebuff(c,u,t,'leth'))L(c,`특성 나태 → ${nm(t)} 무기력: 민첩 -6, 연속 행동 불가`);
+  if(hpDealt>0&&HA(c,u,'sloth',0)&&offensiveDebuff(c,u,t,'leth'))L(c,`특성 나태 → ${nm(t)} 무기력: 민첩 주사위 -20%, 연속 행동 불가`);
   if(hpDealt>0&&HA(c,u,'greed',0)&&liveU(u)){const sv=Math.ceil(hpDealt*.15);u.shield=(u.shield||0)+sv;let g='';if(u.side==='a'&&c.V&&(B.greed||0)<20){B.greed=(B.greed||0)+2;B.gold+=2;g=', 마석 +2'}L(c,`특성 탐욕 → ${nm(u)} 착복: 보호막 +${sv}${g}`)}
  }
  if(u.job==='mage'&&p>=35){const o=foesC(c,u).filter(x=>x!==t&&x.pos===t.pos);if(o.length){const v=Math.floor(p/3);L(c,`직업 구현자 광역: ${o.map(nm).join(', ')}에게 ${v}`);o.forEach(x=>hit(c,u,x,v))}}
@@ -3516,7 +3519,7 @@ function advance(c,stopAlly,limitRound){
 function pushRec(c){c.hist.unshift(c.rec);if(c.hist.length>200)c.hist.pop()}
 function startBattle(kind,bonus){
  const es=mkEncounter(S.floor,kind);
- S.party.forEach(u=>Object.assign(u,{marks:0,deb:{},debFrom:{},pat:0,_resMirrorRound:0,_resWardRound:0,_patHit:false,grind:0,feast:0,_firstAtk:0,_revenge:0,stance:null,guardBy:null,_opened:0,_evadeCounterRound:0,_lastBeginRound:0,rs:(has('rally')?1:0)+extraTotal('rstart'),shield:u.hp>0?(u.shield||0)+positionShield(u,(has('barrier')?10+S.floor:0)+(has('shieldf')&&u.pos===0?12:0)+extraTotal('shield',u)):0,_incomingQuality:null}));
+ S.party.forEach(u=>Object.assign(u,{marks:0,deb:{},debFrom:{},pat:0,_resMirrorRound:0,_resWardRound:0,_patHit:false,grind:0,feast:0,_firstAtk:0,_revenge:0,stance:null,guardBy:null,_opened:0,_evadeCounterRound:0,_lastBeginRound:0,rs:(has('rally')?1:0)+extraTotal('rstart'),shield:u.hp>0?(u.shield||0)+positionShield(u,Math.ceil(u.maxHp*((has('barrier')?12:0)+(has('shieldf')&&u.pos===0?15:0)+extraTotal('shield',u))/100)):0,_incomingQuality:null}));
  
  S.party.forEach(u=>u.rs=Math.min(rmaxOf(u),u.rs));
  B={phx:0,kind,bonus:bonus||1,potions:S.potions,allies:S.party,enemies:es,round:0,queue:[],qi:0,cur:null,over:null,gold:0,kills:0,hist:[],stat:{},V:true,showAll:false,sel:null};
@@ -3578,14 +3581,14 @@ function scheduleWin(){const gen=++wrGen;if(!HAS_DOM||!B||B.over||!B.cur||S.scre
 
 /* ---------- 보상과 성장 ---------- */
 const fmul=()=>1+.18*(S.floor-1);
-const LVB=8;
+const LVB=10;
 const RED_GATE_S_TICKET_ITEM='<b>S급 확정 영입권</b> (레드 게이트 돌파 보상)';
-/* 레벨 업: 스탯 총량 +8을 받아 다시 분배. 빠른 분배로 만든 캐릭터는 그 분배형 비율로, 직접 분배한 캐릭터는 지금 비율 그대로 */
+/* 레벨 업: 스탯 총량 +10을 받아 다시 분배. 빠른 분배로 만든 캐릭터는 그 분배형 비율로, 직접 분배한 캐릭터는 지금 비율 그대로 */
 function reAlloc(u){const p=presetOf(u),B0=dtotal(u.dice)||1,r=p?RATIO[p]:STAT_KEYS.map(k=>diceStat(u.dice,k)/B0);u.dice=autoAlloc(totalBudget(u),r);if(p)u.preset=p}
 /* 영입 시작 레벨: 1·2번 승강장 Lv2, 3번 승강장부터 (승강장 번호 −1)×1.4(소수 버림)+2 → 3번 승강장 Lv4, 4번 승강장 Lv6, 5번 승강장 Lv7, 6번 승강장 Lv9 … */
 const recruitLevel=()=>{const f=S&&S.floor||1;return f<=2?2:Math.floor(1.4*(f-1))+2};
-function levelUpTo(u,lv){let n=0;while(u.lvl<lv){u.lvl++;u.maxHp+=8;u.hp=u.maxHp;u.budget+=LVB;n++}if(n)reAlloc(u);return n}
-function gainExp(u,x){u.exp+=x;const ups=[];while(u.exp>=expNeed(u.lvl)){u.exp-=expNeed(u.lvl);u.lvl++;u.maxHp+=8;if(u.hp>0)u.hp+=8;u.budget+=LVB;ups.push(u.lvl)}if(ups.length)reAlloc(u);return ups}
+function levelUpTo(u,lv){let n=0;while(u.lvl<lv){u.lvl++;u.maxHp+=10;u.hp=u.maxHp;u.budget+=LVB;n++}if(n)reAlloc(u);return n}
+function gainExp(u,x){u.exp+=x;const ups=[];while(u.exp>=expNeed(u.lvl)){u.exp-=expNeed(u.lvl);u.lvl++;u.maxHp+=10;if(u.hp>0)u.hp+=10;u.budget+=LVB;ups.push(u.lvl)}if(ups.length)reAlloc(u);return ups}
 function finishBattle(){
  S.stats.battles++;S.stats.kills+=B.kills;
  S.party.forEach(u=>{u.stance=null;u.act=null;u.deb={};u.debFrom={}});
@@ -3604,9 +3607,9 @@ function finishBattle(){
  const lost=S.party.filter(u=>!alive(u)).map(u=>u.name);
  if(B.over==='flee'){S.screen='map';S.msg=`${revive} 전투에서 이탈했습니다. 보상은 없습니다.${lost.length?' 전사: '+lost.map(esc).join(', '):''}`;B=null;return}
  const k=B.kind,base={normal:22,elite:50,red:110,boss:120}[k];
- const gold=Math.round((base+R(base/2))*fmul()*(has('detector')?1.12:1)*B.bonus)+B.gold+(has('detector')?5:0);S.gold+=gold;
+ const gold=Math.round((base+R(base/2))*fmul()*(has('detector')?1.17:1)*B.bonus)+B.gold;S.gold+=gold;
  
- const xp=Math.round({normal:20,elite:45,red:90,boss:80}[k]*(1+.2*(S.floor-1))*(has('tome')?1.16:1)*(has('lantern')&&k!=='normal'?1.2:1))+(has('tome')?2:0);
+ const xp=Math.round({normal:20,elite:45,red:90,boss:80}[k]*(1+.2*(S.floor-1))*(has('tome')?1.18:1)*(has('lantern')&&k!=='normal'?1.2:1));
  const exps=S.party.filter(alive).map(u=>{const ups=gainExp(u,xp);return{name:u.name,xp,ups}});
  const items=[];
  const pr=DROP[k],got={};
@@ -3627,7 +3630,7 @@ const DROP={normal:{gold:1,potion:.35,art:.2,ticket:.06},elite:{gold:1,potion:.5
 const DROPN={gold:'마석',potion:'회복 포션',art:'아티팩트',ticket:'영입권'};
 const dropLine=k=>Object.keys(DROPN).map(x=>`${DROPN[x]} ${Math.round(DROP[k][x]*100)}%`).join(' · ');
 const artOpts=n=>shuffle(ARTS.filter(r=>!has(r.k))).slice(0,n);
-function gainArt(k){if(has(k))return;S.arts.push(k);if(k==='leaf')all().forEach(u=>{u.maxHp+=15;if(u.hp>0)u.hp+=15})}
+function gainArt(k){if(has(k))return;S.arts.push(k);if(k==='leaf')all().forEach(u=>{const gl=Math.ceil(u.maxHp*.15);u.maxHp+=gl;if(u.hp>0)u.hp+=gl})}
 const PROMO={F:[3,1],E:[5,2],D:[7,3],C:[9,4],B:[12,5],A:[15,6]};
 const nextG=g=>GRADES[GRADES.indexOf(g)+1];
 const promoCost=u=>Math.round(40*(GRADES.indexOf(u.tier)+1)*(1+.1*(S.floor-1)));
@@ -3643,7 +3646,7 @@ const hireCost=g=>Math.round(TIERS[g].cost*(has('contract')?.7:1));
 const canFight=()=>S.party.some(alive);
 const spaceLeft=()=>S.party.length<partyLimit()||S.bench.length<8;
 function nextFloor(){S.floor++;S.stats.best=Math.max(S.stats.best,S.floor);S.map=genMap();S.screen='map';S.msg=`${floorLabel(S.floor)}에 도착했습니다. 몬스터가 더 강해지고 보상도 늘어납니다.`}
-const potionHeal=u=>Math.ceil(u.maxHp*(has('medkit')?.45:.4))+(has('salve')?8:0);
+const potionHeal=u=>Math.ceil(u.maxHp*((has('medkit')?.45:.4)+(has('salve')?.07:0)));
 
 /* ---------- 돌발 퀘스트 ---------- */
 /* 이벤트 피해: 살아 있으면 최소 1, 이미 쓰러졌으면 0 유지 */
@@ -3656,24 +3659,25 @@ const hurtTo=(u,v)=>u.hp>0?Math.max(1,v):0;
 const done=m=>{S.event.result=m;S.event.closed=true};
 const say=m=>{S.event.result=m};
 const f_=()=>S.floor;
+const hpPct=(u,p)=>Math.max(1,Math.ceil(u.maxHp*p/100));
 const EVENTS=[
  {t:'레드 게이트 감지',d:'경로 옆에 붉은 균열이 열렸습니다. 들어가면 안의 몬스터를 모두 처치하기 전까지 나올 수 없습니다.',o:[
   {n:'진입한다 (레드 게이트 전투)',c:()=>canFight()&&S.floor>=2,f:()=>startBattle('red')},{n:'협회에 보고하고 지나친다',f:()=>done('균열 좌표를 협회에 전송했습니다.')}]},
  {t:'정체불명의 계약서',d:'바닥에 떨어진 계약서. 서명하면 마석을 주겠다는 문구가 떠오릅니다.',o:[
-  {n:()=>`서명한다 (플레이어 최대 HP -10, 마석 +${60+f_()*10})`,f:()=>{const p=P(),g=60+f_()*10;p.maxHp-=10;p.hp=hurtTo(p,Math.min(p.hp,p.maxHp));S.gold+=g;done(`계약 성립. 마석 ${g}${JO(g,'이')} 들어왔습니다.`)}},{n:'무시한다',f:()=>done('계약서가 재가 되어 흩어졌습니다.')}]},
+  {n:()=>`서명한다 (플레이어 최대 HP -10%, 마석 +${60+f_()*10})`,f:()=>{const p=P(),g=60+f_()*10;p.maxHp=Math.max(1,p.maxHp-hpPct(p,10));p.hp=hurtTo(p,Math.min(p.hp,p.maxHp));S.gold+=g;done(`계약 성립. 마석 ${g}${JO(g,'이')} 들어왔습니다.`)}},{n:'무시한다',f:()=>done('계약서가 재가 되어 흩어졌습니다.')}]},
  {t:'떠돌이 아티팩트 상인',d:'"마석 말고 피로 받지. 출전 인원 전원이 조금씩만."',o:[
-  {n:'거래한다 (출전 인원 HP -15, 아티팩트 1개)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-15));const r=artOpts(1)[0];if(r){gainArt(r.k);done(`아티팩트 「${r.n}」 획득.`)}else done('더 줄 물건이 없다며 사라졌습니다.')}},{n:'거절한다',f:()=>done('상인은 어깨를 으쓱하고 사라졌습니다.')}]},
+  {n:'거래한다 (출전 인원 최대 HP 15% 피해, 아티팩트 1개)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-hpPct(u,15)));const r=artOpts(1)[0];if(r){gainArt(r.k);done(`아티팩트 「${r.n}」 획득.`)}else done('더 줄 물건이 없다며 사라졌습니다.')}},{n:'거절한다',f:()=>done('상인은 어깨를 으쓱하고 사라졌습니다.')}]},
  {t:'조난당한 헌터',d:'파티가 전멸하고 혼자 남은 헌터가 동행을 청합니다.',o:[
   {n:'받아들인다 (무료 영입)',f:()=>{if(!spaceLeft())return done('자리가 없어 출발 승강장으로 돌아가는 길만 알려 줬습니다.');const u=mkAlly(newDraft(ticketGrade(Math.max(1,f_()-2)),true));done(`${gname(u.tier)} ${esc(u.name)}이(가) ${place(u)}에 합류했습니다.`)}},{n:'거절한다',f:()=>done('헌터는 귀환석을 깨고 사라졌습니다.')}]},
  {t:'불법 도박장',d:'"D6 하나. 4 이상이면 건 만큼 따고, 3 이하면 잃는다. 마석이 남아 있는 한 계속 걸 수 있어."',o:[
   {n:'10 건다',c:()=>S.gold>=10,f:()=>gamble(10)},{n:'50 건다',c:()=>S.gold>=50,f:()=>gamble(50)},{n:()=>`전부 건다 (${S.gold})`,c:()=>S.gold>0,f:()=>gamble(S.gold)},{n:'그만둔다',f:()=>done('도박장을 나섰습니다.')}]},
  {t:'마나 샘',d:'승강장 연결 통로 한가운데 푸른 마나가 고인 샘이 있습니다.',o:[
-  {n:'마신다 (생존한 출전 인원 HP 20 회복)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,20)});done('생존한 파티원의 상처가 아물었습니다.')}},{n:'병에 담는다 (회복 포션 +1)',f:()=>{S.potions++;done('회복 포션 1개를 챙겼습니다.')}}]},
+  {n:'마신다 (생존한 출전 인원 최대 HP 20% 회복)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,hpPct(u,20))});done('생존한 파티원의 상처가 아물었습니다.')}},{n:'병에 담는다 (회복 포션 +1)',f:()=>{S.potions++;done('회복 포션 1개를 챙겼습니다.')}}]},
  {t:'함정 복도',d:'바닥에 압력판이 빼곡합니다. 민첩하게 지나가면 끝에 마석 더미가 보입니다.',o:[
-  {n:()=>`통과한다 (각자 민첩 판정 · 실패 시 피해 ${10+2*f_()})`,f:()=>{const dc=10+2*f_(),out=S.party.filter(alive).map(u=>{const r=rollPool(u,u.dice.agi,'agi').sum+(u.pos===1?2:0);if(r>=dc)return`${esc(u.name)} 성공(${r})`;u.hp=hurtTo(u,u.hp-dc);return`${esc(u.name)} 실패(${r}) -${dc}`});const g=30+8*f_();S.gold+=g;done(out.join(' · ')+`. 마석 ${g} 획득.`)}},
+  {n:()=>`통과한다 (각자 민첩 판정 · 실패 시 최대 HP ${8+f_()}% 피해)`,f:()=>{const dc=10+2*f_(),out=S.party.filter(alive).map(u=>{const r=rollPool(u,u.dice.agi,'agi').sum+(u.pos===1?2:0);if(r>=dc)return`${esc(u.name)} 성공(${r})`;const dm=hpPct(u,8+f_());u.hp=hurtTo(u,u.hp-dm);return`${esc(u.name)} 실패(${r}) -${dm}`});const g=30+8*f_();S.gold+=g;done(out.join(' · ')+`. 마석 ${g} 획득.`)}},
   {n:()=>`마석 ${15+3*f_()}${JO(15+3*f_(),'을')} 내고 우회한다`,c:()=>S.gold>=15+3*f_(),f:()=>{S.gold-=15+3*f_();done('안전한 길로 돌아갔습니다.')}}]},
  {t:'잠긴 보물상자',d:'봉인된 상자입니다. 마석을 녹여 넣으면 열릴 것 같습니다.',o:[
-  {n:()=>`마석 ${20+4*f_()}${JO(20+4*f_(),'으로')} 연다`,c:()=>S.gold>=20+4*f_(),f:()=>{S.gold-=20+4*f_();const r=Math.random();if(r<.45){const a=artOpts(1)[0];if(a){gainArt(a.k);return done(`아티팩트 「${a.n}」!`)}}if(r<.8){const g=60+12*f_();S.gold+=g;return done(`마석 ${g}${JO(g,'이')} 쏟아졌습니다.`)}const lv=S.party.filter(alive),u=pick(lv.length?lv:S.party);u.hp=hurtTo(u,u.hp-20);done(`미믹이었습니다! ${esc(u.name)} HP -20.`)}},{n:'두고 간다',f:()=>done('상자를 그대로 두었습니다.')}]},
+  {n:()=>`마석 ${20+4*f_()}${JO(20+4*f_(),'으로')} 연다`,c:()=>S.gold>=20+4*f_(),f:()=>{S.gold-=20+4*f_();const r=Math.random();if(r<.45){const a=artOpts(1)[0];if(a){gainArt(a.k);return done(`아티팩트 「${a.n}」!`)}}if(r<.8){const g=60+12*f_();S.gold+=g;return done(`마석 ${g}${JO(g,'이')} 쏟아졌습니다.`)}const lv=S.party.filter(alive),u=pick(lv.length?lv:S.party);const dm=hpPct(u,20);u.hp=hurtTo(u,u.hp-dm);done(`미믹이었습니다! ${esc(u.name)} 최대 HP 20% 피해 (-${dm}).`)}},{n:'두고 간다',f:()=>done('상자를 그대로 두었습니다.')}]},
  {t:'수련의 석판',d:'석판에 손을 얹으면 한 명이 깨달음을 얻습니다.',o:()=>S.party.map(u=>({n:`${esc(u.name)} (Lv${u.lvl}) · 경험치 +${40+10*f_()}`,f:()=>{const ups=gainExp(u,40+10*f_());done(`${esc(u.name)} 경험치 +${40+10*f_()}${ups.length?` · 레벨 업! Lv${u.lvl}`:''}`)}}))},
  {t:'매복',d:'몬스터 무리가 숨어 있습니다. 싸워서 이기면 평소의 두 배 마석을 얻습니다.',o:[
   {n:'맞서 싸운다 (보상 마석 ×2)',c:()=>canFight(),f:()=>startBattle('normal',2)},{n:()=>`마석 ${10+5*f_()}${JO(10+5*f_(),'을')} 던져 주의를 끈다`,c:()=>S.gold>=10+5*f_(),f:()=>{S.gold-=10+5*f_();done('몬스터들이 마석을 쫓아갔습니다.')}}]},
@@ -3682,26 +3686,26 @@ const EVENTS=[
  {t:'영혼 거래상',d:'"마석을 주면 네 동료들의 경험을 대신 쌓아 주지."',o:[
   {n:()=>`마석 ${30+8*f_()} · 출전 인원 경험치 +${25+5*f_()}`,c:()=>S.gold>=30+8*f_(),f:()=>{S.gold-=30+8*f_();const ups=S.party.filter(u=>gainExp(u,25+5*f_()).length).map(u=>esc(u.name));done(`경험치를 받았습니다.${ups.length?' 레벨 업: '+ups.join(', '):''}`)}},{n:'거절한다',f:()=>done('거래상이 그림자 속으로 사라졌습니다.')}]},
  {t:'저주받은 진열장',d:'강력한 아티팩트가 저주와 함께 진열돼 있습니다.',o:[
-  {n:'가져간다 (아티팩트 1개, 모든 캐릭터 최대 HP -5)',f:()=>{const a=artOpts(1)[0];all().forEach(u=>{u.maxHp-=5;u.hp=hurtTo(u,Math.min(u.hp,u.maxHp))});if(a){gainArt(a.k);done(`「${a.n}」 획득. 몸이 무거워졌습니다.`)}else done('진열장은 비어 있었습니다.')}},{n:'손대지 않는다',f:()=>done('진열장을 지나쳤습니다.')}]},
+  {n:'가져간다 (아티팩트 1개, 모든 캐릭터 최대 HP -5%)',f:()=>{const a=artOpts(1)[0];all().forEach(u=>{u.maxHp=Math.max(1,u.maxHp-hpPct(u,5));u.hp=hurtTo(u,Math.min(u.hp,u.maxHp))});if(a){gainArt(a.k);done(`「${a.n}」 획득. 몸이 무거워졌습니다.`)}else done('진열장은 비어 있었습니다.')}},{n:'손대지 않는다',f:()=>done('진열장을 지나쳤습니다.')}]},
  {t:'부상당한 협회 의무관',d:'의무관이 치료를 해 주겠다고 합니다. 대가는 마석.',o:[
-  {n:()=>`마석 ${20+5*f_()} · 생존한 모든 캐릭터 HP 완전 회복`,c:()=>S.gold>=20+5*f_(),f:()=>{S.gold-=20+5*f_();all().forEach(u=>{if(alive(u))u.hp=u.maxHp});done('생존한 캐릭터가 완전히 회복했습니다. 쓰러진 동료는 안전 지대에서만 부활할 수 있습니다.')}},{n:'붕대만 받는다 (생존한 출전 인원 HP 10)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,10)});done('생존한 출전 인원이 응급 처치를 받았습니다.')}}]},
+  {n:()=>`마석 ${20+5*f_()} · 생존한 모든 캐릭터 HP 완전 회복`,c:()=>S.gold>=20+5*f_(),f:()=>{S.gold-=20+5*f_();all().forEach(u=>{if(alive(u))u.hp=u.maxHp});done('생존한 캐릭터가 완전히 회복했습니다. 쓰러진 동료는 안전 지대에서만 부활할 수 있습니다.')}},{n:'붕대만 받는다 (생존한 출전 인원 최대 HP 10% 회복)',f:()=>{S.party.forEach(u=>{if(alive(u))receiveHealing(u,hpPct(u,10))});done('생존한 출전 인원이 응급 처치를 받았습니다.')}}]},
  {t:'무너진 연결 통로',d:'무너진 연결 통로 너머에 다음 승강장으로 향하다 쓰러진 헌터의 유품이 보입니다. 잔해를 치우려면 힘을 써야 합니다.',o:[
-  {n:()=>`잔해를 치운다 (출전 인원 HP -8, 마석 +${40+8*f_()})`,f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-8));const g=40+8*f_();S.gold+=g;done(`돌무더기를 치웠더니 마석 ${g}${JO(g,'을')} 찾았습니다.`)}},{n:'명복을 빌고 지나친다',f:()=>done('조용히 묵념하고 지나갔습니다.')}]},
+  {n:()=>`잔해를 치운다 (출전 인원 최대 HP 8% 피해, 마석 +${40+8*f_()})`,f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-hpPct(u,8)));const g=40+8*f_();S.gold+=g;done(`돌무더기를 치웠더니 마석 ${g}${JO(g,'을')} 찾았습니다.`)}},{n:'명복을 빌고 지나친다',f:()=>done('조용히 묵념하고 지나갔습니다.')}]},
  {t:'낯선 약초 군락',d:'처음 보는 약초가 무성합니다. 몸에 좋을지 독이 될지는 먹어 봐야 압니다.',o:[
-  {n:'먹어 본다 (50%: 출전 인원 최대 HP +6 / 50%: HP -12)',f:()=>{if(Math.random()<.5){S.party.forEach(u=>{u.maxHp+=6;if(alive(u))u.hp+=6});done('몸에 힘이 솟습니다. 출전 인원 최대 HP +6.')}else{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-12));done('독초였습니다. 출전 인원 HP -12.')}}},
+  {n:'먹어 본다 (50%: 출전 인원 최대 HP +6% / 50%: 최대 HP 12% 피해)',f:()=>{if(Math.random()<.5){S.party.forEach(u=>{const gm=Math.ceil(u.maxHp*.06);u.maxHp+=gm;if(alive(u))u.hp+=gm});done('몸에 힘이 솟습니다. 출전 인원 최대 HP +6%.')}else{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-hpPct(u,12)));done('독초였습니다. 출전 인원 최대 HP 12% 피해.')}}},
   {n:'포션 재료로 채집한다 (회복 포션 +1)',f:()=>{S.potions++;done('약초를 정리해 회복 포션 1개를 만들었습니다.')}}]},
  {t:'거울 회랑',d:'벽면 거울 속 그림자가 결투를 청합니다. 이기면 그림자가 품은 마석을 넘겨준다고 합니다.',o:[
   {n:'결투를 받아들인다 (일반 전투 · 보상 마석 ×1.5)',c:()=>canFight(),f:()=>startBattle('normal',1.5)},
-  {n:'거울을 깨뜨린다 (플레이어 HP -10)',f:()=>{const p=P();p.hp=hurtTo(p,p.hp-10);done('거울 조각에 베였지만 그림자는 사라졌습니다.')}}]},
+  {n:'거울을 깨뜨린다 (플레이어 최대 HP 10% 피해)',f:()=>{const p=P();p.hp=hurtTo(p,p.hp-hpPct(p,10));done('거울 조각에 베였지만 그림자는 사라졌습니다.')}}]},
  {t:'협회 현상 수배',d:'벽보에 이 승강장에 숨어든 정예 몬스터의 현상금이 걸려 있습니다.',o:[
   {n:'사냥에 나선다 (정예 전투 · 보상 마석 ×2.5)',c:()=>canFight()&&S.floor>=2,f:()=>startBattle('elite',2.5)},{n:'다른 헌터에게 양보한다',f:()=>done('벽보를 다시 붙여 두었습니다.')}]},
  {t:'멈춰 선 보급 수레',d:'바퀴가 빠진 협회 보급 수레가 길을 막고 있습니다. 주인은 보이지 않습니다.',o:[
-  {n:'바퀴를 끼워 준다 (출전 인원 HP -5, 회복 포션 +2)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-5));S.potions+=2;done('돌아온 상인이 고맙다며 포션 2개를 건넸습니다.')}},
+  {n:'바퀴를 끼워 준다 (출전 인원 최대 HP 5% 피해, 회복 포션 +2)',f:()=>{S.party.forEach(u=>u.hp=hurtTo(u,u.hp-hpPct(u,5)));S.potions+=2;done('돌아온 상인이 고맙다며 포션 2개를 건넸습니다.')}},
   {n:()=>`짐을 뒤진다 (마석 +${50+10*f_()} · 확률로 매복 전투(50%))`,f:()=>{const g=50+10*f_();S.gold+=g;if(Math.random()<.5&&canFight()){S.msg=`마석 ${g}${JO(g,'을')} 챙겼지만 수레를 노리던 몬스터가 덮칩니다!`;startBattle('normal')}else done(`마석 ${g}${JO(g,'을')} 챙겼습니다.`)}}]},
  {t:'고대 제단',d:'제단에 아티팩트를 바치면 그 힘을 마석과 치유로 돌려준다고 새겨져 있습니다.',o:[
   {n:()=>`아티팩트 1개를 무작위로 바친다 (마석 +${80+15*f_()}, 생존 인원 완전 회복)`,c:()=>S.arts.length>0,f:()=>{const i=R(S.arts.length),k=S.arts.splice(i,1)[0],g=80+15*f_();reconcileParty();S.gold+=g;all().forEach(u=>{if(alive(u))u.hp=u.maxHp});done(`「${AR[k].n}」이(가) 빛이 되어 사라졌습니다. 마석 ${g}, 생존 인원 완전 회복.`)}},{n:'손대지 않는다',f:()=>done('제단을 지나쳤습니다.')}]},
  {t:'갇힌 정령',d:'마석 결정 속에 작은 정령이 갇혀 있습니다.',o:[
-  {n:'풀어 준다 (쓰러진 동료 HP 30%로 부활, 생존 인원 HP +10)',f:()=>{let n=0;all().forEach(u=>{if(!alive(u)){u.hp=Math.ceil(u.maxHp*.3);n++}else receiveHealing(u,10)});done(`정령이 고마움의 빛을 뿌렸습니다.${n?' 쓰러진 동료 '+n+'명이 일어났습니다.':''}`)}},
+  {n:'풀어 준다 (쓰러진 동료 HP 30%로 부활, 생존 인원 최대 HP 10% 회복)',f:()=>{let n=0;all().forEach(u=>{if(!alive(u)){u.hp=Math.ceil(u.maxHp*.3);n++}else receiveHealing(u,hpPct(u,10))});done(`정령이 고마움의 빛을 뿌렸습니다.${n?' 쓰러진 동료 '+n+'명이 일어났습니다.':''}`)}},
   {n:()=>`결정째 판다 (마석 +${70+10*f_()})`,f:()=>{const g=70+10*f_();S.gold+=g;done(`마석 ${g}에 팔았습니다. 결정 속 빛이 잠깐 흔들렸습니다.`)}}]},
  {t:'협회 보급 투하',d:'상공에서 협회 보급 상자가 떨어졌습니다. 하나만 챙길 시간이 있습니다.',o:[
   {n:'회복 포션 2개',f:()=>{S.potions+=2;done('회복 포션 2개를 챙겼습니다.')}},
@@ -3712,7 +3716,7 @@ const EVENTS=[
   {n:()=>`욕심껏 캔다 (마석 +${60+12*f_()} · 확률로 전투(40%))`,f:()=>{const g=60+12*f_();S.gold+=g;if(Math.random()<.4&&canFight()){S.msg=`마석 ${g}${JO(g,'을')} 캤지만 소리를 듣고 몬스터가 몰려왔습니다!`;startBattle('normal')}else done(`마석 ${g}${JO(g,'을')} 캤습니다.`)}}]},
  {t:'노병의 모닥불',d:'은퇴한 노헌터가 모닥불가에서 옛 이야기를 들려줍니다.',o:[
   {n:()=>`이야기를 듣는다 (모든 캐릭터 경험치 +${15+4*f_()})`,f:()=>{const x=15+4*f_(),ups=all().filter(u=>gainExp(u,x).length).map(u=>esc(u.name));done(`많은 것을 배웠습니다.${ups.length?' 레벨 업: '+ups.join(', '):''}`)}},
-  {n:'불가에서 쉰다 (생존 인원 HP +15)',f:()=>{all().forEach(u=>{if(alive(u))receiveHealing(u,15)});done('따뜻한 불 곁에서 숨을 돌렸습니다.')}}]}
+  {n:'불가에서 쉰다 (생존 인원 최대 HP 15% 회복)',f:()=>{all().forEach(u=>{if(alive(u))receiveHealing(u,hpPct(u,15))});done('따뜻한 불 곁에서 숨을 돌렸습니다.')}}]}
 ];
 function gamble(n){const r=1+R(6);if(r>=4){S.gold+=n;say(`D6 = ${r}. 마석 ${n}${JO(n,'을')} 땄습니다! (보유 ${S.gold})`)}else{S.gold-=n;say(`D6 = ${r}. 마석 ${n}${JO(n,'을')} 잃었습니다. (보유 ${S.gold})`)}if(S.gold<=0)done(`D6 = ${r}. 마석이 바닥났습니다. 쫓겨났습니다.`);return'stay'}
 const evOpts=e=>typeof e.o==='function'?e.o():e.o;
@@ -3740,9 +3744,9 @@ const STORY_ARCS={
    {t:'배달되지 않은 우편함',d:'빈 대합실의 우편함에서 {item}과 같은 봉인을 발견했습니다. {name}은 손을 뻗었다가 거둡니다. 반송인 칸에는 이미 자신의 이름이 적혀 있습니다.',
     c:[{n:'봉인을 열고 내용을 함께 읽는다',r:'안에는 “다시 돌아오면 혼자 읽지 말 것”이라는 짧은 문장과 보관함 번호가 있었습니다. {name}은 번호를 당신에게도 적어 주었습니다.',trust:2,reward:{gold:15}},
        {n:'봉인을 지키고 배달 기록부터 찾는다',r:'배달 기록에 같은 서명이 여러 번 남아 있습니다. {name}은 봉투를 품에 넣고 마지막 반송 주소를 표시했습니다.',trust:1,reward:{potion:1}},
-       {n:"봉투에 적힌 소인 날짜부터 확인한다",r:"소인은 이 정거장에 처음 온 날짜였습니다. {name}은 그날부터 편지를 들고 다녔다는 걸 깨닫고 보관함 번호를 찾아냈습니다.",trust:1,reward:{exp:20}}]},
+       {n:"봉투에 적힌 소인 날짜부터 확인한다",r:"소인은 이 정거장에 처음 온 날짜였습니다. {name}은 그날부터 편지를 들고 다녔다는 걸 깨닫고 보관함 번호를 찾아냈습니다.",trust:1,reward:{exp:25}}]},
    {t:'편지의 마지막 수취인',d:['기록해 둔 보관함에는 똑같은 편지가 줄지어 있습니다. 마지막 장의 수취인은 지금 곁에 선 당신입니다.','반송 주소를 따라 도착한 보관함에는 개봉되지 않은 편지가 쌓여 있습니다. 가장 오래된 봉투에 “다음의 나에게”라고 적혀 있습니다.'],
-    c:[{n:'이번 회차의 답장을 남긴다',r:'{name}은 “이번에는 동행이 생겼다”고 적었습니다. 답장은 빈칸 하나를 남긴 채 보관함에 놓였습니다.',trust:2,reward:{exp:40},end:'답장이 놓인 우편함'},
+    c:[{n:'이번 회차의 답장을 남긴다',r:'{name}은 “이번에는 동행이 생겼다”고 적었습니다. 답장은 빈칸 하나를 남긴 채 보관함에 놓였습니다.',trust:2,reward:{exp:50},end:'답장이 놓인 우편함'},
        {n:'배달 의무를 끝내고 편지를 챙긴다',r:'{name}은 더는 누군가를 찾아 헤매지 않기로 했습니다. 편지는 끝내야 할 일이 아니라 돌아본 길의 기록이 되었습니다.',trust:1,reward:{gold:35},end:'끝난 배달'}],
     team:'{peer}이 보관함 밖에서 읽을 수 있도록 답장을 베껴 붙였습니다. {name}은 다음에 오는 누군가도 혼자가 아닐 수 있겠다고 말했습니다.',teamEnd:'세 사람이 남긴 답장',teamN:"{peer}에게 답장을 같이 써 달라고 한다"}]},
  name:{title:'지워지는 이름',hold:"이름표를 다시 달아 주고 다음 기록을 찾기로 한다",items:['흐릿한 협회 신분증','이름을 수놓은 천 조각','긁힌 금속 명찰'],
@@ -3753,9 +3757,9 @@ const STORY_ARCS={
    {t:'이름 없는 출입 기록',d:'출입 단말기가 {name}을 알아봅니다. 하지만 화면의 인적 사항은 모두 빈칸입니다. {item}의 이름도 조금 전보다 흐려 보입니다.',
     c:[{n:'남아 있는 기록을 함께 베껴 둔다',r:'잉크가 사라지기 전에 함께 기록을 옮겼습니다. 마지막 줄에는 폐쇄된 등록실의 위치가 남아 있었습니다.',trust:2,reward:{gold:15}},
        {n:'기억나는 일을 직접 말해 달라고 한다',r:'자잘한 습관부터 처음 쥔 무기까지 이야기가 이어졌습니다. 말하는 동안 {name}은 등록실로 가는 길을 떠올렸습니다.',trust:1,reward:{potion:1}},
-       {n:"{name}의 이름을 큰 소리로 불러 준다",r:"당신이 이름을 부르자 단말기 화면에 첫 글자가 잠깐 돌아왔습니다. 그 글자 옆에 등록실 층수가 함께 떴습니다.",trust:1,reward:{exp:20}}]},
+       {n:"{name}의 이름을 큰 소리로 불러 준다",r:"당신이 이름을 부르자 단말기 화면에 첫 글자가 잠깐 돌아왔습니다. 그 글자 옆에 등록실 층수가 함께 떴습니다.",trust:1,reward:{exp:25}}]},
    {t:'빈칸으로 남은 증명서',d:['등록실에는 복사해 둔 기록과 똑같은 빈 서식만 남아 있습니다. 보관된 이름을 되찾을 방법은 없어 보입니다.','등록실의 녹음기에서 자신의 목소리가 나옵니다. 하지만 이름을 말하는 부분만 끊겨 있습니다.'],
-    c:[{n:'지금까지 함께한 일을 증명서에 쓴다',r:'당신이 기억하는 일을 받아 적으며 {name}은 자신의 이름을 다시 썼습니다. 오래된 기록 대신 오늘의 증인이 생겼습니다.',trust:2,reward:{exp:40},end:'오늘부터의 기록'},
+    c:[{n:'지금까지 함께한 일을 증명서에 쓴다',r:'당신이 기억하는 일을 받아 적으며 {name}은 자신의 이름을 다시 썼습니다. 오래된 기록 대신 오늘의 증인이 생겼습니다.',trust:2,reward:{exp:50},end:'오늘부터의 기록'},
        {n:'이름을 증명하지 않아도 함께하겠다고 한다',r:'{name}은 빈 증명서를 접었습니다. 기록이 없어도 돌아갈 자리가 있다는 사실을 오래 확인했습니다.',trust:1,reward:{gold:35},end:'빈칸을 남겨 둔 이름'}],
     team:'{peer}이 자신이 기억하는 {name}의 모습을 한 줄 보탰습니다. 서로 다른 세 사람의 글씨가 빈 증명서를 채웠습니다.',teamEnd:'서로를 기억하는 사람들',teamN:"{peer}에게 {name}의 증인이 되어 달라고 한다"}]},
  signal:{title:'반복되는 구조 신호',hold:"무전기를 끄고 다음 신호를 기다린다",items:['금이 간 무전기','한쪽만 남은 이어폰','주파수가 적힌 메모'],
@@ -3766,9 +3770,9 @@ const STORY_ARCS={
    {t:'아직 오지 않은 구조 요청',d:'{item}에서 구조 요청이 흘러나옵니다. 발신 시각은 지금보다 몇 분 뒤입니다. {name}은 소리가 들리는 빈 관리실을 바라봅니다.',
     c:[{n:'송신 내용을 끝까지 녹음한다',r:'녹음 끝에서 현재 동료의 발소리와 같은 소리를 들었습니다. 신호가 되풀이되는 중계기의 위치를 적었습니다.',trust:2,reward:{gold:15}},
        {n:'응답을 보내 동행이 있음을 알린다',r:'짧은 침묵 뒤에 “이번에는 혼자가 아니구나”라는 답이 왔습니다. 송신등이 켜진 중계기로 가는 문이 열렸습니다.',trust:1,reward:{potion:1}},
-       {n:"주파수를 조금씩 돌려 다른 소리를 찾는다",r:"구조 신호 뒤에 아주 작은 음악이 섞여 있었습니다. 음악이 가장 크게 들리는 방향에 중계기가 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"주파수를 조금씩 돌려 다른 소리를 찾는다",r:"구조 신호 뒤에 아주 작은 음악이 섞여 있었습니다. 음악이 가장 크게 들리는 방향에 중계기가 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:'응답을 기다리는 중계기',d:['중계기에 남은 녹음은 모두 같은 구조 요청입니다. 목소리의 주인은 다른 회차의 자신이었습니다.','중계기에 저장된 마지막 응답은 방금 전 자신이 보낸 말과 같습니다. 닫힌 회로가 구조 요청을 계속 돌려보내고 있습니다.'],
-    c:[{n:'안전한 경로를 새 신호로 남긴다',r:'{name}은 구조 요청 대신 함께 확인한 안전한 길을 녹음했습니다. 누군가를 부르던 목소리가 길을 안내하기 시작했습니다.',trust:2,reward:{exp:40},end:'누군가에게 닿을 안내'},
+    c:[{n:'안전한 경로를 새 신호로 남긴다',r:'{name}은 구조 요청 대신 함께 확인한 안전한 길을 녹음했습니다. 누군가를 부르던 목소리가 길을 안내하기 시작했습니다.',trust:2,reward:{exp:50},end:'누군가에게 닿을 안내'},
        {n:'송신을 끄고 현재의 동료에게 돌아온다',r:'신호가 멎자 {name}은 지금 들리는 발소리를 세었습니다. 고장 난 중계기 밖에 기다리는 사람이 있었습니다.',trust:1,reward:{gold:35},end:'잡음 뒤에 남은 발소리'}],
     team:'{peer}이 중계기 밖에서 신호를 받아 안내가 제대로 들리는지 확인했습니다. {name}은 처음으로 실제 답신을 듣고 마이크를 놓았습니다.',teamEnd:'처음 돌아온 답신',teamN:"{peer}에게 반대편에서 응답해 달라고 한다"}]},
  clock:{title:'멈춘 약속',hold:"시계를 그대로 두고 다음 시각을 기다린다",items:['유리가 깨진 손목시계','시각이 적힌 승차권','태엽이 풀린 회중시계'],
@@ -3779,9 +3783,9 @@ const STORY_ARCS={
    {t:'다 같은 시각',d:'대합실의 시계가 모두 {item}에 남은 시각에서 멈췄습니다. {name}이 기다리던 의자 아래에 짧은 쪽지가 붙어 있습니다.',
     c:[{n:'시계보다 쪽지의 필체를 확인한다',r:'쪽지는 {name} 자신의 글씨였습니다. “기다리지 않아도 된다”는 문장 뒤에 정비실 번호가 적혀 있었습니다.',trust:2,reward:{gold:15}},
        {n:'의자 곁에서 함께 잠시 기다린다',r:'누구도 오지 않았지만, 이번에는 기다리는 사람이 둘이었습니다. 잠깐 켜진 정비등이 다음 단서의 위치를 비췄습니다.',trust:1,reward:{potion:1}},
-       {n:"멈춘 시계 하나를 손으로 돌려 본다",r:"바늘이 한 칸 움직이자 대합실 전체가 잠깐 숨을 쉬는 것 같았습니다. 정비실로 가는 문이 그 소리에 맞춰 열렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"멈춘 시계 하나를 손으로 돌려 본다",r:"바늘이 한 칸 움직이자 대합실 전체가 잠깐 숨을 쉬는 것 같았습니다. 정비실로 가는 문이 그 소리에 맞춰 열렸습니다.",trust:1,reward:{exp:25}}]},
    {t:'움직일 수 있는 바늘',d:['정비실에는 같은 필체의 쪽지가 더 있습니다. 누군가를 기다리라는 말은 없고, 떠나도 된다는 말만 반복됩니다.','정비실에서 대합실의 시계를 조작할 수 있습니다. 약속한 시각은 누군가가 매번 되돌린 값이었습니다.'],
-    c:[{n:'바늘을 현재 시각에 맞추고 함께 떠난다',r:'{name}은 마지막으로 시계를 확인한 뒤 걸음을 옮겼습니다. 다음 약속은 도착 시각 대신 같이 가는 것으로 정했습니다.',trust:2,reward:{exp:40},end:'새로 정한 약속'},
+    c:[{n:'바늘을 현재 시각에 맞추고 함께 떠난다',r:'{name}은 마지막으로 시계를 확인한 뒤 걸음을 옮겼습니다. 다음 약속은 도착 시각 대신 같이 가는 것으로 정했습니다.',trust:2,reward:{exp:50},end:'새로 정한 약속'},
        {n:'기다리던 자리에 작별 인사를 남긴다',r:'{name}은 오지 못한 누군가를 탓하지 않는 문장을 적었습니다. 기다림을 끝내고 {item}을 가방 깊숙이 넣었습니다.',trust:1,reward:{gold:35},end:'기다림을 마친 자리'}],
     team:'{peer}이 정비실 밖의 시계도 움직였다고 알려 왔습니다. 세 사람은 같은 시각을 확인하고, 같은 방향으로 출발했습니다.',teamEnd:'함께 맞춘 출발 시각',teamN:"{peer}의 시계와 시간을 맞춰 보자고 한다"}]},
  survivor:{title:'돌아오지 않은 동료',hold:"인원을 다시 세고 다음 갈림길까지 미룬다",items:['끊어진 구조 로프','동료의 찌그러진 인식표','한 장 남은 파티 사진'],
@@ -3792,9 +3796,9 @@ const STORY_ARCS={
    {t:'뒤에 남겨진 표식',d:'방화문에 {item}과 같은 파티 표식이 남아 있습니다. {name}은 문 너머에 누군가 있을지도 모른다며 멈춰 섭니다.',
     c:[{n:'당시의 탈출 기록을 함께 찾는다',r:'문 옆 장치에 남은 기록에는 동료가 안쪽에서 문을 잠갔다고 적혀 있었습니다. 보관실에 마지막 음성이 남아 있습니다.',trust:2,reward:{gold:15}},
        {n:'이번에는 먼저 들어가지 않고 곁을 지킨다',r:'{name}은 숨을 고른 뒤 직접 문을 열었습니다. 텅 빈 방에서 마지막 음성 기록이 보관된 위치를 발견했습니다.',trust:1,reward:{potion:1}},
-       {n:"표식 옆에 지금 파티의 표식을 새긴다",r:"두 표식이 나란히 새겨지자 {name}의 손이 덜 떨렸습니다. 문 안쪽에서 기록 장치의 불빛이 깜빡였습니다.",trust:1,reward:{exp:20}}]},
+       {n:"표식 옆에 지금 파티의 표식을 새긴다",r:"두 표식이 나란히 새겨지자 {name}의 손이 덜 떨렸습니다. 문 안쪽에서 기록 장치의 불빛이 깜빡였습니다.",trust:1,reward:{exp:25}}]},
    {t:'남겨진 사람의 말',d:['보관실의 음성 기록에 “나를 기다리지 말고 살아서 나가”라는 말이 남아 있습니다. {name}은 끝내 버튼에서 손을 떼지 못합니다.','뒤따라 들어온 보관실에서 이전 동료의 목소리가 재생됩니다. 비난 대신 먼저 나간 사람의 안부를 묻고 있습니다.'],
-    c:[{n:'기록을 챙겨 그 사람의 몫까지 기억한다',r:'{name}은 음성을 끝까지 들었습니다. 돌아오지 못한 동료의 이름을 현재의 파티 기록에도 적어 두었습니다.',trust:2,reward:{exp:40},end:'이름을 함께 데려가는 길'},
+    c:[{n:'기록을 챙겨 그 사람의 몫까지 기억한다',r:'{name}은 음성을 끝까지 들었습니다. 돌아오지 못한 동료의 이름을 현재의 파티 기록에도 적어 두었습니다.',trust:2,reward:{exp:50},end:'이름을 함께 데려가는 길'},
        {n:'기록을 끄고 살아 있는 동료들의 이름을 부른다',r:'한 명씩 대답이 돌아왔습니다. {name}은 과거의 문 앞에서 돌아서, 지금 함께 걷는 인원을 다시 세었습니다.',trust:1,reward:{gold:35},end:'이번에는 모두의 대답'}],
     team:'{peer}이 다음 갈림길에서는 자신이 뒤를 확인하겠다고 말했습니다. {name}은 처음으로 맨 뒤의 자리를 다른 사람에게 맡겼습니다.',teamEnd:'나누어 맡은 뒷자리',teamN:"{peer}에게 맨 뒤를 맡아 달라고 한다"}]},
  terminal:{title:'노선도에 없는 종착역',hold:"노선도를 접고 다음 승강장에서 다시 펼친다",items:['낡은 집 열쇠','출구 이름이 지워진 노선도','돌아갈 주소가 적힌 수첩'],
@@ -3805,9 +3809,9 @@ const STORY_ARCS={
    {t:'기억 속 주소의 표지판',d:'{name}이 기억하던 주소가 출구 표지판에 잠깐 나타났다가 사라집니다. {item}을 가까이 대면 글자가 다시 선명해집니다.',
     c:[{n:'표지판 뒤의 연결 경로를 기록한다',r:'표지판 뒤에는 사용하지 않는 개찰구의 위치가 적혀 있습니다. {name}은 그동안 돌아온 길과 다른 경로를 표시했습니다.',trust:2,reward:{gold:15}},
        {n:'돌아가고 싶은 곳에 대해 더 묻는다',r:'장소보다 함께 살던 사람에 대한 이야기가 길었습니다. 말을 마칠 즈음 폐쇄된 개찰구에 불이 들어왔습니다.',trust:1,reward:{potion:1}},
-       {n:"노선도 위에 지금 위치부터 표시한다",r:"현재 위치에 점을 찍자 지워진 노선 일부가 다시 그려졌습니다. 이어진 선 끝에 폐쇄된 개찰구가 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"노선도 위에 지금 위치부터 표시한다",r:"현재 위치에 점을 찍자 지워진 노선 일부가 다시 그려졌습니다. 이어진 선 끝에 폐쇄된 개찰구가 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:'도착지가 없는 개찰구',d:['기록한 경로 끝에는 개찰구만 있고, 너머의 길은 다시 이 정거장으로 이어집니다. 지도에서 찾던 목적지는 여전히 없습니다.','불이 들어온 개찰구 너머로 익숙한 소리가 들리지만, 보이는 것은 같은 승강장입니다. 기억만으로는 출구가 열리지 않습니다.'],
-    c:[{n:'함께 돌아갈 길을 새로 찾겠다고 약속한다',r:'{name}은 {item}을 품에 챙긴 뒤 다음 승강장의 경로를 확인했습니다. 돌아갈 곳을 포기하지 않은 채 오늘의 길을 정했습니다.',trust:2,reward:{exp:40},end:'돌아갈 길을 찾는 동행'},
+    c:[{n:'함께 돌아갈 길을 새로 찾겠다고 약속한다',r:'{name}은 {item}을 품에 챙긴 뒤 다음 승강장의 경로를 확인했습니다. 돌아갈 곳을 포기하지 않은 채 오늘의 길을 정했습니다.',trust:2,reward:{exp:50},end:'돌아갈 길을 찾는 동행'},
        {n:'목적지를 정하지 않고 다음 역으로 간다',r:'{name}은 오래된 주소를 지우지 않고 페이지를 넘겼습니다. 빈 페이지에 처음 적은 것은 동료들의 이름이었습니다.',trust:1,reward:{gold:35},end:'새 페이지의 목적지'}],
     team:'{peer}이 자신도 돌아갈 길을 찾고 있다고 털어놓았습니다. 세 사람은 각자의 경로를 겹쳐 보며 함께 갈 수 있는 구간부터 표시했습니다.',teamEnd:'서로의 길이 겹치는 곳',teamN:"{peer}의 목적지도 노선도에 표시하자고 한다"}]},
  umbrella:{title:'돌려주지 못한 우산',hold:"우산을 접어 들고 다음 비를 기다린다",items:['손잡이가 닳은 검은 우산','이름표가 달린 비닐우산','살 하나가 휜 접이식 우산'],
@@ -3818,9 +3822,9 @@ const STORY_ARCS={
    {t:'젖은 분실물 보관함',d:'역 분실물 보관함에 {item}과 똑같은 우산이 수십 개 걸려 있습니다. 모두 같은 날짜의 꼬리표를 달고 있습니다. {name}은 그중 하나를 집었다가 내려놓습니다.',
     c:[{n:'꼬리표의 날짜와 열차 번호를 대조한다',r:'꼬리표마다 열차 번호가 하나씩 달랐지만, 마지막 번호만은 지금도 운행 중이었습니다. {name}은 그 번호를 손바닥에 적었습니다.',trust:2,reward:{gold:15}},
        {n:'빌린 날의 이야기를 먼저 듣는다',r:'우산을 받던 순간 그 사람이 “다음에 만나면 돌려줘”라고 웃었다는 이야기가 이어졌습니다. 말을 마칠 즈음 안내판에 같은 열차가 표시됐습니다.',trust:1,reward:{potion:1}},
-       {n:"우산을 펴서 둘이 함께 쓴다",r:"우산 안쪽에 작은 글씨로 열차 번호가 적혀 있었습니다. 비 오는 승강장에서 그 번호를 찾는 건 어렵지 않았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"우산을 펴서 둘이 함께 쓴다",r:"우산 안쪽에 작은 글씨로 열차 번호가 적혀 있었습니다. 비 오는 승강장에서 그 번호를 찾는 건 어렵지 않았습니다.",trust:1,reward:{exp:25}}]},
    {t:'비가 멎는 승강장',d:['적어 둔 열차가 들어오자 비가 잠시 멎습니다. 객실은 비어 있고, 좌석 하나에만 물기가 남아 있습니다.','안내판의 열차는 승강장에 서지 않고 지나갑니다. 창문 너머로 누군가 손을 흔든 것 같았습니다.'],
-    c:[{n:'빈 좌석에 우산을 두고 내린다',r:'{name}은 우산을 접어 좌석에 기대 두었습니다. 문이 닫히는 순간 오래 이어지던 빗소리가 그쳤습니다.',trust:2,reward:{exp:40},end:'돌려준 우산'},
+    c:[{n:'빈 좌석에 우산을 두고 내린다',r:'{name}은 우산을 접어 좌석에 기대 두었습니다. 문이 닫히는 순간 오래 이어지던 빗소리가 그쳤습니다.',trust:2,reward:{exp:50},end:'돌려준 우산'},
        {n:'우산을 계속 들고 다음 비를 기다린다',r:'{name}은 주인을 만나면 직접 건네기로 했습니다. 그때까지는 비 오는 날 옆 사람을 씌워 주는 데 쓰겠다고 했습니다.',trust:1,reward:{gold:35},end:'함께 쓰는 우산'}],
     team:'{peer}이 우산 하나를 더 펴서 셋이 나란히 섰습니다. {name}은 빌린 것을 갚는 방법이 꼭 하나만은 아니라고 말했습니다.',teamEnd:'셋이 쓴 우산 아래',teamN:"{peer}에게 우산을 같이 들어 달라고 한다"}]},
  photo:{title:'찍히지 않는 사람',hold:"카메라를 내려놓고 다음 현상소를 찾는다",items:['필름이 남은 즉석 카메라','모서리가 찢긴 단체 사진','렌즈에 금이 간 디지털카메라'],
@@ -3831,9 +3835,9 @@ const STORY_ARCS={
    {t:'현상소의 빈 액자',d:'폐쇄된 현상소 벽에 액자가 줄지어 걸려 있습니다. 사진마다 한 사람 몫의 자리가 비어 있고, 그 옆에 {item}과 같은 촬영 날짜가 적혀 있습니다.',
     c:[{n:'빈자리의 그림자를 자세히 살핀다',r:'빈자리 바닥에는 희미한 그림자가 찍혀 있었습니다. {name}은 그림자가 향한 암실 문을 가리켰습니다.',trust:2,reward:{gold:15}},
        {n:'지금 같이 사진을 한 장 찍는다',r:'이번 사진에도 {name}은 보이지 않았지만, 당신의 어깨에 얹힌 손 하나가 또렷하게 남았습니다. 사진 뒷면에 암실 번호가 비쳤습니다.',trust:1,reward:{potion:1}},
-       {n:"카메라를 당신에게 맡기고 찍어 달라고 한다",r:"당신이 찍은 사진에는 {name}의 그림자가 처음으로 남았습니다. 그림자는 암실 쪽을 향하고 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"카메라를 당신에게 맡기고 찍어 달라고 한다",r:"당신이 찍은 사진에는 {name}의 그림자가 처음으로 남았습니다. 그림자는 암실 쪽을 향하고 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:'암실의 붉은 불빛',d:['암실에는 아직 현상하지 않은 필름 한 통이 남아 있습니다. 라벨에는 {name}의 글씨로 “나를 찍지 말 것”이라고 적혀 있습니다.','암실의 사진들 속 빈자리가 모두 같은 방향을 바라봅니다. 그 끝에는 거울 한 장이 걸려 있습니다.'],
-    c:[{n:'필름을 현상해 끝까지 확인한다',r:'마지막 한 장에만 {name}이 웃고 있었습니다. 찍힌 날짜는 오늘이었습니다. {name}은 그 사진을 지갑 깊숙이 넣었습니다.',trust:2,reward:{exp:40},end:'처음 찍힌 얼굴'},
+    c:[{n:'필름을 현상해 끝까지 확인한다',r:'마지막 한 장에만 {name}이 웃고 있었습니다. 찍힌 날짜는 오늘이었습니다. {name}은 그 사진을 지갑 깊숙이 넣었습니다.',trust:2,reward:{exp:50},end:'처음 찍힌 얼굴'},
        {n:'사진 대신 서로의 기억을 기록으로 남긴다',r:'{name}은 카메라를 내려놓고 수첩을 꺼냈습니다. 그날 함께 있던 사람들의 이름을 한 줄씩 적어 사진 대신 붙였습니다.',trust:1,reward:{gold:35},end:'글로 남긴 단체 사진'}],
     team:'{peer}이 {name}의 빈자리를 손가락으로 짚으며 여기 있었다고 사진 뒷면에 적었습니다. 증인이 둘이 되자 빈자리가 조금 덜 비어 보였습니다.',teamEnd:'증인이 있는 사진',teamN:"{peer}에게 함께 사진에 들어가 달라고 한다"}]},
  melody:{title:'끝나지 않는 노래',hold:"오르골을 닫고 다음 소절을 기다린다",items:['태엽이 감긴 오르골','가사가 적힌 악보 한 장','녹음 버튼이 고장 난 카세트'],
@@ -3844,9 +3848,9 @@ const STORY_ARCS={
    {t:'역 구내 방송실',d:'구내 방송 스피커에서 {item}과 같은 노래가 흘러나옵니다. 역시 마지막 소절 직전에 끊기고, 방송실의 문이 반쯤 열려 있습니다.',
     c:[{n:'방송실의 녹음 기록을 뒤진다',r:'수십 개의 녹음 테이프가 모두 같은 곳에서 끊겨 있었습니다. 그중 하나에만 “다음 사람이 이어 부를 것”이라는 쪽지가 붙어 있었습니다.',trust:2,reward:{gold:15}},
        {n:'끊긴 자리에서 함께 흥얼거린다',r:'두 사람의 목소리가 엇갈리며 어설픈 마지막 음을 만들었습니다. {name}은 웃음을 참지 못했고, 방송실 안쪽에서 마이크가 켜졌습니다.',trust:1,reward:{potion:1}},
-       {n:"노래 제목을 함께 추측해 본다",r:"엉뚱한 제목들을 대다 보니 {name}이 가사 한 줄을 떠올렸습니다. 그 가사가 방송실 테이프 라벨에 적혀 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"노래 제목을 함께 추측해 본다",r:"엉뚱한 제목들을 대다 보니 {name}이 가사 한 줄을 떠올렸습니다. 그 가사가 방송실 테이프 라벨에 적혀 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:'켜진 마이크',d:['테이프를 넣자 마지막 소절 자리가 녹음되지 않은 빈 공간으로 남아 있습니다. 녹음 버튼에 불이 들어옵니다.','켜진 마이크 앞에 악보가 펼쳐져 있습니다. 마지막 마디는 아무것도 적히지 않은 오선입니다.'],
-    c:[{n:'지금의 목소리로 마지막 소절을 녹음한다',r:'{name}은 떨리는 목소리로 노래를 끝까지 불렀습니다. 처음 듣는 끝이었지만, 이상하게 오래 알던 것처럼 들렸습니다.',trust:2,reward:{exp:40},end:'처음 끝난 노래'},
+    c:[{n:'지금의 목소리로 마지막 소절을 녹음한다',r:'{name}은 떨리는 목소리로 노래를 끝까지 불렀습니다. 처음 듣는 끝이었지만, 이상하게 오래 알던 것처럼 들렸습니다.',trust:2,reward:{exp:50},end:'처음 끝난 노래'},
        {n:'빈 마디를 남겨 두고 함께 부를 날을 정한다',r:'{name}은 악보의 빈 마디에 날짜 대신 “다 같이”라고 적었습니다. 노래는 끝나지 않았지만, 더는 끊긴 느낌이 아니었습니다.',trust:1,reward:{gold:35},end:'함께 부를 마지막 마디'}],
     team:'{peer}이 화음을 넣으며 마지막 소절을 함께 불렀습니다. 녹음된 노래에는 처음으로 세 사람의 목소리가 겹쳐 있었습니다.',teamEnd:'세 목소리의 끝소절',teamN:"{peer}에게 화음을 넣어 달라고 한다"}]},
  refund:{title:'환불되지 않는 편도표',hold:"표를 지갑에 넣고 다음 창구를 찾는다",items:['구멍이 뚫린 편도 승차권','도장이 찍힌 정기권','날짜가 지워진 특급권'],
@@ -3857,9 +3861,9 @@ const STORY_ARCS={
    {t:'불 꺼진 매표 창구',d:'아무도 없는 매표 창구에 {item}을 내밀자 기계가 스스로 켜집니다. 화면에는 “행선지 확인 불가 · 동반자 정보 입력”이라는 문구가 뜹니다.',
     c:[{n:'동반자 칸에 당신의 이름을 적는다',r:'이름을 입력하자 표 뒷면에 희미한 행선지가 떠올랐습니다. 지도에 없는 역 이름이었지만, {name}은 그 이름을 알아봤습니다.',trust:2,reward:{gold:15}},
        {n:'기계 대신 창구 뒤 서류를 살핀다',r:'환불 대장에는 같은 표가 여러 번 반려된 기록이 있었습니다. 반려 사유는 늘 “본인이 아직 탑승 중”이었습니다.',trust:1,reward:{potion:1}},
-       {n:"표를 구겨 버리는 척해 본다",r:"{name}은 손을 쥐었다가 차마 구기지 못했습니다. 표가 아직 필요하다는 걸 둘 다 알게 되었고, 창구 기계가 저절로 켜졌습니다.",trust:1,reward:{exp:20}}]},
+       {n:"표를 구겨 버리는 척해 본다",r:"{name}은 손을 쥐었다가 차마 구기지 못했습니다. 표가 아직 필요하다는 걸 둘 다 알게 되었고, 창구 기계가 저절로 켜졌습니다.",trust:1,reward:{exp:25}}]},
    {t:'행선지 없는 개찰구',d:['떠오른 역 이름을 따라가자 개찰구 하나가 열려 있습니다. 표를 넣으면 돌아올 수 없다는 경고가 깜빡입니다.','기록에 적힌 플랫폼에 서자, {name}이 탔어야 할 열차가 아직도 문을 연 채 기다리고 있습니다.'],
-    c:[{n:'표를 넣지 않고 왕복표를 새로 끊는다',r:'{name}은 편도표를 기념처럼 접어 넣고, 당신과 같은 왕복표를 샀습니다. 돌아올 곳이 생긴 첫 표였습니다.',trust:2,reward:{exp:40},end:'처음 끊은 왕복표'},
+    c:[{n:'표를 넣지 않고 왕복표를 새로 끊는다',r:'{name}은 편도표를 기념처럼 접어 넣고, 당신과 같은 왕복표를 샀습니다. 돌아올 곳이 생긴 첫 표였습니다.',trust:2,reward:{exp:50},end:'처음 끊은 왕복표'},
        {n:'열차를 보내고 표를 찢는다',r:'문이 닫히고 열차가 떠났습니다. {name}은 찢은 표 조각을 바람에 날리며, 남은 여정은 이 승강장에서 정하겠다고 말했습니다.',trust:1,reward:{gold:35},end:'떠나보낸 열차'}],
     team:'{peer}이 자기 표를 꺼내 {name}의 표와 나란히 개찰기에 올렸습니다. 기계는 잠시 고민하더니 두 장 모두 “단체 승차”로 처리했습니다.',teamEnd:'단체 승차권',teamN:"{peer}의 표도 함께 내밀어 보자고 한다"}]},
  lamp:{title:'꺼지지 않는 등',hold:"등을 켜 둔 채 다음 밤을 기다린다",items:['유리가 그을린 휴대용 램프','심지가 짧아진 손전등','작은 신호등 조각'],
@@ -3870,9 +3874,9 @@ const STORY_ARCS={
    {t:'어두운 선로 끝',d:'정전된 선로 끝에서 희미한 불빛 하나가 깜빡입니다. 신호처럼 일정한 간격입니다. {name}은 {item}을 들어 같은 간격으로 흔들어 봅니다.',
     c:[{n:'불빛의 간격을 기록해 해독한다',r:'짧고 긴 깜빡임은 “여기 있다”는 오래된 신호였습니다. 신호가 나오는 곳은 선로 끝의 신호소였습니다.',trust:2,reward:{gold:15}},
        {n:'등을 대신 들어 주고 쉬게 한다',r:'{name}은 처음으로 등을 남에게 맡겼습니다. 잠깐 눈을 감은 사이, 멀리서 신호소 창문이 밝아졌습니다.',trust:1,reward:{potion:1}},
-       {n:"등불의 심지를 새것으로 갈아 준다",r:"새 심지에 불이 붙자 불빛이 더 멀리 닿았습니다. 선로 끝 신호소의 창문이 불빛에 응답하듯 깜빡였습니다.",trust:1,reward:{exp:20}}]},
+       {n:"등불의 심지를 새것으로 갈아 준다",r:"새 심지에 불이 붙자 불빛이 더 멀리 닿았습니다. 선로 끝 신호소의 창문이 불빛에 응답하듯 깜빡였습니다.",trust:1,reward:{exp:25}}]},
    {t:'신호소의 등',d:['신호소 안에는 {item}과 똑같은 등이 수십 개 놓여 있습니다. 모두 같은 사람이 켜 둔 것입니다.','신호소의 창가에 앉은 사람은 없고, 의자 위에 다 탄 심지와 “이제 쉬어도 돼”라는 쪽지만 남아 있습니다.'],
-    c:[{n:'등을 신호소에 걸어 두고 떠난다',r:'{name}은 자신의 등을 줄 맨 끝에 걸었습니다. 수많은 불빛 사이에서 그 등이 가장 밝게 빛났습니다.',trust:2,reward:{exp:40},end:'걸어 둔 불빛'},
+    c:[{n:'등을 신호소에 걸어 두고 떠난다',r:'{name}은 자신의 등을 줄 맨 끝에 걸었습니다. 수많은 불빛 사이에서 그 등이 가장 밝게 빛났습니다.',trust:2,reward:{exp:50},end:'걸어 둔 불빛'},
        {n:'등을 들고 길 잃은 사람을 직접 찾는다',r:'{name}은 등을 끄지 않기로 했습니다. 기다리는 대신 불빛을 들고 먼저 찾아가겠다고 말했습니다.',trust:1,reward:{gold:35},end:'먼저 찾아가는 등'}],
     team:'{peer}이 자신의 손전등을 켜 {name}의 등 옆에 나란히 들었습니다. 두 불빛이 겹친 자리는 그림자가 생기지 않았습니다.',teamEnd:'나란히 켠 불빛',teamN:"{peer}에게 불빛을 하나 더 들어 달라고 한다"}]},
  scar:{title:'기억에 없는 흉터',hold:"붕대를 다시 감고 다음 전투 후에 이어 간다",items:['흉터 위에 감은 붕대','피 묻은 장갑 한 짝','날이 빠진 단검 손잡이'],
@@ -3883,9 +3887,9 @@ const STORY_ARCS={
    {t:'무너진 방어선',d:'무너진 바리케이드 뒤에 오래된 전투 흔적이 남아 있습니다. 벽에 남은 칼자국의 높이와 각도가 {name}의 흉터와 정확히 일치합니다.',
     c:[{n:'흔적을 따라 당시의 움직임을 재현한다',r:'흔적을 따라 서 보니 등 뒤에 지켜야 할 문이 하나 있었습니다. 문 너머는 대피소였습니다.',trust:2,reward:{gold:15}},
        {n:'흉터를 치료하며 이야기를 듣는다',r:'붕대를 갈아 주는 동안 {name}은 흉터가 아프지 않다고 했습니다. 다만 대피소 표지판을 보면 손이 떨린다고 털어놓았습니다.',trust:1,reward:{potion:1}},
-       {n:"흉터를 하나씩 세며 기록해 둔다",r:"흉터 하나하나에 날짜를 붙이자 모두 같은 장소에서 생긴 것이었습니다. 그 장소가 바로 이 방어선 뒤 대피소였습니다.",trust:1,reward:{exp:20}}]},
+       {n:"흉터를 하나씩 세며 기록해 둔다",r:"흉터 하나하나에 날짜를 붙이자 모두 같은 장소에서 생긴 것이었습니다. 그 장소가 바로 이 방어선 뒤 대피소였습니다.",trust:1,reward:{exp:25}}]},
    {t:'대피소의 명단',d:['대피소 벽에는 살아남은 사람들의 이름이 빼곡히 적혀 있습니다. 마지막 줄에 “문을 지킨 헌터에게 감사”라는 글귀가 있습니다.','대피소 안쪽에 아이가 그린 그림이 걸려 있습니다. 문 앞을 지키는 사람의 팔에 {name}과 같은 흉터가 그려져 있습니다.'],
-    c:[{n:'흉터를 지켜 낸 증거로 받아들인다',r:'{name}은 처음으로 흉터를 감추지 않고 소매를 걷었습니다. 다른 회차의 자신도 결국 같은 선택을 했다는 걸 알았습니다.',trust:2,reward:{exp:40},end:'자랑이 된 흉터'},
+    c:[{n:'흉터를 지켜 낸 증거로 받아들인다',r:'{name}은 처음으로 흉터를 감추지 않고 소매를 걷었습니다. 다른 회차의 자신도 결국 같은 선택을 했다는 걸 알았습니다.',trust:2,reward:{exp:50},end:'자랑이 된 흉터'},
        {n:'이번에는 다치지 않고 지키겠다고 다짐한다',r:'{name}은 명단 아래에 새 줄을 비워 두었습니다. 이번 회차에는 지킨 사람과 지켜진 사람 모두 무사하기를 바랐습니다.',trust:1,reward:{gold:35},end:'비워 둔 마지막 줄'}],
     team:'{peer}이 자신의 흉터 하나를 보여 주며 같은 문을 지킨 적이 있는지도 모른다고 말했습니다. 두 사람은 대피소 명단 맨 아래에 나란히 이름을 적었습니다.',teamEnd:'함께 지킨 문',teamN:"{peer}에게 흉터를 보여 달라고 한다"}]},
  garden:{title:'승강장의 화분',hold:"화분에 물만 주고 다음에 다시 오기로 한다",items:['금이 간 작은 화분','씨앗이 든 종이봉투','녹슨 물뿌리개'],
@@ -3896,9 +3900,9 @@ const STORY_ARCS={
    {t:'햇빛이 드는 틈',d:'무너진 천장 틈으로 한 줄기 빛이 승강장 바닥을 비춥니다. 그 자리에 누군가 심어 두었다가 시든 싹들이 줄지어 있습니다.',
     c:[{n:'시든 싹들의 기록을 살핀다',r:'싹마다 작은 팻말이 꽂혀 있었습니다. 모두 {name}의 글씨였고, 마지막 팻말에만 “물이 부족했다”고 적혀 있었습니다.',trust:2,reward:{gold:15}},
        {n:'지금 바로 함께 씨앗을 심는다',r:'두 사람이 흙을 고르고 씨앗을 묻었습니다. {name}은 처음으로 혼자 심지 않은 싹이라며 팻말에 두 사람의 이름을 적었습니다.',trust:1,reward:{potion:1}},
-       {n:"주변의 흙을 조금 모아 화분을 채운다",r:"모은 흙에서 작은 씨앗 하나가 나왔습니다. 누군가 이곳에 미리 심어 두려던 것 같았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"주변의 흙을 조금 모아 화분을 채운다",r:"모은 흙에서 작은 씨앗 하나가 나왔습니다. 누군가 이곳에 미리 심어 두려던 것 같았습니다.",trust:1,reward:{exp:25}}]},
    {t:'첫 꽃봉오리',d:['다시 찾은 틈에서 싹이 무릎 높이까지 자라 있습니다. 끝에는 아직 피지 않은 봉오리가 하나 맺혔습니다.','함께 심은 자리에서 가녀린 줄기가 올라왔습니다. 봉오리는 단단히 닫혀 있고, 다음 회귀까지 피지 않을 것 같습니다.'],
-    c:[{n:'봉오리가 필 때까지 이곳을 지키겠다고 한다',r:'{name}은 물뿌리개를 내려놓고 봉오리 곁에 앉았습니다. 피기 직전의 꽃은 지금 이대로도 충분히 예뻤습니다.',trust:2,reward:{exp:40},end:'피기 직전의 봄'},
+    c:[{n:'봉오리가 필 때까지 이곳을 지키겠다고 한다',r:'{name}은 물뿌리개를 내려놓고 봉오리 곁에 앉았습니다. 피기 직전의 꽃은 지금 이대로도 충분히 예뻤습니다.',trust:2,reward:{exp:50},end:'피기 직전의 봄'},
        {n:'씨앗을 받아 다음 회차에 가져간다',r:'{name}은 봉오리 대신 옆에 맺힌 씨앗을 조심스럽게 거뒀습니다. 다음에는 처음부터가 아니라 여기서부터 시작할 수 있습니다.',trust:1,reward:{gold:35},end:'다음 회차의 씨앗'}],
     team:'{peer}이 물을 길어 오고 {name}이 흙을 다졌습니다. 서로 다른 손이 돌본 화분은 승강장에서 가장 푸른 자리가 되었습니다.',teamEnd:'함께 가꾼 화단',teamN:"{peer}에게 물을 길어 와 달라고 한다"}]},
  mirror:{title:'거울 속 다른 대답',hold:"거울을 뒤집어 두고 다음에 다시 마주한다",items:['손거울 조각','김이 서린 창유리 파편','뒷면이 벗겨진 거울'],
@@ -3909,9 +3913,9 @@ const STORY_ARCS={
    {t:'화장실 앞 깨진 거울',d:'역 화장실 앞의 큰 거울이 금 가 있습니다. 갈라진 조각마다 {name}이 서로 다른 표정을 짓고 있고, 한 조각만 입을 움직입니다.',
     c:[{n:'움직이는 입 모양을 읽는다',r:'거울 속 {name}은 “출구는 뒤에 있다”고 말했습니다. 돌아보니 벽에 막힌 비상구 표시가 희미하게 빛났습니다.',trust:2,reward:{gold:15}},
        {n:'거울을 등지고 직접 물어본다',r:'{name}은 거울을 보지 않은 채 자신의 생각을 말했습니다. 대답이 끝나자 거울 쪽에서 작게 박수 소리가 들렸습니다.',trust:1,reward:{potion:1}},
-       {n:"거울 조각에 천을 덮고 목소리만 듣는다",r:"보이지 않으니 거울 속 목소리가 더 또렷하게 들렸습니다. “뒤를 봐”라는 말에 돌아보니 비상구 표시가 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"거울 조각에 천을 덮고 목소리만 듣는다",r:"보이지 않으니 거울 속 목소리가 더 또렷하게 들렸습니다. “뒤를 봐”라는 말에 돌아보니 비상구 표시가 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:'막힌 비상구',d:['비상구 문에도 거울이 붙어 있습니다. 거울 속 {name}은 문을 열면 혼자 나갈 수 있다고 속삭입니다.','비상구 앞에서 거울 속 {name}이 처음으로 같은 표정을 짓습니다. 다만 거울 속에는 동료가 아무도 비치지 않습니다.'],
-    c:[{n:'거울을 깨고 동료들과 남는다',r:'{name}은 거울 조각을 바닥에 내려놓았습니다. 혼자 나가는 출구보다 다 같이 찾는 길을 고르겠다고 말했습니다.',trust:2,reward:{exp:40},end:'한 사람의 대답'},
+    c:[{n:'거울을 깨고 동료들과 남는다',r:'{name}은 거울 조각을 바닥에 내려놓았습니다. 혼자 나가는 출구보다 다 같이 찾는 길을 고르겠다고 말했습니다.',trust:2,reward:{exp:50},end:'한 사람의 대답'},
        {n:'거울 속 자신에게 작별을 고한다',r:'{name}은 거울 속 자신에게 고마웠다고 말했습니다. 거울은 마지막으로 웃고는 평범한 유리가 되었습니다.',trust:1,reward:{gold:35},end:'평범해진 거울'}],
     team:'{peer}이 거울 앞에 함께 서자, 거울 속에도 두 사람이 비쳤습니다. 거울 속 {name}은 그제야 아무 말 없이 고개를 끄덕였습니다.',teamEnd:'함께 비친 얼굴',teamN:"{peer}에게 거울 앞에 같이 서 달라고 한다"}]},
  key:{title:"맞지 않는 열쇠",hold:"열쇠를 주머니에 넣고 다음 문 앞에서 다시 꺼낸다",items:["녹슨 현관 열쇠", "번호가 새겨진 사물함 열쇠", "끈에 묶인 작은 열쇠"],
@@ -3922,9 +3926,9 @@ const STORY_ARCS={
    {t:"잠긴 관리인실",d:"관리인실 문에 열쇠 구멍이 셋 있습니다. 그중 하나가 {item}과 같은 모양입니다. {name}은 열쇠를 꺼냈다가 손을 떨며 멈춥니다.",
     c:[{n:"열쇠를 함께 쥐고 돌린다",r:"두 사람의 손이 겹치자 열쇠가 반 바퀴 돌았습니다. 문은 열리지 않았지만, 안쪽에서 무언가 떨어지는 소리가 들렸습니다.",trust:2,reward:{gold:15}},
        {n:"다른 두 구멍의 열쇠부터 찾자고 한다",r:"관리인 책상 서랍에서 다른 열쇠 하나를 찾았습니다. 꼬리표에는 “셋이 모이면 열 것”이라고 적혀 있었습니다.",trust:1,reward:{potion:1}},
-       {n:"열쇠를 귀에 대고 소리를 들어 본다",r:"열쇠 안쪽에서 작게 딸깍거리는 소리가 났습니다. 같은 소리가 관리인실 안쪽에서도 들려왔습니다.",trust:1,reward:{exp:20}}]},
+       {n:"열쇠를 귀에 대고 소리를 들어 본다",r:"열쇠 안쪽에서 작게 딸깍거리는 소리가 났습니다. 같은 소리가 관리인실 안쪽에서도 들려왔습니다.",trust:1,reward:{exp:25}}]},
    {t:"열린 관리인실",d:["문이 열리자 작은 방 한가운데에 상자가 놓여 있습니다. 상자에도 열쇠 구멍이 있고, {item}이 정확히 맞습니다.", "관리인실 안에는 열쇠 꾸러미가 벽에 걸려 있습니다. 꾸러미 맨 끝 고리 하나가 비어 있습니다."],
-    c:[{n:"상자를 열고 안의 것을 확인한다",r:"상자 안에는 {name}이 어릴 적 쓴 쪽지가 있었습니다. “문은 열려도 되고 안 열려도 돼. 같이 있는 게 중요해.” {name}은 오래 웃었습니다.",trust:2,reward:{exp:40},end:"열린 상자의 쪽지"},
+    c:[{n:"상자를 열고 안의 것을 확인한다",r:"상자 안에는 {name}이 어릴 적 쓴 쪽지가 있었습니다. “문은 열려도 되고 안 열려도 돼. 같이 있는 게 중요해.” {name}은 오래 웃었습니다.",trust:2,reward:{exp:50},end:"열린 상자의 쪽지"},
        {n:"열쇠를 빈 고리에 걸어 둔다",r:"{name}은 열쇠를 꾸러미에 걸고 손을 털었습니다. 맞는 문을 찾는 대신, 이제는 열쇠를 맡길 곳을 찾았다고 말했습니다.",trust:1,reward:{gold:35},end:"제자리에 걸린 열쇠"}],
     team:"{peer}이 세 번째 구멍에 자신의 열쇠를 넣었습니다. 놀랍게도 딱 맞았습니다. 세 사람이 동시에 돌리자 문이 소리 없이 열렸습니다.",teamEnd:"셋이 연 문",teamN:"{peer}에게도 열쇠가 있는지 묻는다"}]},
  notebook:{title:"빈 일기장",hold:"일기장을 덮고 다음 장은 내일 쓰기로 한다",items:["표지가 해진 일기장", "날짜만 적힌 수첩", "첫 장이 찢긴 공책"],
@@ -3935,9 +3939,9 @@ const STORY_ARCS={
    {t:"낙서로 가득한 벽",d:"대합실 벽에 같은 날짜들이 낙서로 빼곡합니다. {item}의 날짜와 똑같습니다. 날짜 옆에는 짧은 단어 하나씩이 적혀 있습니다.",
     c:[{n:"날짜와 단어를 일기장에 옮겨 적는다",r:"옮겨 적은 단어를 이어 읽자 문장이 되었습니다. “기록은 사라져도 같이 있던 사람은 남는다.” 끝 날짜 옆에 서고 번호가 있었습니다.",trust:2,reward:{gold:15}},
        {n:"오늘의 일을 먼저 적어 보라고 권한다",r:"{name}이 처음 쓴 문장은 사라지지 않았습니다. 빈 일기장에 남은 첫 글자를 보며 {name}은 숨을 크게 쉬었습니다.",trust:1,reward:{potion:1}},
-       {n:"빈 장에 오늘 날씨부터 적어 보게 한다",r:"“흐림.” 첫 단어가 사라지지 않았습니다. {name}은 놀라서 펜을 내려놓았다가, 서고로 가는 표지판을 발견했습니다.",trust:1,reward:{exp:20}}]},
+       {n:"빈 장에 오늘 날씨부터 적어 보게 한다",r:"“흐림.” 첫 단어가 사라지지 않았습니다. {name}은 놀라서 펜을 내려놓았다가, 서고로 가는 표지판을 발견했습니다.",trust:1,reward:{exp:25}}]},
    {t:"서고의 마지막 칸",d:["서고에는 {item}과 같은 일기장이 수십 권 꽂혀 있습니다. 모두 비어 있고, 마지막 한 권에만 오늘 날짜가 적혀 있습니다.", "{name}이 쓴 문장 아래로 새 줄이 저절로 생겨납니다. 다음 문장을 기다리는 것처럼 보입니다."],
-    c:[{n:"마지막 권에 둘의 이야기를 쓴다",r:"{name}은 오늘 있었던 일을 천천히 적었습니다. 이번에는 글자가 사라지지 않고 잉크처럼 번졌습니다.",trust:2,reward:{exp:40},end:"지워지지 않는 하루"},
+    c:[{n:"마지막 권에 둘의 이야기를 쓴다",r:"{name}은 오늘 있었던 일을 천천히 적었습니다. 이번에는 글자가 사라지지 않고 잉크처럼 번졌습니다.",trust:2,reward:{exp:50},end:"지워지지 않는 하루"},
        {n:"빈 일기장을 서고에 두고 새 공책을 산다",r:"{name}은 비어 있던 날들을 탓하지 않기로 했습니다. 새 공책 첫 장에 “여기서부터”라고 적었습니다.",trust:1,reward:{gold:35},end:"여기서부터의 기록"}],
     team:"{peer}이 옆 장에 자신이 본 오늘을 적었습니다. 같은 날을 두 사람이 다르게 적은 기록이 나란히 남았습니다.",teamEnd:"두 사람이 쓴 같은 날",teamN:"{peer}에게 오늘을 같이 적자고 한다"}]},
  coin:{title:"던지지 못한 동전",hold:"동전을 주머니에 넣고 결정은 미룬다",items:["앞뒤가 닳은 동전", "구멍 뚫린 옛 동전", "한쪽 면만 있는 동전"],
@@ -3948,9 +3952,9 @@ const STORY_ARCS={
    {t:"갈림길의 분수대",d:"마른 분수대 바닥에 동전이 수없이 깔려 있습니다. 모두 {item}과 같은 무늬이고, 하나같이 옆면으로 서 있습니다.",
     c:[{n:"서 있는 동전들을 하나씩 눕혀 본다",r:"동전을 눕힐 때마다 짧은 목소리가 들렸습니다. 모두 “아직 정하지 못했다”는 말이었습니다. 마지막 동전 아래에 열차 시간표가 깔려 있었습니다.",trust:2,reward:{gold:15}},
        {n:"동전을 던지지 말고 말로 고르자고 한다",r:"{name}은 한참 망설이다 왼쪽 길을 골랐습니다. 동전을 쥔 손이 처음으로 펴졌습니다.",trust:1,reward:{potion:1}},
-       {n:"동전을 던지지 않고 손바닥에 올려만 둔다",r:"동전은 손바닥 위에서 잠깐 떨렸다가 멈췄습니다. 앞면도 뒷면도 아닌 채로 시간표 한 장을 가리켰습니다.",trust:1,reward:{exp:20}}]},
+       {n:"동전을 던지지 않고 손바닥에 올려만 둔다",r:"동전은 손바닥 위에서 잠깐 떨렸다가 멈췄습니다. 앞면도 뒷면도 아닌 채로 시간표 한 장을 가리켰습니다.",trust:1,reward:{exp:25}}]},
    {t:"정하지 못한 열차",d:["시간표에 적힌 열차가 들어옵니다. 탈지 말지, {name}이 그날 고르지 못한 바로 그 열차입니다.", "{name}이 고른 길 끝에 같은 열차가 서 있습니다. 문이 열린 채 출발 신호를 기다립니다."],
-    c:[{n:"타지 않고 보내 준다",r:"{name}은 열차가 떠나는 걸 끝까지 지켜봤습니다. 이번에는 머무르는 쪽을 스스로 골랐습니다.",trust:2,reward:{exp:40},end:"스스로 고른 머무름"},
+    c:[{n:"타지 않고 보내 준다",r:"{name}은 열차가 떠나는 걸 끝까지 지켜봤습니다. 이번에는 머무르는 쪽을 스스로 골랐습니다.",trust:2,reward:{exp:50},end:"스스로 고른 머무름"},
        {n:"동전을 열차에 두고 내린다",r:"{name}은 동전을 좌석에 남겨 두고 내렸습니다. 결정은 이제 손바닥이 아니라 발걸음으로 하겠다고 했습니다.",trust:1,reward:{gold:35},end:"두고 내린 동전"}],
     team:"{peer}이 동전을 받아 공중에 던지고 일부러 받지 않았습니다. 동전이 굴러가는 사이 세 사람은 이미 다음 길을 정해 두었습니다.",teamEnd:"받지 않은 동전",teamN:"{peer}에게 대신 던져 달라고 한다"}]},
  toytrain:{title:"멈춘 장난감 기차",hold:"기차를 상자에 넣고 다음 전시실을 찾는다",items:["태엽이 풀린 장난감 기차", "바퀴 하나 빠진 객차", "손때 묻은 철로 조각"],
@@ -3961,9 +3965,9 @@ const STORY_ARCS={
    {t:"모형 철도 전시실",d:"버려진 전시실에 정거장 전체를 본뜬 모형 철도가 있습니다. 선로 한 칸이 비어 있고, 그 모양이 {item}과 맞습니다.",
     c:[{n:"빈 칸에 장난감을 올려 둔다",r:"태엽을 감지 않았는데도 기차가 천천히 움직였습니다. 기차는 모형 한구석의 작은 집 앞에서 멈췄습니다.",trust:2,reward:{gold:15}},
        {n:"동생 이야기를 더 들려 달라고 한다",r:"{name}은 동생이 좋아하던 노선 이름을 하나씩 댔습니다. 그중 하나가 전시실 지도에도 적혀 있었습니다.",trust:1,reward:{potion:1}},
-       {n:"장난감 태엽을 함께 감아 본다",r:"태엽이 다 감기자 기차가 스스로 방향을 바꿨습니다. 기차가 향한 곳은 모형 속 작은 집이었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"장난감 태엽을 함께 감아 본다",r:"태엽이 다 감기자 기차가 스스로 방향을 바꿨습니다. 기차가 향한 곳은 모형 속 작은 집이었습니다.",trust:1,reward:{exp:25}}]},
    {t:"작은 집 앞의 정거장",d:["모형 속 작은 집 창문에 불이 켜져 있습니다. 창가에 아주 작은 인형 하나가 기차를 기다리듯 서 있습니다.", "지도에 적힌 노선을 따라가자 모형 끝 작은 정거장에 도착했습니다. 승강장에 “거꾸로 가도 괜찮아”라는 낙서가 있습니다."],
-    c:[{n:"기차를 거꾸로 돌려 집까지 보내 준다",r:"{name}은 동생처럼 기차를 반대로 돌렸습니다. 기차는 집 앞까지 웃는 소리를 내며 굴러갔습니다.",trust:2,reward:{exp:40},end:"거꾸로 도착한 기차"},
+    c:[{n:"기차를 거꾸로 돌려 집까지 보내 준다",r:"{name}은 동생처럼 기차를 반대로 돌렸습니다. 기차는 집 앞까지 웃는 소리를 내며 굴러갔습니다.",trust:2,reward:{exp:50},end:"거꾸로 도착한 기차"},
        {n:"장난감을 챙겨 함께 가지고 간다",r:"{name}은 기차를 품에 안고 일어났습니다. 동생에게 보여 줄 다음 노선은 직접 달려서 정하겠다고 했습니다.",trust:1,reward:{gold:35},end:"함께 가는 장난감"}],
     team:"{peer}이 객차 하나를 이어 붙였습니다. 두 칸이 된 기차가 모형을 한 바퀴 돌고 다시 세 사람 앞에 섰습니다.",teamEnd:"객차가 늘어난 기차",teamN:"{peer}에게 객차를 이어 달라고 한다"}]},
  taste:{title:"잃어버린 맛",hold:"수첩을 덮고 다음 주방을 찾는다",items:["기름때 묻은 요리 수첩", "이 빠진 국자", "이름 없는 향신료 병"],
@@ -3974,9 +3978,9 @@ const STORY_ARCS={
    {t:"비어 있는 구내식당",d:"구내식당 주방에 냄비가 아직 따뜻합니다. 조리대 위에 {item}과 같은 글씨로 쓴 주문서가 붙어 있습니다.",
     c:[{n:"주문서의 조리법대로 함께 끓여 본다",r:"국은 거의 비슷했지만 무언가 하나가 비었습니다. 주문서 뒷면에 식료품 창고의 번호가 적혀 있었습니다.",trust:2,reward:{gold:15}},
        {n:"맛을 기억하는 대로 설명해 달라고 한다",r:"{name}은 짭짤하고 조금 달았다고 했습니다. 설명을 듣다 보니 창고 선반에 같은 병이 놓여 있는 게 보였습니다.",trust:1,reward:{potion:1}},
-       {n:"주방에 남은 재료로 아무거나 만들어 본다",r:"엉망인 요리였지만 {name}은 한 숟갈 먹고 크게 웃었습니다. 웃음 끝에 창고 열쇠가 냄비 뒤에서 나왔습니다.",trust:1,reward:{exp:20}}]},
+       {n:"주방에 남은 재료로 아무거나 만들어 본다",r:"엉망인 요리였지만 {name}은 한 숟갈 먹고 크게 웃었습니다. 웃음 끝에 창고 열쇠가 냄비 뒤에서 나왔습니다.",trust:1,reward:{exp:25}}]},
    {t:"창고의 마지막 병",d:["창고 선반에 라벨 없는 병이 하나 있습니다. 뚜껑을 열자 {name}이 그토록 찾던 향이 퍼집니다.", "선반의 병은 비어 있고, 안쪽에 “재료는 같이 먹는 사람”이라고 적힌 쪽지만 있습니다."],
-    c:[{n:"그 재료로 모두의 그릇을 채운다",r:"{name}은 완성한 국을 동료들 그릇에 나눠 담았습니다. 맛을 본 순간 누군가의 웃는 얼굴이 떠올랐다고 했습니다.",trust:2,reward:{exp:40},end:"다시 끓인 국"},
+    c:[{n:"그 재료로 모두의 그릇을 채운다",r:"{name}은 완성한 국을 동료들 그릇에 나눠 담았습니다. 맛을 본 순간 누군가의 웃는 얼굴이 떠올랐다고 했습니다.",trust:2,reward:{exp:50},end:"다시 끓인 국"},
        {n:"쪽지대로 재료 없이 함께 먹는다",r:"부족한 국이었지만 함께 먹으니 그럭저럭 맛이 났습니다. {name}은 이 맛도 수첩에 적어 두겠다고 했습니다.",trust:1,reward:{gold:35},end:"함께 먹은 한 그릇"}],
     team:"{peer}이 자기 고향의 양념을 한 숟갈 보탰습니다. 처음 보는 맛이었지만 {name}은 이걸로 됐다고 웃었습니다.",teamEnd:"섞인 두 고향의 맛",teamN:"{peer}에게 재료를 보태 달라고 한다"}]},
  ring:{title:"끼지 못한 반지",hold:"반지 상자를 닫고 다음에 다시 꺼낸다",items:["상자 속 은반지", "실로 감은 반지", "안쪽에 날짜가 새겨진 반지"],
@@ -3987,9 +3991,9 @@ const STORY_ARCS={
    {t:"분실물 진열장",d:"유리 진열장 안에 주인 없는 반지들이 놓여 있습니다. 하나같이 같은 날짜가 새겨져 있습니다. {name}의 {item}과 같은 날입니다.",
     c:[{n:"날짜에 무슨 일이 있었는지 기록을 찾는다",r:"역 일지에는 그날 열차가 한 시간 늦었다고 적혀 있었습니다. 약속 장소였던 개찰구 번호도 남아 있었습니다.",trust:2,reward:{gold:15}},
        {n:"그날 하려던 말을 연습해 보라고 한다",r:"{name}은 서툴게 첫마디를 꺼냈다가 웃음을 터뜨렸습니다. 웃는 사이 진열장 열쇠가 바닥에 떨어진 게 보였습니다.",trust:1,reward:{potion:1}},
-       {n:"반지를 진열장 반지들 옆에 나란히 놓아 본다",r:"반지들이 모두 같은 방향으로 살짝 굴렀습니다. 굴러간 쪽 끝에 약속의 개찰구로 가는 안내판이 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"반지를 진열장 반지들 옆에 나란히 놓아 본다",r:"반지들이 모두 같은 방향으로 살짝 굴렀습니다. 굴러간 쪽 끝에 약속의 개찰구로 가는 안내판이 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"약속의 개찰구",d:["개찰구 앞에 빈 의자 하나가 놓여 있습니다. 의자 위에 같은 크기의 반지 상자가 열린 채 기다립니다.", "진열장 안쪽에 “다음에 만나면 직접 받을게”라는 쪽지가 있습니다. {name}의 손이 떨립니다."],
-    c:[{n:"반지를 빈 상자에 넣어 둔다",r:"{name}은 반지를 상자에 넣고 뚜껑을 닫았습니다. 건네지는 못했지만 마음은 제자리에 놓였다고 했습니다.",trust:2,reward:{exp:40},end:"제자리에 놓인 마음"},
+    c:[{n:"반지를 빈 상자에 넣어 둔다",r:"{name}은 반지를 상자에 넣고 뚜껑을 닫았습니다. 건네지는 못했지만 마음은 제자리에 놓였다고 했습니다.",trust:2,reward:{exp:50},end:"제자리에 놓인 마음"},
        {n:"반지를 목걸이로 걸고 다닌다",r:"{name}은 반지를 끈에 꿰어 목에 걸었습니다. 직접 받겠다는 사람을 만날 때까지 가까이 두겠다고 했습니다.",trust:1,reward:{gold:35},end:"목에 건 약속"}],
     team:"{peer}이 하려던 말을 대신 들어 주겠다고 했습니다. 끝까지 말을 마친 {name}은 오래 묵은 숨을 내쉬었습니다.",teamEnd:"끝까지 한 고백",teamN:"{peer}에게 연습 상대가 되어 달라고 한다"}]},
  leash:{title:"기다리는 목줄",hold:"목줄을 다시 감고 다음 산책 때 찾기로 한다",items:["빈 산책 목줄", "이름이 새겨진 인식표", "반쯤 씹힌 공"],
@@ -4000,9 +4004,9 @@ const STORY_ARCS={
    {t:"발자국이 남은 승강장",d:"먼지 쌓인 승강장에 작은 발자국이 줄지어 있습니다. 발자국은 같은 자리를 빙빙 돌다가 벤치 아래서 멈춥니다.",
     c:[{n:"발자국을 따라 함께 걷는다",r:"발자국을 따라 돌다 보니 산책하던 길과 모양이 같았습니다. 벤치 아래에 {item}과 같은 무늬의 털이 남아 있었습니다.",trust:2,reward:{gold:15}},
        {n:"벤치에 앉아 이름을 불러 보게 한다",r:"{name}이 이름을 부르자 멀리서 짧게 짖는 소리가 돌아왔습니다. 소리는 화물 승강장 쪽이었습니다.",trust:1,reward:{potion:1}},
-       {n:"목줄을 풀어 바닥에 길게 늘어뜨린다",r:"목줄이 저절로 한쪽으로 끌려갔습니다. 무언가 반대편을 물고 있는 것처럼 화물 승강장 쪽으로 당겨졌습니다.",trust:1,reward:{exp:20}}]},
+       {n:"목줄을 풀어 바닥에 길게 늘어뜨린다",r:"목줄이 저절로 한쪽으로 끌려갔습니다. 무언가 반대편을 물고 있는 것처럼 화물 승강장 쪽으로 당겨졌습니다.",trust:1,reward:{exp:25}}]},
    {t:"화물 승강장의 개집",d:["화물 승강장 구석에 낡은 개집이 있습니다. 안은 비어 있고, 바닥이 아직 따뜻합니다.", "짖는 소리를 따라간 곳에 물그릇이 놓여 있습니다. 누군가 매일 물을 갈아 준 흔적이 있습니다."],
-    c:[{n:"목줄을 개집에 걸어 두고 떠난다",r:"{name}은 목줄을 개집 문고리에 걸었습니다. 기다리는 대신, 이제 쉬어도 된다고 말해 주고 싶었다고 했습니다.",trust:2,reward:{exp:40},end:"걸어 둔 목줄"},
+    c:[{n:"목줄을 개집에 걸어 두고 떠난다",r:"{name}은 목줄을 개집 문고리에 걸었습니다. 기다리는 대신, 이제 쉬어도 된다고 말해 주고 싶었다고 했습니다.",trust:2,reward:{exp:50},end:"걸어 둔 목줄"},
        {n:"물그릇을 채우고 다시 오겠다고 한다",r:"{name}은 물을 가득 채우고 공을 그릇 옆에 두었습니다. 다음 산책은 꼭 같이 가자고 혼잣말을 했습니다.",trust:1,reward:{gold:35},end:"다음 산책의 약속"}],
     team:"{peer}이 공을 멀리 던지자 어디선가 발소리가 따라 달렸습니다. 공은 돌아오지 않았지만 세 사람 모두 같은 방향을 보며 웃었습니다.",teamEnd:"어딘가로 달려간 발소리",teamN:"{peer}에게 같이 불러 달라고 한다"}]},
  drawing:{title:"동생의 그림",hold:"그림을 접어 두고 다음 벽을 찾는다",items:["크레파스로 그린 가족 그림", "구겨진 스케치북 한 장", "색이 바랜 생일 카드"],
@@ -4013,9 +4017,9 @@ const STORY_ARCS={
    {t:"낙서 금지 벽",d:"“낙서 금지” 팻말 아래 벽에 아이 그림이 가득합니다. 그중 하나가 {item}과 똑같은 구도입니다. 이 그림 속 아이는 얼굴이 있습니다.",
     c:[{n:"벽 그림을 자세히 베껴 둔다",r:"그림 속 아이는 노란 모자를 쓰고 있었습니다. 구석에 “언니 오빠 기다려”라는 삐뚤빼뚤한 글씨가 있었습니다.",trust:2,reward:{gold:15}},
        {n:"그림을 보며 떠오르는 걸 말하게 한다",r:"{name}은 노란 모자를 떠올렸습니다. 말하는 사이 벽 너머에서 크레파스 굴러가는 소리가 났습니다.",trust:1,reward:{potion:1}},
-       {n:"그림 속 배경부터 같이 찾아본다",r:"그림 배경의 놀이터가 이 역 근처 공터와 같았습니다. 공터 벽 너머에서 크레파스 냄새가 났습니다.",trust:1,reward:{exp:20}}]},
+       {n:"그림 속 배경부터 같이 찾아본다",r:"그림 배경의 놀이터가 이 역 근처 공터와 같았습니다. 공터 벽 너머에서 크레파스 냄새가 났습니다.",trust:1,reward:{exp:25}}]},
    {t:"노란 모자의 그림",d:["벽 너머 작은 방에 노란 크레파스 하나가 놓여 있습니다. 바닥에는 그리다 만 그림이 펼쳐져 있습니다.", "작은 방 벽에 노란 모자가 걸려 있습니다. 모자 안에 “다 그리면 보여 줘”라는 쪽지가 있습니다."],
-    c:[{n:"노란 크레파스로 얼굴을 그려 넣는다",r:"{name}은 혀를 살짝 내밀고 아이의 얼굴을 그렸습니다. 똑같지는 않았지만, 웃는 얼굴이었습니다.",trust:2,reward:{exp:40},end:"완성된 가족 그림"},
+    c:[{n:"노란 크레파스로 얼굴을 그려 넣는다",r:"{name}은 혀를 살짝 내밀고 아이의 얼굴을 그렸습니다. 똑같지는 않았지만, 웃는 얼굴이었습니다.",trust:2,reward:{exp:50},end:"완성된 가족 그림"},
        {n:"그림을 모자 안에 넣어 두고 온다",r:"{name}은 그림을 접어 모자 안에 넣었습니다. 다 그리면 보여 주겠다는 약속은 다음으로 미뤘습니다.",trust:1,reward:{gold:35},end:"모자에 넣어 둔 그림"}],
     team:"{peer}이 그림 귀퉁이에 자신과 당신을 작게 그려 넣었습니다. 손잡은 사람이 넷이 된 그림을 {name}은 오래 바라봤습니다.",teamEnd:"넷이 손잡은 그림",teamN:"{peer}에게 그림에 함께 들어가 달라고 한다"}]},
  ledger:{title:"갚지 못한 장부",hold:"장부를 덮고 다음 사물함을 찾는다",items:["빨간 줄이 그어진 장부", "손때 묻은 차용증", "도장이 번진 영수증 묶음"],
@@ -4026,9 +4030,9 @@ const STORY_ARCS={
    {t:"역무원 사물함",d:"역무원 사물함마다 같은 이름표가 붙어 있습니다. {item}에 적힌 그 이름입니다. 한 칸만 문이 살짝 열려 있습니다.",
     c:[{n:"열린 사물함 속 물건을 확인한다",r:"사물함 안에는 {name}의 이름이 적힌 우산과 도시락통이 있었습니다. 빌려줬던 사람이 오히려 이것저것 챙겨 준 흔적이었습니다.",trust:2,reward:{gold:15}},
        {n:"그 사람과의 일을 기억나는 대로 듣는다",r:"{name}은 비 오는 날 우산을 빌린 일, 점심을 나눠 먹은 일을 이야기했습니다. 빚이 하나둘 늘어갔습니다.",trust:1,reward:{potion:1}},
-       {n:"장부의 다른 쪽부터 넘겨 본다",r:"장부 뒷장에는 반대로 {name}이 빌려준 것들이 적혀 있었습니다. 둘이 주고받은 기록이 근무 일지로 이어졌습니다.",trust:1,reward:{exp:20}}]},
+       {n:"장부의 다른 쪽부터 넘겨 본다",r:"장부 뒷장에는 반대로 {name}이 빌려준 것들이 적혀 있었습니다. 둘이 주고받은 기록이 근무 일지로 이어졌습니다.",trust:1,reward:{exp:25}}]},
    {t:"근무 일지의 마지막 장",d:["근무 일지 마지막 장에 “빚은 없다. 대신 다음 사람에게 똑같이 해 줄 것”이라고 적혀 있습니다.", "근무 일지에는 그 사람이 매일 {name}의 안부를 적어 둔 기록이 있습니다."],
-    c:[{n:"장부를 덮고 다음 사람에게 갚기로 한다",r:"{name}은 장부의 빨간 줄 위에 “이월”이라고 적었습니다. 받은 만큼 동료들에게 갚아 나가겠다고 했습니다.",trust:2,reward:{exp:40},end:"다음 사람에게 이월된 빚"},
+    c:[{n:"장부를 덮고 다음 사람에게 갚기로 한다",r:"{name}은 장부의 빨간 줄 위에 “이월”이라고 적었습니다. 받은 만큼 동료들에게 갚아 나가겠다고 했습니다.",trust:2,reward:{exp:50},end:"다음 사람에게 이월된 빚"},
        {n:"일지에 감사 인사를 남긴다",r:"{name}은 일지 마지막 줄에 고맙다는 말을 길게 적었습니다. 금액보다 이게 먼저였다고 말했습니다.",trust:1,reward:{gold:35},end:"늦게 쓴 감사 인사"}],
     team:"{peer}이 자신도 갚지 못한 게 많다며 장부 한 칸을 나눠 썼습니다. 둘의 빚은 서로에게 갚아 나가기로 했습니다.",teamEnd:"서로에게 지는 빚",teamN:"{peer}에게 장부를 같이 보자고 한다"}]},
  lesson:{title:"마지막 수업",hold:"분필을 내려놓고 다음 교실을 찾는다",items:["분필이 묻은 출석부", "빨간 펜으로 채점한 시험지", "끝이 닳은 지시봉"],
@@ -4039,9 +4043,9 @@ const STORY_ARCS={
    {t:"역사 안의 교육실",d:"신입 역무원 교육실 칠판에 판서가 반쯤 지워져 남아 있습니다. 글씨체가 {name}의 것과 똑같습니다.",
     c:[{n:"지워진 판서를 함께 복원한다",r:"지워진 부분은 “틀려도 괜찮다”는 문장이었습니다. 칠판 아래 출석부에 마지막 학생의 이름이 비어 있었습니다.",trust:2,reward:{gold:15}},
        {n:"교단에 서서 수업을 해 보라고 한다",r:"{name}은 머쓱하게 웃다가 진짜 수업처럼 말을 이었습니다. 끝날 즈음 복도에서 종소리가 울렸습니다.",trust:1,reward:{potion:1}},
-       {n:"출석부를 펼쳐 이름을 불러 보게 한다",r:"{name}이 이름을 부를 때마다 빈 책상에서 작은 대답이 들리는 것 같았습니다. 마지막 이름 차례에 종이 울렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"출석부를 펼쳐 이름을 불러 보게 한다",r:"{name}이 이름을 부를 때마다 빈 책상에서 작은 대답이 들리는 것 같았습니다. 마지막 이름 차례에 종이 울렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"울리는 종",d:["종이 울리지만 이번에는 아무도 교실을 나가지 않습니다. 빈 책상 위에 시험지 한 장이 놓여 있습니다.", "종소리를 따라간 복도 끝 교실에 학생 한 명 몫의 의자만 남아 있습니다."],
-    c:[{n:"종이 멎을 때까지 마지막 말을 끝낸다",r:"{name}은 종소리를 무시하고 끝까지 말했습니다. “모르면 물어봐. 물어봐도 괜찮아.” 이번에는 수업이 제대로 끝났습니다.",trust:2,reward:{exp:40},end:"끝까지 한 수업"},
+    c:[{n:"종이 멎을 때까지 마지막 말을 끝낸다",r:"{name}은 종소리를 무시하고 끝까지 말했습니다. “모르면 물어봐. 물어봐도 괜찮아.” 이번에는 수업이 제대로 끝났습니다.",trust:2,reward:{exp:50},end:"끝까지 한 수업"},
        {n:"빈 의자에 쪽지를 남긴다",r:"{name}은 하고 싶던 말을 쪽지에 적어 의자 위에 두었습니다. 언젠가 앉을 누군가가 읽기를 바랐습니다.",trust:1,reward:{gold:35},end:"빈 의자의 쪽지"}],
     team:"{peer}이 학생처럼 손을 들고 질문을 했습니다. {name}은 처음으로 질문을 받는 기쁨을 다시 느꼈다고 했습니다.",teamEnd:"손을 든 학생",teamN:"{peer}에게 학생이 되어 달라고 한다"}]},
  wrongmap:{title:"틀린 지도",hold:"지도를 접어 두고 다음 통로에서 펼친다",items:["구겨진 노선도", "손으로 고친 안내도", "좌표가 어긋난 지도"],
@@ -4052,9 +4056,9 @@ const STORY_ARCS={
    {t:"지도에만 있는 통로",d:"{item}에 그려진 통로 자리는 벽으로 막혀 있습니다. 벽을 두드리자 속이 비어 있는 소리가 납니다.",
     c:[{n:"벽 너머의 공간을 조사한다",r:"벽 틈으로 들여다보니 지도와 똑같은 통로가 이어져 있었습니다. 다만 통로 끝은 무너져 있었습니다.",trust:2,reward:{gold:15}},
        {n:"지도에서 지워진 길부터 걸어 본다",r:"지도에 없는 길을 걷자 {name}은 처음 보는데도 익숙하다고 했습니다. 길 끝 표지판이 지도 속 통로 쪽을 가리켰습니다.",trust:1,reward:{potion:1}},
-       {n:"지도를 거꾸로 들고 다시 본다",r:"거꾸로 보니 지워진 길이 오히려 또렷해졌습니다. {name}은 웃으며 이게 원래 방향이었다고 했습니다.",trust:1,reward:{exp:20}}]},
+       {n:"지도를 거꾸로 들고 다시 본다",r:"거꾸로 보니 지워진 길이 오히려 또렷해졌습니다. {name}은 웃으며 이게 원래 방향이었다고 했습니다.",trust:1,reward:{exp:25}}]},
    {t:"두 개의 길",d:["무너진 통로 너머에 다른 회차의 지도 조각이 붙어 있습니다. 조각을 맞추면 오늘의 길이 그려집니다.", "표지판 아래에 수십 장의 지도가 겹쳐 붙어 있습니다. 가장 위의 한 장만 아직 비어 있습니다."],
-    c:[{n:"조각을 맞춰 오늘의 지도를 완성한다",r:"{name}은 조각들을 이어 붙여 새 지도를 만들었습니다. 이번 지도에는 동료들의 이름이 지명처럼 적혀 있었습니다.",trust:2,reward:{exp:40},end:"이름이 지명인 지도"},
+    c:[{n:"조각을 맞춰 오늘의 지도를 완성한다",r:"{name}은 조각들을 이어 붙여 새 지도를 만들었습니다. 이번 지도에는 동료들의 이름이 지명처럼 적혀 있었습니다.",trust:2,reward:{exp:50},end:"이름이 지명인 지도"},
        {n:"빈 지도에 직접 걸은 길을 그린다",r:"{name}은 오늘 함께 걸은 길만 그렸습니다. 지도는 작았지만 틀린 곳이 하나도 없었습니다.",trust:1,reward:{gold:35},end:"틀린 곳 없는 작은 지도"}],
     team:"{peer}이 자신이 기억하는 길을 덧그렸습니다. 두 사람의 지도가 겹친 곳에서 새 통로가 열렸습니다.",teamEnd:"겹친 지도의 통로",teamN:"{peer}의 기억도 지도에 그려 달라고 한다"}]},
  shoe:{title:"한 짝뿐인 신발",hold:"신발을 가방에 넣고 다음 계단에서 찾는다",items:["리본 달린 아이 신발 한 짝", "밑창이 떨어진 운동화", "진흙 묻은 구두 한 짝"],
@@ -4065,9 +4069,9 @@ const STORY_ARCS={
    {t:"한쪽만 울리는 계단",d:"비상계단에서 신발 소리가 한쪽만 울립니다. 터벅, 쉼, 터벅. 소리는 위층으로 올라가고 있습니다.",
     c:[{n:"소리를 따라 계단을 오른다",r:"계단참마다 같은 크기의 작은 발자국이 하나씩 찍혀 있었습니다. 맨 위 문틈에 신발 끈 하나가 걸려 있었습니다.",trust:2,reward:{gold:15}},
        {n:"계단에 앉아 기다리자고 한다",r:"잠시 뒤 소리가 멈추고 위에서 신발 끈이 하나 떨어졌습니다. {name}은 끈을 쥐고 위층을 올려다봤습니다.",trust:1,reward:{potion:1}},
-       {n:"신발을 바닥에 놓고 어느 쪽을 향하는지 본다",r:"신발 끝이 저절로 비상계단 쪽으로 돌았습니다. 계단 위에서 한쪽 발소리가 다시 들렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"신발을 바닥에 놓고 어느 쪽을 향하는지 본다",r:"신발 끝이 저절로 비상계단 쪽으로 돌았습니다. 계단 위에서 한쪽 발소리가 다시 들렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"옥상 문 앞",d:["옥상 문 앞에 나머지 한 짝이 가지런히 놓여 있습니다. 주인은 보이지 않습니다.", "옥상 문 앞에 신발 없이 앉아 있던 흔적만 남아 있습니다. 바닥에 “괜찮아, 맨발도 걸을 만해”라는 낙서가 있습니다."],
-    c:[{n:"두 짝을 맞춰 놓고 돌아선다",r:"{name}은 두 짝을 나란히 놓고 리본을 다시 묶었습니다. 주인이 돌아오면 바로 신을 수 있게 해 두었습니다.",trust:2,reward:{exp:40},end:"짝을 찾은 신발"},
+    c:[{n:"두 짝을 맞춰 놓고 돌아선다",r:"{name}은 두 짝을 나란히 놓고 리본을 다시 묶었습니다. 주인이 돌아오면 바로 신을 수 있게 해 두었습니다.",trust:2,reward:{exp:50},end:"짝을 찾은 신발"},
        {n:"신발을 낙서 옆에 두고 온다",r:"{name}은 신발을 낙서 옆에 두며 웃었습니다. 맨발이라도 걸을 수 있다는 말이 자신에게 하는 말 같았다고 했습니다.",trust:1,reward:{gold:35},end:"맨발의 답장"}],
     team:"{peer}이 끈을 함께 잡고 계단 끝까지 올라갔습니다. 셋의 발소리가 겹치자 한쪽만 울리던 소리가 더는 들리지 않았습니다.",teamEnd:"겹친 발소리",teamN:"{peer}에게 같이 올라가 달라고 한다"}]},
  voicemail:{title:"음성 사서함",hold:"휴대폰을 끄고 용기가 생길 때 다시 켠다",items:["배터리가 거의 없는 휴대폰", "사서함 번호가 적힌 쪽지", "끊긴 공중전화 카드"],
@@ -4078,9 +4082,9 @@ const STORY_ARCS={
    {t:"공중전화 부스",d:"역 구석 공중전화가 갑자기 울립니다. 수화기를 들자 {item}에 남은 메시지와 같은 잡음이 들립니다.",
     c:[{n:"수화기를 함께 귀에 대고 듣는다",r:"잡음 사이로 “밥은”이라는 단어만 들렸습니다. 부스 유리에 사서함이 있는 통신실 위치가 붙어 있었습니다.",trust:2,reward:{gold:15}},
        {n:"먼저 하고 싶은 말을 정리하게 한다",r:"{name}은 할 말을 손바닥에 적었습니다. 적는 사이 전화가 끊겼고, 통신실의 불이 켜졌습니다.",trust:1,reward:{potion:1}},
-       {n:"재생 대신 사서함 기록 시간부터 확인한다",r:"메시지는 {name}이 이곳에 오기 직전에 남겨진 것이었습니다. 기록 옆에 통신실 위치가 함께 적혀 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"재생 대신 사서함 기록 시간부터 확인한다",r:"메시지는 {name}이 이곳에 오기 직전에 남겨진 것이었습니다. 기록 옆에 통신실 위치가 함께 적혀 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"통신실의 재생 버튼",d:["통신실에서 메시지를 끝까지 들을 수 있습니다. “밥은 챙겨 먹고 다녀.” 그게 전부입니다.", "통신실 녹음기에 답장 녹음 버튼만 깜빡입니다. 원래 메시지는 이미 지워졌습니다."],
-    c:[{n:"답장으로 잘 지낸다고 녹음한다",r:"{name}은 웃으며 “응, 잘 먹고 다녀. 동료들이랑”이라고 녹음했습니다. 3초보다 훨씬 긴 답장이었습니다.",trust:2,reward:{exp:40},end:"3초짜리 안부의 답장"},
+    c:[{n:"답장으로 잘 지낸다고 녹음한다",r:"{name}은 웃으며 “응, 잘 먹고 다녀. 동료들이랑”이라고 녹음했습니다. 3초보다 훨씬 긴 답장이었습니다.",trust:2,reward:{exp:50},end:"3초짜리 안부의 답장"},
        {n:"메시지를 저장하고 지금의 밥을 먹으러 간다",r:"{name}은 메시지를 지우지 않고 저장했습니다. 그리고 말 그대로 동료들과 밥을 먹으러 갔습니다.",trust:1,reward:{gold:35},end:"챙겨 먹은 한 끼"}],
     team:"{peer}이 수화기 반대편에 귀를 대고 같이 들었습니다. 메시지가 끝나자 {peer}이 대신 “잘 챙겨 먹이겠다”고 답했습니다.",teamEnd:"대신 해 준 대답",teamN:"{peer}에게 같이 들어 달라고 한다"}]},
  bell:{title:"울리지 않는 종",hold:"종을 가방에 넣고 다음 종탑을 찾는다",items:["녹슨 손종", "추가 빠진 방울", "금이 간 풍경"],
@@ -4091,9 +4095,9 @@ const STORY_ARCS={
    {t:"종탑으로 가는 사다리",d:"역 지붕 위 작은 종탑으로 사다리가 이어져 있습니다. 종탑의 큰 종에도 추가 없습니다. {item}의 추가 빠진 자리와 같은 모양입니다.",
     c:[{n:"사라진 추를 함께 찾는다",r:"종탑 아래 쌓인 고철 더미에서 추 두 개를 찾았습니다. 하나는 크고 하나는 아주 작았습니다.",trust:2,reward:{gold:15}},
        {n:"소리 없는 종을 먼저 흔들어 보게 한다",r:"{name}이 종을 흔들자 소리 대신 바람이 불었습니다. 바람이 가리키는 쪽에서 쇳조각 부딪히는 소리가 났습니다.",trust:1,reward:{potion:1}},
-       {n:"종을 귀에 대고 안쪽 소리를 들어 본다",r:"종 안에서 아주 먼 종소리가 메아리쳤습니다. 메아리가 지붕 위 종탑에서 오는 것 같았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"종을 귀에 대고 안쪽 소리를 들어 본다",r:"종 안에서 아주 먼 종소리가 메아리쳤습니다. 메아리가 지붕 위 종탑에서 오는 것 같았습니다.",trust:1,reward:{exp:25}}]},
    {t:"종을 울릴 시간",d:["큰 종과 작은 종에 추를 달 수 있습니다. 두 종이 함께 울리면 정거장 전체에 들릴 것 같습니다.", "종탑 기둥에 “누군가를 위해 울릴 것, 자신을 위해서가 아니라”라고 새겨져 있습니다."],
-    c:[{n:"함께 종을 크게 울린다",r:"종소리가 정거장 끝까지 퍼졌습니다. 먼 승강장에서 누군가 손을 흔드는 게 보였습니다. {name}은 그것으로 충분하다고 했습니다.",trust:2,reward:{exp:40},end:"멀리 닿은 종소리"},
+    c:[{n:"함께 종을 크게 울린다",r:"종소리가 정거장 끝까지 퍼졌습니다. 먼 승강장에서 누군가 손을 흔드는 게 보였습니다. {name}은 그것으로 충분하다고 했습니다.",trust:2,reward:{exp:50},end:"멀리 닿은 종소리"},
        {n:"작은 종만 조용히 울린다",r:"{name}은 작은 종을 한 번만 울렸습니다. 가까이 있는 동료들만 들을 수 있는 소리였고, 그걸로 됐다고 했습니다.",trust:1,reward:{gold:35},end:"곁에만 들린 종소리"}],
     team:"{peer}이 큰 종의 줄을, {name}이 작은 종의 줄을 잡았습니다. 두 소리가 박자를 맞춰 울리자 정거장의 등이 하나씩 켜졌습니다.",teamEnd:"두 종의 화음",teamN:"{peer}에게 다른 종을 맡아 달라고 한다"}]},
  snow:{title:"녹지 않는 눈",hold:"눈을 그대로 두고 다음 따뜻한 곳을 찾는다",items:["눈 결정이 갇힌 유리구슬", "젖지 않는 털장갑", "흰 눈이 묻은 목도리"],
@@ -4104,9 +4108,9 @@ const STORY_ARCS={
    {t:"얼어붙은 승강장",d:"한 승강장만 하얗게 얼어 있습니다. 바닥에 두 사람이 나란히 서 있던 발자국이 남아 있고, 하나는 {name}의 것입니다.",
     c:[{n:"다른 발자국을 따라간다",r:"다른 발자국은 매점 쪽으로 이어졌습니다. 매점 안에는 식지 않은 보온병이 남아 있었습니다.",trust:2,reward:{gold:15}},
        {n:"그날 기억을 천천히 떠올리게 한다",r:"{name}은 눈 오는 날 누군가 핫초코를 사 오겠다며 뛰어갔다고 했습니다. 그 사람은 돌아오지 않았습니다.",trust:1,reward:{potion:1}},
-       {n:"어깨의 눈을 손으로 털어 준다",r:"눈은 털어도 다시 쌓였지만, {name}은 누가 털어 준 게 처음이라며 웃었습니다. 그 웃음에 승강장 얼음이 조금 녹았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"어깨의 눈을 손으로 털어 준다",r:"눈은 털어도 다시 쌓였지만, {name}은 누가 털어 준 게 처음이라며 웃었습니다. 그 웃음에 승강장 얼음이 조금 녹았습니다.",trust:1,reward:{exp:25}}]},
    {t:"매점의 보온병",d:["보온병에는 아직 따뜻한 핫초코가 들어 있습니다. 컵 두 개가 나란히 놓여 있습니다.", "매점 계산대에 “금방 올게”라는 메모와 함께 거스름돈이 놓여 있습니다."],
-    c:[{n:"핫초코를 나눠 마시며 눈을 녹인다",r:"따뜻한 걸 마시자 {name}의 어깨에서 눈이 처음 녹아내렸습니다. {name}은 젖은 어깨를 만지며 오래 웃었습니다.",trust:2,reward:{exp:40},end:"처음 녹은 눈"},
+    c:[{n:"핫초코를 나눠 마시며 눈을 녹인다",r:"따뜻한 걸 마시자 {name}의 어깨에서 눈이 처음 녹아내렸습니다. {name}은 젖은 어깨를 만지며 오래 웃었습니다.",trust:2,reward:{exp:50},end:"처음 녹은 눈"},
        {n:"메모 옆에 “기다렸어”라고 적는다",r:"{name}은 메모 아래에 짧게 답했습니다. 눈은 그대로였지만 더 무겁게 느껴지지 않는다고 했습니다.",trust:1,reward:{gold:35},end:"기다림에 쓴 답장"}],
     team:"{peer}이 자기 외투를 {name}의 어깨에 걸쳐 주었습니다. 외투 속에서 눈이 조용히 녹아 물방울이 되었습니다.",teamEnd:"외투 속에서 녹은 눈",teamN:"{peer}에게 곁을 데워 달라고 한다"}]},
  stars:{title:"보이지 않는 별자리",hold:"천장을 한 번 더 보고 다음 밤에 이어 간다",items:["별자리가 그려진 엽서", "눈금이 바랜 천체도", "렌즈 하나 깨진 쌍안경"],
@@ -4117,9 +4121,9 @@ const STORY_ARCS={
    {t:"천장에 뚫린 구멍",d:"대합실 천장에 작은 구멍들이 뚫려 있고, 그 사이로 빛이 새어 들어옵니다. 빛의 배치가 별자리처럼 보입니다.",
     c:[{n:"빛을 이어 별자리를 맞춰 본다",r:"빛을 손가락으로 이어 보니 {item}의 별자리와 절반쯤 맞았습니다. 나머지 절반은 지붕 위쪽에 있는 것 같았습니다.",trust:2,reward:{gold:15}},
        {n:"누워서 함께 천장을 올려다본다",r:"{name}은 바닥에 누워 한참을 올려다보다가, 함께 별을 보던 사람의 웃음소리가 생각났다고 했습니다. 천장 한쪽 빛이 깜빡였습니다.",trust:1,reward:{potion:1}},
-       {n:"천장 구멍 하나에 손을 대고 빛을 가려 본다",r:"하나를 가리자 별자리가 다른 모양이 되었습니다. {name}은 그 모양을 보고 지붕으로 가는 사다리를 떠올렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"천장 구멍 하나에 손을 대고 빛을 가려 본다",r:"하나를 가리자 별자리가 다른 모양이 되었습니다. {name}은 그 모양을 보고 지붕으로 가는 사다리를 떠올렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"지붕 위의 밤",d:["지붕 위로 나가자 진짜 밤하늘이 펼쳐집니다. 찾던 별자리는 없지만, 처음 보는 별들이 가득합니다.", "깜빡이던 빛은 지붕 위 작은 등불이었습니다. 누군가 별 대신 등을 놓아 별자리를 만들어 두었습니다."],
-    c:[{n:"처음 보는 별들을 이어 새 이름을 붙인다",r:"{name}은 동료들의 자리처럼 별을 이었습니다. 새 별자리에 이번 파티의 이름을 붙였습니다.",trust:2,reward:{exp:40},end:"파티의 이름을 딴 별자리"},
+    c:[{n:"처음 보는 별들을 이어 새 이름을 붙인다",r:"{name}은 동료들의 자리처럼 별을 이었습니다. 새 별자리에 이번 파티의 이름을 붙였습니다.",trust:2,reward:{exp:50},end:"파티의 이름을 딴 별자리"},
        {n:"등불 하나를 더 놓아 별자리를 완성한다",r:"{name}은 비어 있던 자리에 등을 하나 놓았습니다. 누군가 이어 둔 별자리가 그제야 완성되었습니다.",trust:1,reward:{gold:35},end:"함께 완성한 별자리"}],
     team:"{peer}이 손가락으로 별을 이으며 자기 고향 하늘 이야기를 했습니다. 두 사람이 이은 선이 겹쳐 새로운 모양이 되었습니다.",teamEnd:"겹쳐 그린 하늘",teamN:"{peer}에게 별을 같이 이어 달라고 한다"}]},
  bread:{title:"나눠 먹던 빵",hold:"빵 봉투를 챙기고 내일 다시 오기로 한다",items:["반으로 쪼갠 빵 봉투", "빵집 도장이 찍힌 쿠폰", "딱딱하게 굳은 빵 한 조각"],
@@ -4130,9 +4134,9 @@ const STORY_ARCS={
    {t:"불 꺼진 빵집",d:"역 안 빵집의 진열대가 비어 있지만 오븐은 아직 따뜻합니다. 계산대 쿠폰함에 {name}의 이름이 적힌 쿠폰이 수북합니다.",
     c:[{n:"쿠폰을 세어 보며 방문 날짜를 확인한다",r:"쿠폰마다 같은 시각, 두 개의 서명이 있었습니다. 하나는 {name}, 다른 하나는 번져서 읽을 수 없었습니다.",trust:2,reward:{gold:15}},
        {n:"오븐에 남은 반죽으로 빵을 굽는다",r:"서툴게 구운 빵이 오븐에서 나왔습니다. {name}은 빵을 들고 습관처럼 반으로 쪼갰습니다.",trust:1,reward:{potion:1}},
-       {n:"빵 냄새를 따라 오븐 뒤를 살핀다",r:"오븐 뒤에 반으로 쪼갠 빵 하나가 종이에 싸여 있었습니다. 종이에 “내일 몫”이라고 적혀 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"빵 냄새를 따라 오븐 뒤를 살핀다",r:"오븐 뒤에 반으로 쪼갠 빵 하나가 종이에 싸여 있었습니다. 종이에 “내일 몫”이라고 적혀 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"반쪽의 자리",d:["쿠폰 마지막 장 뒷면에 “내일도 반 남겨 둬”라고 적혀 있습니다. 빵집 뒷문이 열려 있습니다.", "쪼갠 빵의 반쪽을 건넬 사람을 찾아 고개를 들자, 당신이 앞에 서 있습니다."],
-    c:[{n:"반쪽을 당신에게 건넨다",r:"{name}은 반쪽을 당신 손에 쥐여 주었습니다. 기억 속 손이 누구든, 오늘 반쪽의 주인은 정해졌다고 했습니다.",trust:2,reward:{exp:40},end:"오늘의 반쪽"},
+    c:[{n:"반쪽을 당신에게 건넨다",r:"{name}은 반쪽을 당신 손에 쥐여 주었습니다. 기억 속 손이 누구든, 오늘 반쪽의 주인은 정해졌다고 했습니다.",trust:2,reward:{exp:50},end:"오늘의 반쪽"},
        {n:"반쪽을 뒷문 앞에 남겨 둔다",r:"{name}은 빵 반쪽을 종이에 싸서 뒷문 앞에 두었습니다. 내일도 반 남겨 두겠다는 약속을 지켰습니다.",trust:1,reward:{gold:35},end:"뒷문 앞의 반쪽"}],
     team:"{peer}이 빵을 셋으로 나누자고 했습니다. 조각은 작아졌지만 {name}은 이게 더 맛있다고 했습니다.",teamEnd:"셋으로 나눈 빵",teamN:"{peer}도 불러 같이 나누자고 한다"}]},
  blade:{title:"부러진 맹세",hold:"칼을 칼집에 넣고 다음 훈련장에서 다시 본다",items:["반으로 부러진 단검", "칼집만 남은 장식 검", "이가 나간 훈련용 검"],
@@ -4143,9 +4147,9 @@ const STORY_ARCS={
    {t:"훈련장의 표적",d:"폐쇄된 협회 훈련장 표적에 칼자국이 가득합니다. 가장 깊은 자국에 {item}의 부러진 날 조각이 박혀 있습니다.",
     c:[{n:"날 조각을 뽑아 맞춰 본다",r:"조각은 정확히 맞았습니다. 날 안쪽에 작은 글씨로 “혼자 지키지 말 것”이라고 새겨져 있었습니다.",trust:2,reward:{gold:15}},
        {n:"그날 무슨 일이 있었는지 묻는다",r:"{name}은 혼자 앞에 서다 칼이 부러졌고, 그 사이 동료가 대신 막았다고 했습니다. 동료는 그 뒤로 보이지 않았습니다.",trust:1,reward:{potion:1}},
-       {n:"부러진 칼을 들고 자세를 잡아 보게 한다",r:"짧아진 칼로도 {name}의 자세는 흐트러지지 않았습니다. 칼끝이 가리킨 곳에 대장간으로 가는 문이 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"부러진 칼을 들고 자세를 잡아 보게 한다",r:"짧아진 칼로도 {name}의 자세는 흐트러지지 않았습니다. 칼끝이 가리킨 곳에 대장간으로 가는 문이 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"대장간의 불",d:["훈련장 뒤 대장간에 아직 불씨가 남아 있습니다. 부러진 칼을 다시 붙일 수 있을 것 같습니다.", "대장간 벽에 그 동료의 검이 걸려 있습니다. 칼날에 {name}의 이름이 함께 새겨져 있습니다."],
-    c:[{n:"칼을 다시 벼리며 새 맹세를 한다",r:"{name}은 칼을 다시 이으며 “같이 지키자”고 고쳐 맹세했습니다. 새 칼날은 전보다 조금 짧았지만 단단했습니다.",trust:2,reward:{exp:40},end:"함께 지키자는 맹세"},
+    c:[{n:"칼을 다시 벼리며 새 맹세를 한다",r:"{name}은 칼을 다시 이으며 “같이 지키자”고 고쳐 맹세했습니다. 새 칼날은 전보다 조금 짧았지만 단단했습니다.",trust:2,reward:{exp:50},end:"함께 지키자는 맹세"},
        {n:"부러진 칼을 동료의 검 옆에 건다",r:"{name}은 두 검을 나란히 걸었습니다. 지키지 못한 맹세 대신, 지켜 준 사람을 기억하기로 했습니다.",trust:1,reward:{gold:35},end:"나란히 걸린 두 검"}],
     team:"{peer}이 망치를 잡고 {name}이 칼을 붙들었습니다. 둘이 함께 벼린 칼에는 두 사람의 이름이 새겨졌습니다.",teamEnd:"둘이 벼린 칼",teamN:"{peer}에게 망치를 잡아 달라고 한다"}]},
  scarf:{title:"뜨다 만 목도리",hold:"바늘을 꽂아 두고 다음 쉬는 시간에 이어 뜬다",items:["바늘이 꽂힌 털실 뭉치", "반쯤 뜬 목도리", "색이 다른 털실 두 타래"],
@@ -4156,9 +4160,9 @@ const STORY_ARCS={
    {t:"털실 가게",d:"역 상가의 털실 가게에 같은 색 실이 딱 한 타래 남아 있습니다. 실 꼬리표에 “예약됨”이라고 적혀 있습니다.",
     c:[{n:"예약자 장부를 확인한다",r:"예약자는 {name} 자신이었습니다. 장부 옆에 “두 사람 몫”이라는 메모가 있었습니다.",trust:2,reward:{gold:15}},
        {n:"남은 실로 함께 몇 코 떠 본다",r:"당신의 서툰 코가 섞였지만 {name}은 풀지 않았습니다. 그대로 두면 더 따뜻할 것 같다고 했습니다.",trust:1,reward:{potion:1}},
-       {n:"목도리를 당신 목에 대 보며 길이를 잰다",r:"목도리는 아직 짧았지만 {name}은 이 정도면 금방이라고 했습니다. 실 가게 장부에 남은 실 수량이 적혀 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"목도리를 당신 목에 대 보며 길이를 잰다",r:"목도리는 아직 짧았지만 {name}은 이 정도면 금방이라고 했습니다. 실 가게 장부에 남은 실 수량이 적혀 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"두 사람 몫",d:["장부대로라면 목도리는 두 개여야 합니다. 실은 하나를 겨우 마무리할 만큼만 남았습니다.", "서툰 코가 섞인 목도리가 거의 완성되었습니다. 마지막 매듭만 남았습니다."],
-    c:[{n:"하나를 길게 떠서 둘이 함께 두른다",r:"{name}은 목도리를 두 배로 길게 떴습니다. 두 사람이 함께 두르니 딱 맞았습니다.",trust:2,reward:{exp:40},end:"둘이 두르는 목도리"},
+    c:[{n:"하나를 길게 떠서 둘이 함께 두른다",r:"{name}은 목도리를 두 배로 길게 떴습니다. 두 사람이 함께 두르니 딱 맞았습니다.",trust:2,reward:{exp:50},end:"둘이 두르는 목도리"},
        {n:"완성한 목도리를 당신에게 건넨다",r:"{name}은 마지막 매듭을 짓고 목도리를 건넸습니다. 받을 사람을 기억해 낸 건 아니지만, 지금 주고 싶은 사람은 분명했습니다.",trust:1,reward:{gold:35},end:"건네진 목도리"}],
     team:"{peer}이 다른 색 실로 줄무늬를 넣었습니다. 두 색이 번갈아 들어간 목도리는 처음 계획보다 훨씬 예뻤습니다.",teamEnd:"줄무늬가 들어간 목도리",teamN:"{peer}에게 실을 함께 감아 달라고 한다"}]},
  window:{title:"창밖의 손",hold:"창가 자리에서 일어나 다음 열차를 기다린다",items:["김 서린 창문 조각", "손자국이 찍힌 유리", "창가 자리 승차권"],
@@ -4169,9 +4173,9 @@ const STORY_ARCS={
    {t:"창가 좌석만 남은 객차",d:"측선에 버려진 객차의 창가 좌석에 앉자 유리 바깥에 손자국이 떠오릅니다. {item}의 손자국과 겹칩니다.",
     c:[{n:"유리 바깥으로 나가 손자국 쪽에 선다",r:"바깥에 서자 손자국 높이가 {name}의 키와 꼭 맞았습니다. 손을 흔든 건 다른 회차의 {name} 자신이었습니다.",trust:2,reward:{gold:15}},
        {n:"창에 손을 맞대 보게 한다",r:"손을 맞대자 유리 건너편에서 따뜻한 기운이 느껴졌습니다. 객차 끝 출입문이 덜컹 열렸습니다.",trust:1,reward:{potion:1}},
-       {n:"창에 입김을 불어 글씨를 써 본다",r:"{name}이 쓴 “안녕” 옆에 바깥쪽에서 같은 글씨가 나타났습니다. 객차 끝 문이 덜컹 열렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"창에 입김을 불어 글씨를 써 본다",r:"{name}이 쓴 “안녕” 옆에 바깥쪽에서 같은 글씨가 나타났습니다. 객차 끝 문이 덜컹 열렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"반대편 승강장",d:["반대편 승강장에서 누군가 손을 흔들고 있습니다. 멀어서 얼굴은 보이지 않지만 손짓은 익숙합니다.", "열린 출입문 밖으로 지나가는 열차가 보입니다. 창가에 앉은 누군가가 이쪽을 보고 있습니다."],
-    c:[{n:"크게 손을 흔들어 답한다",r:"{name}은 두 팔을 들어 크게 흔들었습니다. 상대도 똑같이 흔들었고, 그제야 오래 미뤄 둔 인사가 끝났습니다.",trust:2,reward:{exp:40},end:"늦게 건넨 인사"},
+    c:[{n:"크게 손을 흔들어 답한다",r:"{name}은 두 팔을 들어 크게 흔들었습니다. 상대도 똑같이 흔들었고, 그제야 오래 미뤄 둔 인사가 끝났습니다.",trust:2,reward:{exp:50},end:"늦게 건넨 인사"},
        {n:"창가 자리를 다음 사람에게 양보한다",r:"{name}은 창가 좌석에서 일어나 승차권을 의자에 두었습니다. 다음에 앉는 사람은 꼭 손을 흔들어 주길 바랐습니다.",trust:1,reward:{gold:35},end:"양보한 창가 자리"}],
     team:"{peer}이 {name}의 옆에 서서 같이 손을 흔들었습니다. 두 사람의 손이 창에 비쳐 마치 네 사람이 인사하는 것 같았습니다.",teamEnd:"함께 흔든 손",teamN:"{peer}에게 같이 손을 흔들어 달라고 한다"}]},
  seat:{title:"비워 둔 예약석",hold:"예약석을 비워 두고 다음에 다시 앉아 본다",items:["좌석 번호가 적힌 표", "방석이 놓인 접이식 의자", "이름표가 붙은 좌석 덮개"],
@@ -4182,9 +4186,9 @@ const STORY_ARCS={
    {t:"예약 전용 대합실",d:"예약 전용 대합실 좌석 하나에만 “예약석” 팻말이 놓여 있습니다. 번호가 {item}과 같습니다.",
     c:[{n:"예약 기록을 찾아본다",r:"예약자 칸에는 {name}과 다른 이름 하나가 적혀 있었습니다. 다른 이름 옆에 “늦게 도착 예정”이라는 메모가 있었습니다.",trust:2,reward:{gold:15}},
        {n:"예약석 옆에 함께 앉아 기다린다",r:"둘이 앉아 기다리는 동안 대합실 시계가 한 바퀴 돌았습니다. 아무도 오지 않았지만, {name}은 덜 외롭다고 했습니다.",trust:1,reward:{potion:1}},
-       {n:"예약석 팻말을 뒤집어 본다",r:"팻말 뒷면에 “늦어도 꼭 갈게”라고 적혀 있었습니다. {name}은 팻말을 다시 세워 두었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"예약석 팻말을 뒤집어 본다",r:"팻말 뒷면에 “늦어도 꼭 갈게”라고 적혀 있었습니다. {name}은 팻말을 다시 세워 두었습니다.",trust:1,reward:{exp:25}}]},
    {t:"늦게 도착한 열차",d:["안내 방송이 “늦게 도착한 열차”를 알립니다. 내리는 승객은 없고, 좌석 덮개 하나만 바람에 날려 옵니다.", "대합실 불이 꺼질 시간이 되었습니다. 예약석 팻말을 치울지 말지 {name}이 고민합니다."],
-    c:[{n:"예약석에 당신을 앉힌다",r:"{name}은 팻말을 치우고 당신에게 자리를 권했습니다. 기다리던 사람이 아니어도, 기다려도 좋은 사람이 생겼다고 했습니다.",trust:2,reward:{exp:40},end:"채워진 예약석"},
+    c:[{n:"예약석에 당신을 앉힌다",r:"{name}은 팻말을 치우고 당신에게 자리를 권했습니다. 기다리던 사람이 아니어도, 기다려도 좋은 사람이 생겼다고 했습니다.",trust:2,reward:{exp:50},end:"채워진 예약석"},
        {n:"팻말을 그대로 두고 일어난다",r:"{name}은 예약석을 그대로 두었습니다. 언젠가 늦게라도 오면 앉을 곳은 있어야 한다고 말했습니다.",trust:1,reward:{gold:35},end:"남겨 둔 예약석"}],
     team:"{peer}이 의자 하나를 더 끌어왔습니다. 셋이 나란히 앉자 예약석이 하나쯤 비어 있어도 괜찮아 보였습니다.",teamEnd:"하나 더 놓인 의자",teamN:"{peer}에게 의자를 가져와 달라고 한다"}]},
  janggi:{title:"끝나지 않은 장기판",hold:"판을 그대로 두고 다음에 와서 두기로 한다",items:["말 하나가 빠진 장기판", "손때 묻은 차 말", "기보가 적힌 수첩"],
@@ -4195,9 +4199,9 @@ const STORY_ARCS={
    {t:"대합실의 장기 테이블",d:"대합실 구석 장기 테이블에 {item}과 똑같은 판이 차려져 있습니다. 상대편 의자에 아직 온기가 남아 있습니다.",
     c:[{n:"기보를 보며 판을 복원한다",r:"기보 마지막 줄 옆에 “다음 수는 같이 생각하자”는 메모가 있었습니다. 상대가 일부러 판을 남겨 둔 것 같았습니다.",trust:2,reward:{gold:15}},
        {n:"상대편 자리에 앉아 한 수 둔다",r:"당신이 엉뚱한 수를 두자 {name}은 크게 웃었습니다. 그 웃음에 테이블 서랍이 덜컥 열렸습니다.",trust:1,reward:{potion:1}},
-       {n:"판을 처음부터 다시 두어 본다",r:"처음부터 두자 {name}은 그날과 똑같이 두었습니다. 같은 자리에서 손이 멈추자 서랍이 열렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"판을 처음부터 다시 두어 본다",r:"처음부터 두자 {name}은 그날과 똑같이 두었습니다. 같은 자리에서 손이 멈추자 서랍이 열렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"서랍 속 빠진 말",d:["서랍 안에 빠져 있던 말 하나가 있습니다. 상대편의 왕입니다.", "서랍 안에 상대가 남긴 기보가 하나 더 있습니다. {name}이 이기는 수순이 적혀 있습니다."],
-    c:[{n:"왕을 판에 돌려놓고 끝까지 둔다",r:"{name}은 왕을 제자리에 놓고 마지막 수를 두었습니다. 이겼지만, 이긴 것보다 끝낸 게 더 기쁘다고 했습니다.",trust:2,reward:{exp:40},end:"끝까지 둔 한 판"},
+    c:[{n:"왕을 판에 돌려놓고 끝까지 둔다",r:"{name}은 왕을 제자리에 놓고 마지막 수를 두었습니다. 이겼지만, 이긴 것보다 끝낸 게 더 기쁘다고 했습니다.",trust:2,reward:{exp:50},end:"끝까지 둔 한 판"},
        {n:"승부를 내지 않고 판을 접는다",r:"{name}은 기보를 읽고 웃으며 판을 접었습니다. 이긴 걸 확인했으니, 다음 판은 새로 시작하자고 했습니다.",trust:1,reward:{gold:35},end:"다음 판의 약속"}],
     team:"{peer}이 훈수를 두기 시작하자 판이 엉망이 되었습니다. 세 사람은 승부 대신 웃음으로 판을 끝냈습니다.",teamEnd:"훈수로 끝난 판",teamN:"{peer}에게 훈수를 부탁한다"}]},
  medal:{title:"반납한 메달",hold:"메달을 상자에 넣고 다음에 다시 꺼낸다",items:["리본이 끊긴 메달", "이름이 긁힌 상패", "빈 메달 상자"],
@@ -4208,9 +4212,9 @@ const STORY_ARCS={
    {t:"협회 기록실",d:"협회 기록실에 대회 기록이 보관되어 있습니다. {name}의 이름 옆 순위 칸만 비어 있고, 다른 이름이 연필로 적혀 있습니다.",
     c:[{n:"연필로 적힌 이름의 기록을 찾는다",r:"그 이름의 주인은 대회 중 {name}을 대신해 다쳤던 동료였습니다. 메달은 그 동료의 것이어야 한다고 {name}이 판단했던 겁니다.",trust:2,reward:{gold:15}},
        {n:"기록보다 그날의 기분을 묻는다",r:"{name}은 시상대에서 혼자 웃을 수 없었다고 했습니다. 말이 끝나자 기록실 서랍에서 메달 상자 하나가 보였습니다.",trust:1,reward:{potion:1}},
-       {n:"메달 리본을 새 끈으로 바꿔 준다",r:"새 끈을 단 메달을 보자 {name}은 처음으로 그것을 똑바로 바라봤습니다. 리본 상자 안에 기록실 열쇠가 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"메달 리본을 새 끈으로 바꿔 준다",r:"새 끈을 단 메달을 보자 {name}은 처음으로 그것을 똑바로 바라봤습니다. 리본 상자 안에 기록실 열쇠가 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"두 번째 시상대",d:["기록실 안쪽 작은 시상대에 메달 두 개가 놓여 있습니다. 하나는 {name}의 것, 하나는 그 동료의 것입니다.", "메달 상자 안에는 메달 대신 동료가 쓴 편지가 들어 있습니다. “네가 가져. 둘이 딴 거니까.”"],
-    c:[{n:"두 메달을 나란히 걸어 둔다",r:"{name}은 두 메달을 나란히 걸었습니다. 처음으로 이긴 것을 부끄러워하지 않았습니다.",trust:2,reward:{exp:40},end:"나란히 걸린 메달"},
+    c:[{n:"두 메달을 나란히 걸어 둔다",r:"{name}은 두 메달을 나란히 걸었습니다. 처음으로 이긴 것을 부끄러워하지 않았습니다.",trust:2,reward:{exp:50},end:"나란히 걸린 메달"},
        {n:"편지만 챙기고 메달은 두고 간다",r:"{name}은 편지를 품에 넣었습니다. 메달보다 이게 더 무겁고 좋다고 했습니다.",trust:1,reward:{gold:35},end:"메달보다 무거운 편지"}],
     team:"{peer}이 {name}의 목에 메달을 걸어 주었습니다. 박수 치는 사람이 둘뿐이었지만 {name}은 시상대에서처럼 똑바로 섰습니다.",teamEnd:"둘만의 시상식",teamN:"{peer}에게 메달을 걸어 달라고 한다"}]},
  compass:{title:"북쪽을 잃은 나침반",hold:"나침반을 주머니에 넣고 다음 통로에서 본다",items:["바늘이 도는 나침반", "유리가 깨진 방위계", "방향이 적힌 손수건"],
@@ -4221,9 +4225,9 @@ const STORY_ARCS={
    {t:"자기장이 흔들리는 통로",d:"통로에 들어서자 {item}의 바늘이 미친 듯이 돕니다. 벽마다 화살표가 그려져 있고, 모두 다른 방향을 가리킵니다.",
     c:[{n:"화살표를 하나씩 따라가 본다",r:"화살표를 따라가면 매번 같은 자리로 돌아왔습니다. 돌아올 때마다 바늘은 조금씩 덜 흔들렸습니다.",trust:2,reward:{gold:15}},
        {n:"나침반을 잠시 맡아 주겠다고 한다",r:"당신이 나침반을 받자 바늘이 당신 쪽으로 돌았습니다. {name}은 그걸 보고 한참 말이 없었습니다.",trust:1,reward:{potion:1}},
-       {n:"나침반을 바닥에 내려놓고 지켜본다",r:"바닥에 놓자 바늘이 천천히 통로 중심을 가리켰습니다. 사람에게서 떨어지니 원래 할 일을 기억한 것 같았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"나침반을 바닥에 내려놓고 지켜본다",r:"바닥에 놓자 바늘이 천천히 통로 중심을 가리켰습니다. 사람에게서 떨어지니 원래 할 일을 기억한 것 같았습니다.",trust:1,reward:{exp:25}}]},
    {t:"통로의 중심",d:["통로 한가운데 바닥에 커다란 나침반이 그려져 있습니다. 북쪽 자리가 비어 있습니다.", "바늘이 당신을 가리킨 채 멈췄습니다. 통로의 화살표들이 하나둘 같은 방향으로 바뀝니다."],
-    c:[{n:"비어 있는 북쪽에 동료들의 이름을 적는다",r:"{name}은 바닥 나침반의 북쪽에 동료들의 이름을 적었습니다. 이제 바늘이 어디를 가리켜도 길을 잃지 않을 거라 했습니다.",trust:2,reward:{exp:40},end:"이름이 적힌 북쪽"},
+    c:[{n:"비어 있는 북쪽에 동료들의 이름을 적는다",r:"{name}은 바닥 나침반의 북쪽에 동료들의 이름을 적었습니다. 이제 바늘이 어디를 가리켜도 길을 잃지 않을 거라 했습니다.",trust:2,reward:{exp:50},end:"이름이 적힌 북쪽"},
        {n:"바늘이 가리키는 대로 따라간다",r:"{name}은 나침반을 믿기로 했습니다. 바늘은 출구가 아니라 동료들 쪽을 가리켰고, 그걸로 충분했습니다.",trust:1,reward:{gold:35},end:"동료를 가리키는 바늘"}],
     team:"{peer}이 나침반을 들자 바늘이 {peer}과 {name} 사이 어딘가를 가리켰습니다. 두 사람은 그 방향으로 함께 걸었습니다.",teamEnd:"둘 사이의 북쪽",teamN:"{peer}에게 나침반을 들어 달라고 한다"}]},
  doll:{title:"눈 하나 없는 인형",hold:"인형을 안고 다음 대기실을 찾는다",items:["단추 눈이 하나 없는 곰 인형", "실밥이 터진 헝겊 인형", "리본이 바랜 토끼 인형"],
@@ -4234,9 +4238,9 @@ const STORY_ARCS={
    {t:"아이들의 대기실",d:"어린이 대기실 바닥에 단추가 잔뜩 흩어져 있습니다. 모양이 다 달라서 어느 게 {item}의 눈인지 알 수 없습니다.",
     c:[{n:"단추를 하나씩 대 보며 맞는 걸 찾는다",r:"수십 개를 대 본 끝에 꼭 맞는 단추 하나를 찾았습니다. 단추 뒷면에 아이 글씨로 이름 첫 글자가 새겨져 있었습니다.",trust:2,reward:{gold:15}},
        {n:"인형을 안고 대기실을 둘러보게 한다",r:"{name}이 인형을 안고 걷자 구석의 작은 의자에서 바늘과 실이 굴러 나왔습니다. 누군가 꿰매던 흔적이었습니다.",trust:1,reward:{potion:1}},
-       {n:"인형에게 임시 눈을 그려 준다",r:"펜으로 그린 눈이 조금 웃는 모양이 되었습니다. {name}은 이 얼굴도 나쁘지 않다며 대기실 의자 쪽을 가리켰습니다.",trust:1,reward:{exp:20}}]},
+       {n:"인형에게 임시 눈을 그려 준다",r:"펜으로 그린 눈이 조금 웃는 모양이 되었습니다. {name}은 이 얼굴도 나쁘지 않다며 대기실 의자 쪽을 가리켰습니다.",trust:1,reward:{exp:25}}]},
    {t:"주인의 의자",d:["작은 의자 위에 인형이 앉아 있던 자국이 남아 있습니다. 주인은 오래전에 떠난 것 같습니다.", "실과 바늘 옆에 “고쳐 주면 다시 안을게”라는 쪽지가 있습니다."],
-    c:[{n:"단추를 달아 의자에 앉혀 둔다",r:"{name}은 단추 눈을 꼼꼼히 달고 인형을 의자에 앉혔습니다. 두 눈으로 보는 인형이 웃는 것 같았습니다.",trust:2,reward:{exp:40},end:"두 눈을 찾은 인형"},
+    c:[{n:"단추를 달아 의자에 앉혀 둔다",r:"{name}은 단추 눈을 꼼꼼히 달고 인형을 의자에 앉혔습니다. 두 눈으로 보는 인형이 웃는 것 같았습니다.",trust:2,reward:{exp:50},end:"두 눈을 찾은 인형"},
        {n:"고친 인형을 계속 안고 다닌다",r:"{name}은 쪽지 내용을 따르기로 했습니다. 주인을 만나기 전까지는 자신이 대신 안아 주겠다고 했습니다.",trust:1,reward:{gold:35},end:"대신 안아 주는 인형"}],
     team:"{peer}이 실을 바늘에 꿰어 주고 {name}이 단추를 달았습니다. 서투른 바느질이 둘이라 조금은 덜 삐뚤었습니다.",teamEnd:"둘이 단 단추",teamN:"{peer}에게 바늘을 꿰어 달라고 한다"}]},
  balloon:{title:"날아간 풍선",hold:"끈을 손목에 감고 다음 홀을 찾는다",items:["끊어진 풍선 끈", "바람 빠진 은박 풍선", "손목에 감긴 리본"],
@@ -4247,9 +4251,9 @@ const STORY_ARCS={
    {t:"높은 천장의 홀",d:"환승 홀의 높은 천장에 색색의 풍선이 가득 붙어 있습니다. 하나같이 끈이 끊겨 있습니다.",
     c:[{n:"끈 길이를 비교해 {name}의 풍선을 찾는다",r:"끊긴 끈 하나가 {item}과 정확히 이어졌습니다. 그 풍선만은 아직 바람이 빠지지 않았습니다.",trust:2,reward:{gold:15}},
        {n:"풍선을 놓친 날의 기억을 묻는다",r:"{name}은 누군가 손을 놓지 말라고 했는데 놓쳤다고 했습니다. 말하던 중 풍선 하나가 천천히 내려오기 시작했습니다.",trust:1,reward:{potion:1}},
-       {n:"남은 끈을 높이 들어 흔들어 본다",r:"끈을 흔들자 천장의 풍선 하나가 같이 흔들렸습니다. 끈이 아직 어딘가에 이어져 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"남은 끈을 높이 들어 흔들어 본다",r:"끈을 흔들자 천장의 풍선 하나가 같이 흔들렸습니다. 끈이 아직 어딘가에 이어져 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"내려오는 풍선",d:["풍선이 {name}의 손 높이까지 내려옵니다. 끈 끝에 작은 쪽지가 묶여 있습니다.", "천천히 내려온 풍선이 바닥에 닿지 않고 공중에 머뭅니다. 마치 누군가 잡아 주길 기다리는 것 같습니다."],
-    c:[{n:"끈을 꽉 잡고 쪽지를 읽는다",r:"쪽지에는 “이번엔 놓치지 마”라고 적혀 있었습니다. {name}은 끈을 손목에 두 번 감았습니다.",trust:2,reward:{exp:40},end:"다시 잡은 풍선"},
+    c:[{n:"끈을 꽉 잡고 쪽지를 읽는다",r:"쪽지에는 “이번엔 놓치지 마”라고 적혀 있었습니다. {name}은 끈을 손목에 두 번 감았습니다.",trust:2,reward:{exp:50},end:"다시 잡은 풍선"},
        {n:"일부러 손을 놓아 다시 날려 보낸다",r:"{name}은 웃으며 풍선을 놓았습니다. 이번에는 놓친 게 아니라 보내 준 거라고 했습니다.",trust:1,reward:{gold:35},end:"보내 준 풍선"}],
     team:"{peer}이 {name}의 손 위에 손을 겹쳐 끈을 함께 잡았습니다. 두 손이 잡은 풍선은 바람에도 흔들리지 않았습니다.",teamEnd:"둘이 잡은 끈",teamN:"{peer}에게 같이 끈을 잡아 달라고 한다"}]},
  reel:{title:"감기지 않은 필름",hold:"필름 깡통을 닫고 다음 상영 때 다시 온다",items:["녹슨 필름 깡통", "영사기 손잡이", "반쯤 탄 상영표"],
@@ -4260,9 +4264,9 @@ const STORY_ARCS={
    {t:"역 지하 극장",d:"역 지하에 작은 극장이 있습니다. 좌석은 모두 비어 있고, 영사실 창에서 희미한 빛이 새어 나옵니다.",
     c:[{n:"영사실에 올라가 필름을 건다",r:"{item}을 영사기에 걸자 화면이 밝아졌습니다. 영화 첫 장면에 {name}이 아는 거리가 나왔습니다.",trust:2,reward:{gold:15}},
        {n:"객석에 앉아 기다려 보자고 한다",r:"두 사람이 앉자 객석 등이 꺼지고 예고편이 시작되었습니다. 예고편 속에 {name}의 뒷모습이 스쳐 지나갔습니다.",trust:1,reward:{potion:1}},
-       {n:"필름을 불빛에 비춰 장면을 확인한다",r:"필름 칸마다 같은 극장 객석이 찍혀 있었습니다. 마지막 칸 객석에 두 사람이 앉아 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"필름을 불빛에 비춰 장면을 확인한다",r:"필름 칸마다 같은 극장 객석이 찍혀 있었습니다. 마지막 칸 객석에 두 사람이 앉아 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"마지막 장면",d:["영화가 마지막 장면에 다다릅니다. 화면 속 객석에 두 자리가 비어 있습니다.", "필름이 마지막 몇 칸에서 끊겨 있습니다. 끊긴 자리를 이어 붙일 테이프가 영사실에 있습니다."],
-    c:[{n:"끝까지 보고 박수를 친다",r:"{name}은 마지막 장면에서 웃음을 터뜨렸습니다. 함께 웃기로 했던 장면이 바로 거기 있었습니다.",trust:2,reward:{exp:40},end:"함께 웃은 마지막 장면"},
+    c:[{n:"끝까지 보고 박수를 친다",r:"{name}은 마지막 장면에서 웃음을 터뜨렸습니다. 함께 웃기로 했던 장면이 바로 거기 있었습니다.",trust:2,reward:{exp:50},end:"함께 웃은 마지막 장면"},
        {n:"끊긴 필름을 이어 다음 상영을 남긴다",r:"{name}은 필름을 이어 붙이고 상영표에 다음 날짜를 적었습니다. 결말은 다음에 다 같이 보자고 했습니다.",trust:1,reward:{gold:35},end:"다음 상영 예정"}],
     team:"{peer}이 팝콘 대신 남은 비상식량을 나눠 들고 옆에 앉았습니다. 셋이 함께 본 결말은 생각보다 시시했지만 모두 웃었습니다.",teamEnd:"셋이 본 결말",teamN:"{peer}도 극장에 불러 오자고 한다"}]},
  crane:{title:"천 마리 학",hold:"색종이를 챙기고 다음에 마저 접는다",items:["종이학이 든 유리병", "반쯤 접은 색종이 묶음", "실에 꿴 종이학 줄"],
@@ -4273,9 +4277,9 @@ const STORY_ARCS={
    {t:"종이로 가득한 휴게실",d:"휴게실 바닥에 접다 만 종이학이 수백 개 흩어져 있습니다. 모두 날개를 펴기 직전에서 멈췄습니다.",
     c:[{n:"멈춘 학들의 접는 선을 살핀다",r:"접는 선마다 작은 글씨가 숨어 있었습니다. 모두 “낫게 해 주세요”라는 같은 문장이었습니다.",trust:2,reward:{gold:15}},
        {n:"함께 한 마리를 접어 본다",r:"당신이 접은 학은 비뚤었지만 날개가 펴졌습니다. {name}은 그 학을 오래 들여다봤습니다.",trust:1,reward:{potion:1}},
-       {n:"접는 법을 당신에게 가르쳐 준다",r:"{name}의 설명은 친절했지만 당신의 학은 개구리처럼 보였습니다. 둘이 웃는 사이 휴게실 창가에 바람이 불었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"접는 법을 당신에게 가르쳐 준다",r:"{name}의 설명은 친절했지만 당신의 학은 개구리처럼 보였습니다. 둘이 웃는 사이 휴게실 창가에 바람이 불었습니다.",trust:1,reward:{exp:25}}]},
    {t:"천 번째 학",d:["휴게실 창가에 빈 병이 하나 놓여 있습니다. 마지막 학 한 마리를 위한 자리입니다.", "창가에 누군가 접어 둔 학 한 마리가 놓여 있습니다. 날개 안쪽에 “고마워, 이제 괜찮아”라고 적혀 있습니다."],
-    c:[{n:"함께 접은 학을 천 번째로 넣는다",r:"{name}은 비뚤어진 학을 병에 넣었습니다. 천 마리가 채워지자 병 안에서 작은 바람이 불었습니다.",trust:2,reward:{exp:40},end:"채워진 천 마리"},
+    c:[{n:"함께 접은 학을 천 번째로 넣는다",r:"{name}은 비뚤어진 학을 병에 넣었습니다. 천 마리가 채워지자 병 안에서 작은 바람이 불었습니다.",trust:2,reward:{exp:50},end:"채워진 천 마리"},
        {n:"창가의 학을 받아 들고 접기를 마친다",r:"{name}은 더 접지 않아도 된다는 걸 알았습니다. 소원은 이미 이뤄졌고, 남은 건 고맙다는 말뿐이었습니다.",trust:1,reward:{gold:35},end:"이미 이뤄진 소원"}],
     team:"{peer}이 자신만의 방식으로 학을 접었습니다. 모양이 전혀 달랐지만 날개는 활짝 펴졌습니다.",teamEnd:"모양이 다른 학",teamN:"{peer}에게 학 접는 법을 알려 주자고 한다"}]},
  firework:{title:"터지지 않은 불꽃",hold:"폭죽을 아껴 두고 다음 밤을 기다린다",items:["심지가 젖은 폭죽", "불꽃놀이 예매권", "성냥 한 갑"],
@@ -4286,9 +4290,9 @@ const STORY_ARCS={
    {t:"옥상 관람석",d:"역 옥상에 관람석이 마련되어 있습니다. 좌석마다 예매권이 꽂혀 있고, 날짜는 모두 같은 밤입니다.",
     c:[{n:"하늘을 올려다보며 발사대를 찾는다",r:"옥상 끝 발사대에 불꽃이 가득 장전되어 있었습니다. 점화 스위치 옆에 “둘이 같이 누를 것”이라고 적혀 있었습니다.",trust:2,reward:{gold:15}},
        {n:"관람석에 앉아 그날 이야기를 듣는다",r:"{name}은 불꽃이 터지면 하려던 말이 있었다고 했습니다. 그 말을 떠올리자 발사대 쪽에서 불씨가 반짝였습니다.",trust:1,reward:{potion:1}},
-       {n:"성냥 하나를 그어 불빛을 확인한다",r:"성냥불에 비친 관람석 아래에 발사대로 가는 계단이 보였습니다. 불이 꺼지기 전에 둘은 계단을 확인했습니다.",trust:1,reward:{exp:20}}]},
+       {n:"성냥 하나를 그어 불빛을 확인한다",r:"성냥불에 비친 관람석 아래에 발사대로 가는 계단이 보였습니다. 불이 꺼지기 전에 둘은 계단을 확인했습니다.",trust:1,reward:{exp:25}}]},
    {t:"점화 스위치",d:["스위치는 두 개이고, 동시에 눌러야 불꽃이 올라갑니다.", "발사대의 불씨가 금방이라도 꺼질 것처럼 흔들립니다. 지금 불을 붙이지 않으면 기회가 없을 것 같습니다."],
-    c:[{n:"함께 스위치를 누른다",r:"불꽃이 하늘을 가득 채웠습니다. {name}은 불꽃 소리에 묻혀 하려던 말을 해 버렸습니다. 들렸는지는 물어보지 않았습니다.",trust:2,reward:{exp:40},end:"하늘을 채운 불꽃"},
+    c:[{n:"함께 스위치를 누른다",r:"불꽃이 하늘을 가득 채웠습니다. {name}은 불꽃 소리에 묻혀 하려던 말을 해 버렸습니다. 들렸는지는 물어보지 않았습니다.",trust:2,reward:{exp:50},end:"하늘을 채운 불꽃"},
        {n:"작은 폭죽 하나만 손으로 켠다",r:"{name}은 성냥을 그어 작은 폭죽 하나를 켰습니다. 손바닥만 한 불꽃이었지만 둘이 보기엔 충분했습니다.",trust:1,reward:{gold:35},end:"손바닥만 한 불꽃"}],
     team:"{peer}이 세 번째 스위치를 찾아냈습니다. 셋이 동시에 누르자 불꽃이 세 색으로 터졌습니다.",teamEnd:"세 색의 불꽃",teamN:"{peer}에게 함께 스위치를 눌러 달라고 한다"}]},
  number:{title:"대기 번호표",hold:"번호표를 지갑에 넣고 다음 창구를 찾는다",items:["구겨진 대기 번호표", "번호가 지워진 순번 카드", "호출 벨 하나"],
@@ -4299,9 +4303,9 @@ const STORY_ARCS={
    {t:"민원 창구",d:"폐쇄된 민원 창구 전광판에 번호들이 계속 넘어갑니다. {name}의 번호 바로 앞에서 멈췄다가 다시 처음으로 돌아갑니다.",
     c:[{n:"창구 안쪽에서 대기 명단을 찾는다",r:"대기 명단에서 {name}의 번호 옆에 “본인 확인 필요”라고 적혀 있었습니다. 확인해 줄 사람이 없어서 넘어가지 못한 거였습니다.",trust:2,reward:{gold:15}},
        {n:"창구 의자에 앉아 함께 기다린다",r:"기다리는 동안 {name}은 번호표 뒷면에 동료들의 이름을 적었습니다. 그러자 전광판이 잠깐 멈췄습니다.",trust:1,reward:{potion:1}},
-       {n:"전광판 번호를 직접 큰 소리로 부른다",r:"당신이 번호를 부르자 {name}이 반사적으로 손을 들었습니다. 그 순간 창구 안쪽 서랍이 열렸습니다.",trust:1,reward:{exp:20}}]},
+       {n:"전광판 번호를 직접 큰 소리로 부른다",r:"당신이 번호를 부르자 {name}이 반사적으로 손을 들었습니다. 그 순간 창구 안쪽 서랍이 열렸습니다.",trust:1,reward:{exp:25}}]},
    {t:"호출",d:["당신이 {name}을 확인해 주자 전광판에 번호가 뜹니다. 창구에 작은 상자 하나가 놓여 있습니다.", "전광판에 번호 대신 “다음 분”이라는 글자가 뜹니다. 창구 너머에 아무도 없습니다."],
-    c:[{n:"상자를 열어 돌려받은 것을 확인한다",r:"상자 안에는 {name}의 웃는 사진이 있었습니다. 기다려서 돌려받은 건 그날의 표정이었습니다.",trust:2,reward:{exp:40},end:"돌려받은 표정"},
+    c:[{n:"상자를 열어 돌려받은 것을 확인한다",r:"상자 안에는 {name}의 웃는 사진이 있었습니다. 기다려서 돌려받은 건 그날의 표정이었습니다.",trust:2,reward:{exp:50},end:"돌려받은 표정"},
        {n:"번호표를 찢고 줄에서 나온다",r:"{name}은 번호표를 찢었습니다. 불러 주길 기다리는 대신 스스로 걸어 나가겠다고 했습니다.",trust:1,reward:{gold:35},end:"줄에서 나온 걸음"}],
     team:"{peer}이 증인처럼 창구 앞에 서서 {name}을 확인해 주었습니다. 증인이 둘이 되자 전광판이 축하하듯 깜빡였습니다.",teamEnd:"두 증인의 확인",teamN:"{peer}에게 보증을 서 달라고 한다"}]},
  knot:{title:"풀리지 않는 매듭",hold:"끈을 다시 감아 두고 다음에 당겨 본다",items:["단단히 묶인 붉은 끈", "매듭이 진 등산 로프", "머리끈 두 개를 이은 고리"],
@@ -4312,9 +4316,9 @@ const STORY_ARCS={
    {t:"얽힌 전선 더미",d:"정비실에 전선이 수없이 얽혀 있습니다. 그 사이로 {item}과 같은 색의 끈 한 줄이 이어져 있습니다.",
     c:[{n:"끈을 따라 얽힌 더미를 푼다",r:"한참을 풀자 끈 끝에 같은 매듭이 하나 더 나왔습니다. 두 매듭이 서로 이어져 있었습니다.",trust:2,reward:{gold:15}},
        {n:"끈을 당겨 반대편에 신호를 보낸다",r:"{name}이 끈을 두 번 당기자 반대편에서도 두 번 당겨졌습니다. {name}의 눈이 커졌습니다.",trust:1,reward:{potion:1}},
-       {n:"매듭을 풀지 말고 사진으로 남겨 둔다",r:"기록해 둔 매듭 모양을 보니 두 사람이 서로 손을 잡은 모양이었습니다. 정비실 전선 사이에 같은 모양이 있었습니다.",trust:1,reward:{exp:20}}]},
+       {n:"매듭을 풀지 말고 사진으로 남겨 둔다",r:"기록해 둔 매듭 모양을 보니 두 사람이 서로 손을 잡은 모양이었습니다. 정비실 전선 사이에 같은 모양이 있었습니다.",trust:1,reward:{exp:25}}]},
    {t:"끈의 반대편",d:["끈의 반대편 끝이 문틈으로 이어집니다. 문 너머는 다른 회차의 정거장처럼 흐릿합니다.", "반대편에서 다시 세 번 당겨집니다. 문틈 너머로 누군가의 손이 끈을 쥐고 있는 게 보입니다."],
-    c:[{n:"매듭을 더 단단히 묶어 둔다",r:"{name}은 매듭 위에 한 번 더 매듭을 지었습니다. 풀 필요 없는 인연이라는 걸 확인한 셈이었습니다.",trust:2,reward:{exp:40},end:"더 단단해진 매듭"},
+    c:[{n:"매듭을 더 단단히 묶어 둔다",r:"{name}은 매듭 위에 한 번 더 매듭을 지었습니다. 풀 필요 없는 인연이라는 걸 확인한 셈이었습니다.",trust:2,reward:{exp:50},end:"더 단단해진 매듭"},
        {n:"끈을 문고리에 묶어 이어 둔다",r:"{name}은 끈을 문고리에 묶었습니다. 들고 다니지 않아도 이어져 있다는 걸 이제는 믿을 수 있었습니다.",trust:1,reward:{gold:35},end:"문고리에 묶인 인연"}],
     team:"{peer}이 자기 손목 끈을 풀어 {name}의 매듭에 이어 붙였습니다. 매듭이 하나 늘었지만 끈은 더 길어졌습니다.",teamEnd:"이어 붙인 끈",teamN:"{peer}에게 매듭을 함께 묶자고 한다"}]},
  teacup:{title:"식은 찻잔",hold:"찻잔을 닦아 두고 다음 오후를 기다린다",items:["이가 나간 찻잔", "찻잎이 남은 봉지", "두 사람 몫의 찻잔 받침"],
@@ -4325,9 +4329,9 @@ const STORY_ARCS={
    {t:"역장실의 찻주전자",d:"역장실 책상에 찻주전자가 놓여 있고, 아직 김이 오릅니다. 잔 두 개 중 하나는 {item}과 같은 무늬입니다.",
     c:[{n:"찻주전자의 찻잎을 확인한다",r:"찻잎은 {name}이 좋아하던 것이었습니다. 주전자 손잡이에 “식혀서 줄 것”이라는 쪽지가 붙어 있었습니다.",trust:2,reward:{gold:15}},
        {n:"먼저 한 잔 따라 함께 마셔 본다",r:"차는 이번에도 금방 식었습니다. 그런데 식은 차가 이상하게 그때 그 맛이었습니다.",trust:1,reward:{potion:1}},
-       {n:"찻잔을 두 손으로 감싸 온기를 나눠 준다",r:"잠깐이지만 차가 식지 않았습니다. {name}은 이 온기를 기억하는 사람이 있었다고 했습니다.",trust:1,reward:{exp:20}}]},
+       {n:"찻잔을 두 손으로 감싸 온기를 나눠 준다",r:"잠깐이지만 차가 식지 않았습니다. {name}은 이 온기를 기억하는 사람이 있었다고 했습니다.",trust:1,reward:{exp:25}}]},
    {t:"오후의 찻자리",d:["창가에 찻자리가 마련되어 있습니다. 맞은편 의자에 누군가 막 일어난 듯 쿠션이 눌려 있습니다.", "{name}은 식은 차가 원래 그 사람의 방식이었다는 걸 깨닫습니다. 데우지 않아도 되는 차였습니다."],
-    c:[{n:"맞은편 의자에 당신을 앉히고 차를 따른다",r:"{name}은 차를 조금 식혀서 당신에게 건넸습니다. 받은 방식 그대로 돌려주는 것 같았습니다.",trust:2,reward:{exp:40},end:"식혀서 건넨 차"},
+    c:[{n:"맞은편 의자에 당신을 앉히고 차를 따른다",r:"{name}은 차를 조금 식혀서 당신에게 건넸습니다. 받은 방식 그대로 돌려주는 것 같았습니다.",trust:2,reward:{exp:50},end:"식혀서 건넨 차"},
        {n:"식은 차를 끝까지 마신다",r:"{name}은 식은 차를 천천히 다 마셨습니다. 데우려고 애쓰지 않으니 오히려 따뜻하다고 했습니다.",trust:1,reward:{gold:35},end:"다 마신 식은 차"}],
     team:"{peer}이 찻잔을 하나 더 꺼내 왔습니다. 세 잔이 나란히 놓이자 식는 속도도 조금 느려진 것 같았습니다.",teamEnd:"셋이 나눈 찻자리",teamN:"{peer}의 잔도 함께 따르자고 한다"}]},
  coat:{title:"남의 외투",hold:"외투 단추를 채우고 다음 보관실을 찾는다",items:["소매가 긴 외투", "단추 하나가 다른 코트", "주머니에 쪽지가 든 재킷"],
@@ -4338,9 +4342,9 @@ const STORY_ARCS={
    {t:"보관실의 옷걸이",d:"짐 보관실에 빈 옷걸이가 하나 있습니다. 옷걸이 이름표가 {item}의 안감에 수놓인 이름과 같습니다.",
     c:[{n:"주머니 속 물건으로 주인을 추리한다",r:"주머니에서 협회 출입증, 사탕, 사진 한 장이 나왔습니다. 사진 속 외투 주인이 어린 {name}을 업고 있었습니다.",trust:2,reward:{gold:15}},
        {n:"외투를 벗어 옷걸이에 걸어 보게 한다",r:"{name}은 외투를 걸려다 손을 멈췄습니다. 벗으면 춥다는 것보다 허전하다는 게 먼저였습니다.",trust:1,reward:{potion:1}},
-       {n:"외투 주머니를 하나씩 뒤집어 본다",r:"주머니마다 작은 물건이 하나씩 나왔고, 마지막 주머니에서 보관실 번호표가 나왔습니다.",trust:1,reward:{exp:20}}]},
+       {n:"외투 주머니를 하나씩 뒤집어 본다",r:"주머니마다 작은 물건이 하나씩 나왔고, 마지막 주머니에서 보관실 번호표가 나왔습니다.",trust:1,reward:{exp:25}}]},
    {t:"외투 주인의 자리",d:["보관실 안쪽 기록에 외투 주인이 “아이에게 맡김”이라고 적어 둔 메모가 있습니다.", "외투 안주머니에서 쪽지 한 장이 더 나옵니다. “크면 맞을 거야.”"],
-    c:[{n:"외투를 계속 입기로 한다",r:"{name}은 소매를 두 번 접어 입었습니다. 아직은 크지만 언젠가 맞을 거라고 웃었습니다.",trust:2,reward:{exp:40},end:"언젠가 맞을 외투"},
+    c:[{n:"외투를 계속 입기로 한다",r:"{name}은 소매를 두 번 접어 입었습니다. 아직은 크지만 언젠가 맞을 거라고 웃었습니다.",trust:2,reward:{exp:50},end:"언젠가 맞을 외투"},
        {n:"외투를 옷걸이에 걸고 감사 인사를 한다",r:"{name}은 외투를 걸고 고개를 숙였습니다. 따뜻하게 지켜 준 시간에 대한 인사였습니다.",trust:1,reward:{gold:35},end:"돌려준 외투"}],
     team:"{peer}이 긴 소매를 함께 접어 주었습니다. 딱 맞게 접힌 소매 끝에서 사탕 두 개가 떨어졌고, 둘은 하나씩 나눠 먹었습니다.",teamEnd:"나눠 먹은 사탕",teamN:"{peer}에게 소매를 접어 달라고 한다"}]},
  calendar:{title:"넘기지 못한 달력",hold:"달력을 덮고 다음 장은 나중에 넘기기로 한다",items:["한 장이 남은 탁상 달력", "동그라미 친 날짜", "찢어진 일력"],
@@ -4351,9 +4355,9 @@ const STORY_ARCS={
    {t:"역무실의 벽걸이 달력",d:"역무실 벽걸이 달력도 같은 날짜에서 멈춰 있습니다. 동그라미 옆에 작은 글씨가 비쳐 보입니다.",
     c:[{n:"달력 뒷면을 불빛에 비춰 본다",r:"뒷면 글씨는 “같이 가기로 한 날”이었습니다. 행선지 대신 승강장 번호가 적혀 있었습니다.",trust:2,reward:{gold:15}},
        {n:"그날 무엇을 하고 싶었는지 묻는다",r:"{name}은 여행을 떠나는 날이었던 것 같다고 했습니다. 말하는 사이 달력이 바람에 한 장 넘어갔습니다.",trust:1,reward:{potion:1}},
-       {n:"오늘 날짜에 새 동그라미를 쳐 본다",r:"새 동그라미를 치자 멈춰 있던 날짜 옆에 작은 글씨가 비쳐 보였습니다.",trust:1,reward:{exp:20}}]},
+       {n:"오늘 날짜에 새 동그라미를 쳐 본다",r:"새 동그라미를 치자 멈춰 있던 날짜 옆에 작은 글씨가 비쳐 보였습니다.",trust:1,reward:{exp:25}}]},
    {t:"다음 장",d:["적힌 승강장에 도착하자 열차 대신 빈 벤치가 있습니다. 벤치 위에 다음 달 달력이 놓여 있습니다.", "넘어간 다음 장에는 아무 일정도 없습니다. 빈칸이 가득합니다."],
-    c:[{n:"다음 달 달력에 새 약속을 적는다",r:"{name}은 빈칸에 동료들과의 약속을 하나씩 적었습니다. 동그라미가 다시 생겼지만 이번엔 두렵지 않았습니다.",trust:2,reward:{exp:40},end:"새로 친 동그라미"},
+    c:[{n:"다음 달 달력에 새 약속을 적는다",r:"{name}은 빈칸에 동료들과의 약속을 하나씩 적었습니다. 동그라미가 다시 생겼지만 이번엔 두렵지 않았습니다.",trust:2,reward:{exp:50},end:"새로 친 동그라미"},
        {n:"멈춘 날짜를 떼어 간직한다",r:"{name}은 멈춰 있던 날짜를 조심스럽게 떼어 수첩에 끼웠습니다. 그리고 다음 장을 아무렇지 않게 넘겼습니다.",trust:1,reward:{gold:35},end:"간직한 하루"}],
     team:"{peer}이 펜을 건네며 자기 일정도 같이 적자고 했습니다. 빈 달력이 금세 두 사람의 글씨로 채워졌습니다.",teamEnd:"함께 채운 달력",teamN:"{peer}에게 일정을 같이 짜자고 한다"}]},
  sign:{title:"손짓으로 한 약속",hold:"손을 내리고 다음 승강장에서 다시 손짓한다",items:["손가락에 감은 실반지", "손바닥에 그린 표시", "수어 그림 카드"],
@@ -4364,9 +4368,9 @@ const STORY_ARCS={
    {t:"소리가 없는 승강장",d:"한 승강장에서는 아무 소리도 들리지 않습니다. 벽 안내판에 손짓 그림이 그려져 있고, 그중 하나가 {name}의 손짓과 같습니다.",
     c:[{n:"안내판의 손짓을 하나씩 따라 해 본다",r:"손짓을 이어 하니 문장이 되었습니다. “다시 만나면, 먼저 손을 흔들게.” 마지막 손짓은 지워져 있었습니다.",trust:2,reward:{gold:15}},
        {n:"말 없이 손짓으로만 대화해 본다",r:"소리가 없는데도 두 사람은 금방 웃게 되었습니다. {name}은 그날도 이렇게 웃었다고 손으로 말했습니다.",trust:1,reward:{potion:1}},
-       {n:"손짓 대신 손바닥에 글씨를 써 준다",r:"당신이 손바닥에 쓴 글씨를 읽고 {name}이 웃으며 손짓으로 답했습니다. 승강장 안내판의 그림이 그 손짓과 같았습니다.",trust:1,reward:{exp:20}}]},
+       {n:"손짓 대신 손바닥에 글씨를 써 준다",r:"당신이 손바닥에 쓴 글씨를 읽고 {name}이 웃으며 손짓으로 답했습니다. 승강장 안내판의 그림이 그 손짓과 같았습니다.",trust:1,reward:{exp:25}}]},
    {t:"지워진 마지막 손짓",d:["안내판 끝에 지워진 손짓 자리가 있습니다. 손을 대자 따뜻한 온기가 남아 있습니다.", "소리 없는 승강장 끝에 누군가 서서 손을 흔들고 있습니다. 먼저 손을 흔들겠다던 사람 같습니다."],
-    c:[{n:"지워진 자리에 자신만의 손짓을 채운다",r:"{name}은 손을 가슴에 얹었다가 앞으로 내밀었습니다. “같이 가자”는 뜻이라고, 소리가 돌아온 뒤 말해 주었습니다.",trust:2,reward:{exp:40},end:"새로 만든 손짓"},
+    c:[{n:"지워진 자리에 자신만의 손짓을 채운다",r:"{name}은 손을 가슴에 얹었다가 앞으로 내밀었습니다. “같이 가자”는 뜻이라고, 소리가 돌아온 뒤 말해 주었습니다.",trust:2,reward:{exp:50},end:"새로 만든 손짓"},
        {n:"끝에 선 사람에게 손을 흔들어 답한다",r:"{name}은 크게 손을 흔들었습니다. 먼저 흔들어 준 사람에게, 이번엔 늦지 않게 답했습니다.",trust:1,reward:{gold:35},end:"늦지 않은 답례"}],
     team:"{peer}이 손짓을 배워 함께 따라 했습니다. 세 사람의 손이 같은 모양을 만들자 승강장에 소리가 돌아왔습니다.",teamEnd:"셋이 만든 손짓",teamN:"{peer}에게도 손짓을 가르쳐 주자고 한다"}]},
  birdcage:{title:"빈 새장",hold:"새장을 들고 다음 지붕을 찾는다",items:["문이 열린 작은 새장", "깃털 하나", "모이가 든 주머니"],
@@ -4377,9 +4381,9 @@ const STORY_ARCS={
    {t:"깃털이 떨어진 환기구",d:"환기구 아래에 {item}과 같은 색 깃털이 쌓여 있습니다. 위쪽에서 날갯짓 소리가 간간이 들립니다.",
     c:[{n:"모이를 뿌려 새를 불러 본다",r:"모이를 뿌리자 환기구 안쪽에서 작은 머리가 내다봤습니다. 새는 내려오지 않고 위쪽 통로로 날아갔습니다.",trust:2,reward:{gold:15}},
        {n:"새 이름을 불러 보라고 한다",r:"{name}이 처음으로 이름을 부르자 날갯짓 소리가 멈췄습니다. 잠시 뒤 짧은 지저귐이 돌아왔습니다.",trust:1,reward:{potion:1}},
-       {n:"빈 새장 문을 닫았다 열어 본다",r:"문이 닫히는 소리에 위쪽에서 날갯짓이 멈췄습니다. 다시 열자 깃털 하나가 천천히 떨어졌습니다.",trust:1,reward:{exp:20}}]},
+       {n:"빈 새장 문을 닫았다 열어 본다",r:"문이 닫히는 소리에 위쪽에서 날갯짓이 멈췄습니다. 다시 열자 깃털 하나가 천천히 떨어졌습니다.",trust:1,reward:{exp:25}}]},
    {t:"지붕 위의 둥지",d:["위쪽 통로 끝 지붕 위에 작은 둥지가 있습니다. 새는 둥지에서 알을 품고 있습니다.", "지저귐을 따라간 지붕 위에서 새가 다른 새들과 함께 앉아 있습니다."],
-    c:[{n:"새장을 둥지 옆에 두고 문을 열어 둔다",r:"{name}은 새장을 둥지 옆에 두었습니다. 들어오든 말든 새가 고를 수 있게 문은 활짝 열어 두었습니다.",trust:2,reward:{exp:40},end:"열어 둔 새장 문"},
+    c:[{n:"새장을 둥지 옆에 두고 문을 열어 둔다",r:"{name}은 새장을 둥지 옆에 두었습니다. 들어오든 말든 새가 고를 수 있게 문은 활짝 열어 두었습니다.",trust:2,reward:{exp:50},end:"열어 둔 새장 문"},
        {n:"새장을 접고 혼자 돌아온다",r:"{name}은 새가 행복해 보인다며 새장을 접었습니다. 빈 새장 대신 깃털 하나만 챙겼습니다.",trust:1,reward:{gold:35},end:"깃털 하나의 작별"}],
     team:"{peer}이 모이를 손바닥에 올려 내밀었습니다. 새는 {peer}의 손에 앉았다가 {name}의 어깨로 옮겨 앉았습니다.",teamEnd:"어깨에 앉은 새",teamN:"{peer}에게 모이를 내밀어 달라고 한다"}]}
 };
@@ -4434,12 +4438,12 @@ function rollHunterEvent(firstVisit){
  S.storyMisses=0;S.storyEventFloor=S.floor;u.story.lastEventFloor=S.floor;
  return {e:null,story:{id:u.id,arc:u.story.arc,step:u.story.stage,peerId:peer?.id||null},result:null,closed:false};
 }
-const storyRewardText=r=>[r.gold?`마석 +${r.gold}`:'',r.potion?`회복 포션 +${r.potion}`:'',r.exp?`해당 헌터 경험치 +${r.exp}`:''].filter(Boolean).join(' · ');
+const storyRewardText=r=>[r.gold?`마석 +${r.gold}`:'',r.potion?`회복 포션 +${r.potion}`:'',r.exp?`해당 헌터 필요 경험치의 ${r.exp}%`:''].filter(Boolean).join(' · ');
 function hunterEventChoices(E){
  const u=byId(E.story.id),s=storyOf(u);if(!s||s.arc!==E.story.arc)return [];
  const step=STORY_ARCS[s.arc].steps[E.story.step];if(!step)return [];
  const choices=step.c.map(x=>({...x}));
- if(E.story.step===1)choices.push({n:step.teamN?storyText(step.teamN,u,byId(E.story.peerId)):'다른 동료에게 함께해 달라고 한다',r:step.team,trust:2,reward:{exp:40,potion:1},end:step.teamEnd,team:true});
+ if(E.story.step===1)choices.push({n:step.teamN?storyText(step.teamN,u,byId(E.story.peerId)):'다른 동료에게 함께해 달라고 한다',r:step.team,trust:2,reward:{exp:50,potion:1},end:step.teamEnd,team:true});
  return choices;
 }
 function canResolveHunterEvent(E,i){
@@ -4453,7 +4457,7 @@ function resolveHunterEvent(E,i){
  const text=storyText(choice.r,u,peer),gain=storyTrust(s,choice.trust);
  s.choices.push(i);s.stage++;if(choice.end)s.ending=choice.end;
  const r=choice.reward;S.gold+=r.gold||0;S.potions+=r.potion||0;
- const ups=r.exp?gainExp(u,r.exp):[];
+ const ups=r.exp?gainExp(u,Math.ceil(expNeed(u.lvl)*r.exp/100)):[];
  storyRecord(u,a.steps[E.story.step].t,text);
  if(choice.team&&storyOf(peer)){storyTrust(peer.story,1);storyRecord(peer,`${u.name}의 이야기에 함께함`,text)}
  E.result=`${esc(text)}<br><b>${storyRewardText(r)}${gain?` · 신뢰 +${gain}`:''}</b>${ups.length?`<br>${esc(u.name)} Lv${u.lvl}로 성장했습니다.`:''}${s.ending?`<br>이야기 완결: ${esc(s.ending)}`:'<br>다음 이야기는 다음 승강장부터 이어집니다. (신뢰 2 이상)'}${choice.team&&storyOf(peer)?`<br>${esc(peer.name)}의 신뢰도 함께 올랐습니다.`:''}`;
@@ -4947,10 +4951,10 @@ const artIc=(k,sz=32)=>{
 };
 /* 마우스를 올리면 뜨는 설명 */
 const GL={stance:'방어 태세: 방어 주사위로 굴린 값만큼 다음 자기 차례까지 들어오는 공격을 막습니다. 차례가 돌아오면 남은 값으로 가장 세게 때린 적에게 반격합니다.',
- shield:'보호막: 받는 피해를 HP보다 먼저 이 값만큼 흡수합니다.',marks:'마력 각인: 침식자의 공격으로 실제 HP 피해를 입으면 1중첩. 3중첩 시 고정 피해 20을 주고 중첩이 초기화됩니다.',
+ shield:'보호막: 받는 피해를 HP보다 먼저 이 값만큼 흡수합니다.',marks:'마력 각인: 침식자의 공격으로 실제 HP 피해를 입으면 1중첩. 3중첩 시 대상 최대 HP의 10%만큼 피해를 주고 중첩이 초기화됩니다.',
  pat:'인내: HP 피해 없이 넘긴 라운드만큼 쌓인 방어값 보너스입니다. HP 피해를 받으면 사라집니다.',grind:'근면: 자기 차례마다 쌓이는 공격값·방어값 보너스입니다(최대 +8).',feast:'포식: 폭식 특성으로 적을 쓰러뜨려 얻은 공격값 보너스입니다(최대 +9).',charm:'유혹(디버프): 3턴 동안 공격하면 확률로 빗맞힙니다(35%).',
- plunder:'저주(디버프): 3턴간 공격값 -5.',leth:'무기력(디버프): 3턴 동안 민첩 -6, 연속 행동 불가.',
- stun:'기절(디버프): 3턴 동안 행동할 수 없습니다.',burn:'화상(디버프): 3턴 동안 라운드 시작마다 최대 HP의 3% 피해를 받습니다.',frost:'동상(디버프): 민첩 굴림 -4, 연속 행동 불가.',poison:'중독(디버프): 3턴 동안 라운드 시작마다 최대 HP의 4% 피해를 받습니다.',bleed:'출혈(디버프): 3턴 동안 행동 시작마다 최대 HP의 3% 피해를 받습니다.',
+ plunder:'저주(디버프): 3턴간 공격 주사위 -15%.',leth:'무기력(디버프): 3턴 동안 민첩 주사위 -20%, 연속 행동 불가.',
+ stun:'기절(디버프): 3턴 동안 행동할 수 없습니다.',burn:'화상(디버프): 3턴 동안 라운드 시작마다 최대 HP의 3% 피해를 받습니다.',frost:'동상(디버프): 민첩 주사위 -15%, 연속 행동 불가.',poison:'중독(디버프): 3턴 동안 라운드 시작마다 최대 HP의 4% 피해를 받습니다.',bleed:'출혈(디버프): 3턴 동안 행동 시작마다 최대 HP의 3% 피해를 받습니다.',
  guard:'보호: 탱커가 대신 맞기로 지키고 있습니다. 이 캐릭터를 노린 공격은 탱커가 대신 받습니다.'};
 const tp=(label,desc,cls='')=>`<span class="tp ${cls}" data-tip="${esc(desc)}">${label}</span>`;
 const TS=(label,k)=>`<i class="tp" data-tip="${esc(GL[k])}">${label}</i>`;
@@ -5003,7 +5007,7 @@ function creator(mode){
  <div class="grp"><h3>역할 <small>역할 효과</small></h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(r=>({...r,ic:roleIc(r.k)})),d.role,'','pick',fullFixed)}<p class="desc"><b>${ROLES[d.role].n}</b> ${ROLES[d.role].ab}</p></div>
  <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(d.attr,'pick',fullFixed)}${traitDescription(d.attr,true,abOf(d),'pick',fullFixed)}</div>
  </div>
- <aside class="win side-sticky cr-side" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · 스탯 총량 ${totalBudget(d)} · HP ${Math.round(T.hp*(d.role==='tank'?1.2:1))+(mode==='npc'&&has('leaf')?15:0)}</div><p class="small mute" style="margin:6px 0 0">${tags(d)}</p></div></div>
+ <aside class="win side-sticky cr-side" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · 스탯 총량 ${totalBudget(d)} · HP ${Math.ceil(Math.round(T.hp*(d.role==='tank'?1.2:1))*(mode==='npc'&&has('leaf')?1.15:1))}</div><p class="small mute" style="margin:6px 0 0">${tags(d)}</p></div></div>
  ${fixed?'':imgCtl('draft',d.img)}
  ${mode==='npc'&&!fixed?storyPreview(d):''}
  <p class="small warn">${fixed?'고정 NPC · 설정 잠금 · 자동 성장':'스탯 재분배 시 마석 소모'}</p>
@@ -5104,7 +5108,7 @@ function turnPanel(){
  let body;
  if(sel.a==='atk')body=`<div class="tgts">${info.map(({t,ok,why})=>chip(t,'atk',ok,why)).join('')}</div><p class="small mute">${hint}</p>`;
  else if(sel.a==='def')body=`<p class="small mute">${defHint}</p>`;
- else if(sel.a==='potheal')body=`<div class="tgts">${potT.map(t=>chip(t,'potheal',true,'',` · HP ${t.hp}/${t.maxHp}`)).join('')}</div><p class="small mute">플레이어가 지시한 아이템 행동입니다. 지금 차례인 ${esc(u.name)}의 행동 1회를 사용하고 포션 1개를 소비합니다. 살아 있는 아군 최대 HP 40% 회복(야전 구급함 보유 시 45%, 성수병 보유 시 HP +8 추가 및 정화).</p>`;
+ else if(sel.a==='potheal')body=`<div class="tgts">${potT.map(t=>chip(t,'potheal',true,'',` · HP ${t.hp}/${t.maxHp}`)).join('')}</div><p class="small mute">플레이어가 지시한 아이템 행동입니다. 지금 차례인 ${esc(u.name)}의 행동 1회를 사용하고 포션 1개를 소비합니다. 살아 있는 아군 최대 HP 40% 회복(야전 구급함 보유 시 45%, 성수병 보유 시 최대 HP 7% 추가 및 정화).</p>`;
  else body=`<div class="tgts">${skT.map(t=>chip(t,sel.a,true,'',sel.a==='ambush'?'':` · HP ${t.hp}/${t.maxHp}${t.hp<=0?' · 쓰러짐':''}`)).join('')}</div><p class="small mute"><b>${SK.n}</b> — ${SK.d}</p>`;
  const okRun=sel.a==='atk'?vt.length:sel.a==='def'?1:sel.a==='potheal'?potT.length:skT.length;
  return `<div class="win turn ${turnPop.on||isMob()?'turn-pop':''}" data-t="지금 차례 — ${esc(u.name)}" ${turnPop.on&&!isMob()?`style="left:${turnPopXY()[0]}px;top:${turnPopXY()[1]}px"`:''}>${turnPop.on||isMob()?`<div class="map-popup-titlebar turn-titlebar" aria-label="지금 차례 창 이동"><span class="popup-grip" aria-hidden="true">⠿</span><span class="popup-caption">지금 차례 — ${esc(u.name)}</span><button class="popup-close turn-in" type="button" data-act="turndock" aria-label="화면에 넣기" title="화면에 넣기">×</button></div>`:'<div class="turn-titlebar" title="끌어서 창으로 빼기" aria-hidden="true"></div><div class="turn-grip" title="끌어서 창으로 빼기"><span>⠿ 끌어서 창으로</span></div>'}<h3>${B.qi>0&&B.queue[B.qi-1]===u.id?'<span class="nowt">민첩 추가 행동</span>':''}${badge(u)}<span>${esc(u.name)} <span class="small mute">HP ${u.hp}/${u.maxHp} · 민첩 ${u._g} · ${tPos(u.pos)} · ${tJob(u.job)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}</span> ${pips(u)}</span></h3>
@@ -5128,13 +5132,13 @@ const RULES=`<details><summary>전투 규칙</summary><ul class="ev">
 <li><b>상태이상</b>: 유혹·저주·무기력·기절·화상·동상·중독·출혈. 기본 지속 3턴.</li>
 <li><b>정화</b>: 걸린 상태이상을 제거합니다. 서포터의 치유 기술 또는 정화의 성수병을 보유한 상태에서 사용하는 포션으로 발동합니다.</li>
 <li><b>파티</b>: 기본 5명, 확장 유물로 최대 8명.</li>
-<li><b>레벨</b>: 최대 HP +8, 스탯 +${LVB}. 전투 불능은 안전 지대 또는 부활 유물로 회복.</li>
+<li><b>레벨</b>: 최대 HP +10, 스탯 +${LVB}. 전투 불능은 안전 지대 또는 부활 유물로 회복.</li>
 <li><b>승률</b>: 이번 라운드 ${TRIALS}회 예측.</li></ul></details>`;
 function battleScreen(){
  const over=B.over,pdead=!alive(P());
  if(B.cur&&!B.sel){const u=unitC(B,B.cur),t=u&&validC(B,u)[0];B.sel=t?{a:'atk',t:t.id}:{a:'def'}}
  const cur=B.hist[0];
- return head(`${floorLabel(S.floor)} ${kindN(B.kind)}`,`라운드 ${B.round}${enrageAtk(B)?` · <b class="warn">장기전 광폭: 적 공격값 +${enrageAtk(B)}</b>`:B.round>=ENRAGE_ROUND-5?` · <span class="warn">${ENRAGE_ROUND}라운드부터 적이 광폭해집니다</span>`:''}<br><span class="small">승리 보상 확률: ${dropLine(B.kind)}${B.bonus>1?' · 마석 ×'+B.bonus:''}</span>`)+`
+ return head(`${floorLabel(S.floor)} ${kindN(B.kind)}`,`라운드 ${B.round}${enrageAtk(B)?` · <b class="warn">장기전 광폭: 적 공격 주사위 +${enrageAtk(B)}%</b>`:B.round>=ENRAGE_ROUND-5?` · <span class="warn">${ENRAGE_ROUND}라운드부터 적이 광폭해집니다</span>`:''}<br><span class="small">승리 보상 확률: ${dropLine(B.kind)}${B.bonus>1?' · 마석 ×'+B.bonus:''}</span>`)+`
  <div class="bt-grid"><div class="split-h" data-split="battle" title="두 칸 폭 조절 (두 번 누르면 기본 비율)" aria-hidden="true"></div><div class="bt-main">
  <div class="field bf-v">${side(B.allies,'a')}${side(B.enemies,'e')}</div>
  ${resonanceSummary(B.allies)}
@@ -5160,7 +5164,7 @@ function rewardScreen(){
 }
 function recruitScreen(){
   const Q=S.recruit;
- if(Q.stage==='build')return head(`헌터 영입 — ${gname(Q.tier)}`,(isFullFixed(Q.fixed)?'고정 NPC · 설정 변경 불가':Q.fixed?'고정 NPC · 이름·직업 고정':'헌터 설정을 선택하세요.')+(recruitLevel()>1?` · Lv${recruitLevel()}로 합류 (스탯 총량 +${(recruitLevel()-1)*LVB} · HP +${(recruitLevel()-1)*8})`:''))+creator('npc');
+ if(Q.stage==='build')return head(`헌터 영입 — ${gname(Q.tier)}`,(isFullFixed(Q.fixed)?'고정 NPC · 설정 변경 불가':Q.fixed?'고정 NPC · 이름·직업 고정':'헌터 설정을 선택하세요.')+(recruitLevel()>1?` · Lv${recruitLevel()}로 합류 (스탯 총량 +${(recruitLevel()-1)*LVB} · HP +${(recruitLevel()-1)*10})`:''))+creator('npc');
  return head('헌터 영입',`등급 선택 · F급 상시 등장${` · 새 헌터는 Lv${recruitLevel()}로 합류`}`)+`
  <div class="opts">${Q.list.map((k,i)=>{const T=TIERS[k],f=(Q.fixedOffers||{})[i];return `<button class="opt" data-act="tier" data-v="${k}" data-offer="${i}" ${S.gold<hireCost(k)?'disabled':''}><span class="gr">${k}</span>${f?`<b>${esc(f.name)}</b><span class="small">고정 NPC · ${esc(JOBS[f.job].n)}${isFullFixed(f)?' · '+esc(POS[f.pos].n)+' · '+esc(ROLES[f.role].n):''}</span>`:'<span class="small">일반 헌터</span>'}<span class="p">${hireCost(k)?'마석 '+hireCost(k):'무료'}</span><span class="small">스탯 총량 <b>${f?fixedBudget(T.b):T.b}</b> · HP <b>${T.hp}</b></span></button>`}).join('')}</div>
  ${S.tickets.length?`<h3 class="sub">영입권 사용</h3><div class="row c">${S.tickets.map((g,i)=>`<button class="ghost" data-act="useticket" data-v="${i}" ${spaceLeft()?'':'disabled'}>${px('ticket',17)} ${gname(g)} 영입권 사용 · 무료</button>`).join(' ')}</div>`:''}
@@ -5265,7 +5269,7 @@ function dexOv(){
  const seen=k=>DEXSEEN.has(k)||own(k),unk=()=>ent(px('unknown'),'??','아직 얻지 않았습니다.','','unk');
  if(tab==='art'){const one=a=>seen(a.k)?ent(artIc(a.k),a.n,fullArtDescription(a),own(a.k)?' <span class="own">보유</span>':'',own(a.k)?'on':''):unk();
   body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시</p><div class="dxg">${ARTS.map(one).join('')}</div>`}
- else if(tab==='item')body=`<div class="dxg">${seen('potion')?ent(px('potion'),'회복 포션','HP 40% 회복 · 전투 중 행동 1회 소모'):unk()}${seen('ticket')?ent(px('ticket'),'영입권','지정 등급 헌터 1명 무료 영입'):unk()}${ent(px('gold'),'마석','영입·상점·강화 등에 사용')}${ent(px('exp'),'경험치','출전 인원 획득 · 레벨 업 시 HP +8, 스탯 +'+LVB+' (자동 분배).')}</div>`;
+ else if(tab==='item')body=`<div class="dxg">${seen('potion')?ent(px('potion'),'회복 포션','HP 40% 회복 · 전투 중 행동 1회 소모'):unk()}${seen('ticket')?ent(px('ticket'),'영입권','지정 등급 헌터 1명 무료 영입'):unk()}${ent(px('gold'),'마석','영입·상점·강화 등에 사용')}${ent(px('exp'),'경험치','출전 인원 획득 · 레벨 업 시 HP +10, 스탯 +'+LVB+' (자동 분배).')}</div>`;
  else if(tab==='role')body=`<h3 class="sub l">직업 효과 · 4종</h3><div class="dxg">${Object.entries(JOBS).map(([r,k])=>ent(jobIc(r,26),`${k.n} — ${k.sub}`,`${k.tr}<br><b>고유 효과:</b> ${k.ab}`)).join('')}</div><h3 class="sub l">포지션 · 3종</h3><div class="dxg">${POS.map(p=>ent(posIc(p.k,26),`${p.n} — ${p.sub}`,p.ab)).join('')}</div><p class="small mute">위협도: 탱커 5(방어 시 7) · 딜러 3 · 서포터 2</p><h3 class="sub l">역할 기술 · 3종</h3><div class="dxg">${Object.entries(SKILL).map(([r,k])=>ent(roleIc(r,26),`${ROLES[r].n} — ${k.n}`,`${ROLES[r].ab}<br><b>${k.r}</b> 기본 소모 ${RMAX}칸(후열 ${RMAX-1}칸 · 확률로 ${RMAX-2}칸(25%) · 적은 기본 ${RMAX_E}칸) · ${k.d}`)).join('')}</div>`;
  else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].opts.map(o=>`<span class="trait-sum">「${o.n}」 ${o.ab}</span><span class="trait-more">${o.d}</span>`).join(''))).join('')}</div></section>`).join('')}</div>`;
  return `<div class="ov" data-k="dex"><div class="win common-modal dex-panel" data-t="도감"><div class="common-modal-bar"><strong>도감</strong><button class="ghost" data-act="dex">닫기</button></div>
@@ -5445,7 +5449,7 @@ const MAINW_KEY='afterglow-main-width';let mainW=0;try{mainW=+localStorage.getIt
 /* 가운데 큰 창은 옮길 수 없고, 양옆 가장자리를 끌어 가로 폭만 넓힐 수 있습니다(기본 880px보다 좁아지지 않음). 안의 칸들은 폭에 비례해 함께 넓어집니다. */
 const uiSc=()=>parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale'))||1;
 const maxMainW=()=>Math.max(880,Math.floor((window.innerWidth-16)/uiSc()));
-function applyMainW(){const m=document.querySelector('#app .mainwin');if(!m)return;const w=mainW?Math.min(Math.max(880,mainW),maxMainW()):0;if(w>880){m.style.width=w+'px';m.classList.add('mw-sized')}else{m.style.width='';m.classList.remove('mw-sized')}m.style.setProperty('--mw-extra',Math.max(0,(w||880)-880)+'px');for(const k in SPLIT_DEF)m.style.setProperty('--sp-'+k,String(splits[k]??SPLIT_DEF[k]))}
+function applyMainW(){const m=document.querySelector('#app .mainwin');if(!m)return;const w=mainW?Math.min(Math.max(880,mainW),maxMainW()):0;if(w>880){m.style.width=w+'px';m.classList.add('mw-sized')}else{m.style.width='';m.classList.remove('mw-sized')}m.style.setProperty('--mw-extra',Math.max(0,(w||880)-880)+'px');for(const k in SPLIT_DEF)m.style.setProperty('--sp-'+k,String(splits[k]??SPLIT_DEF[k]));try{placeBagDefault()}catch(_){}}
 /* 넓힌 폭(기본보다 늘어난 만큼)을 두 칸이 나눠 갖는 비율. 0이면 늘어난 폭을 모두 오른쪽, 1이면 모두 왼쪽에. 각 칸은 기본 크기보다 작아지지 않습니다. */
 const SPLIT_KEY='afterglow-splits',SPLIT_DEF={battle:.668,cr:.57},SPLIT_MIN={battle:270,cr:350};let splits={};try{splits=JSON.parse(localStorage.getItem(SPLIT_KEY)||'{}')||{}}catch(e){}
 let splitDrag=null;
@@ -5661,7 +5665,13 @@ document.addEventListener('pointerup',turnDragEnd);document.addEventListener('po
 /* 가방 버블: 끌어서 원하는 곳으로 옮길 수 있음. 위치는 화면 비율로 저장해 창 크기가 바뀌어도 화면 안에 남습니다. */
 let bagPos=null;try{const v=JSON.parse(localStorage.getItem('afterglow-bag-pos')||'null');if(v&&isFinite(v.x)&&isFinite(v.y))bagPos=v}catch(_){}
 function bagBubbleXY(p){const W=innerWidth,H=innerHeight,z=54,m=6;return [Math.round(Math.min(W-z-m,Math.max(m,p.x*W))),Math.round(Math.min(H-z-m,Math.max(m,p.y*H)))]}
-function bagBubbleStyle(){if(!bagPos)return'';const [x,y]=bagBubbleXY(bagPos);return `style="left:${x}px;top:${y}px;bottom:auto;right:auto"`}
+/* 처음(저장된 위치가 없을 때)에는 중앙 창의 왼쪽 바깥, 아래쪽에 놓습니다. 바깥 여백이 좁으면 창 안쪽 왼쪽 아래로 들어옵니다. */
+function bagDefaultXY(){const m=document.querySelector&&document.querySelector('#app .mainwin');if(!m)return null;
+ const r=m.getBoundingClientRect(),z=54,g=14,W=innerWidth,H=innerHeight;
+ const x=r.left>=z+g+6?r.left-z-g:r.left+g,bottom=Math.min(r.bottom-g,H-64);
+ return [Math.round(Math.max(6,Math.min(W-z-6,x))),Math.round(Math.max(6,bottom-z))]}
+function placeBagDefault(){if(bagPos)return;const b=document.querySelector('body>.map-popup-layer>.bag-bubble');if(!b)return;const xy=bagDefaultXY();if(!xy)return;Object.assign(b.style,{left:xy[0]+'px',top:xy[1]+'px',bottom:'auto',right:'auto'})}
+function bagBubbleStyle(){const xy=bagPos?bagBubbleXY(bagPos):bagDefaultXY();if(!xy)return'';return `style="left:${xy[0]}px;top:${xy[1]}px;bottom:auto;right:auto"`}
 let bagDrag=null,bagNoClick=false;
 document.addEventListener('pointerdown',e=>{const b=e.target.closest&&e.target.closest('.bag-bubble');if(!b||e.button!==0)return;const r=b.getBoundingClientRect();bagDrag={id:e.pointerId,b,sx:e.clientX,sy:e.clientY,ox:e.clientX-r.left,oy:e.clientY-r.top,moved:false}});
 document.addEventListener('pointermove',e=>{const d=bagDrag;if(!d||e.pointerId!==d.id)return;
@@ -5673,7 +5683,7 @@ const bagDragEnd=e=>{const d=bagDrag;if(!d||e.pointerId!==d.id)return;bagDrag=nu
  if(d.moved){bagNoClick=true;setTimeout(()=>{bagNoClick=false},0);const [x,y]=bagBubbleXY(bagPos);bagPos={x:x/innerWidth,y:y/innerHeight};try{localStorage.setItem('afterglow-bag-pos',JSON.stringify(bagPos))}catch(_){}}};
 document.addEventListener('pointerup',bagDragEnd);document.addEventListener('pointercancel',bagDragEnd);
 document.addEventListener('click',e=>{if(bagNoClick&&e.target.closest&&e.target.closest('.bag-bubble')){e.stopPropagation();e.preventDefault();bagNoClick=false}},true);
-window.addEventListener('resize',()=>{const b=document.querySelector('body>.map-popup-layer>.bag-bubble');if(b&&bagPos){const [x,y]=bagBubbleXY(bagPos);b.style.left=x+'px';b.style.top=y+'px'}});
+window.addEventListener('resize',()=>{const b=document.querySelector('body>.map-popup-layer>.bag-bubble');if(b&&bagPos){const [x,y]=bagBubbleXY(bagPos);b.style.left=x+'px';b.style.top=y+'px'}else if(b)placeBagDefault()});
 document.addEventListener('pointerdown',e=>{const h=e.target.closest&&e.target.closest('.split-h');if(!h||e.button!==0)return;splitDrag={id:e.pointerId,k:h.dataset.split,grid:h.parentElement};try{h.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
 document.addEventListener('pointermove',e=>{if(!splitDrag||e.pointerId!==splitDrag.id)return;const g=splitDrag.grid,r=g.getBoundingClientRect(),z=r.width/g.offsetWidth||1,m=document.querySelector('#app .mainwin'),extra=Math.max(0,m.offsetWidth-880);if(extra<1)return;const gap=parseFloat(getComputedStyle(g).columnGap)||12;const right=(r.right-e.clientX)/z-gap/2;splits[splitDrag.k]=Math.max(0,Math.min(1,1-(right-SPLIT_MIN[splitDrag.k])/extra));applyMainW()});
 document.addEventListener('pointerup',e=>{if(splitDrag&&e.pointerId===splitDrag.id){splitDrag=null;try{localStorage.setItem(SPLIT_KEY,JSON.stringify(splits))}catch(_){}}});
