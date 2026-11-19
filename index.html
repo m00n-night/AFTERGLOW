@@ -1678,6 +1678,9 @@ body>.map-popup-layer>.bag-bubble{bottom:64px}
 html:is([data-skin=w98],[data-skin=message],[data-skin=receipt],[data-skin=ops],[data-skin=greenhouse]) .cr.cr-split>.cr-side[data-t]{padding-top:56px}
 .cr.cr-split>.cr-side>.cr-actions{margin-top:auto;padding-top:6px;display:flex;flex-direction:column;gap:8px}
 .cr.cr-split>.cr-side>.cr-actions>.btn{min-height:42px;font-size:15px}
+/* 첫 헌터 등록: 오른쪽 프로필 칸을 왼쪽 열 높이에 맞춰 늘리지 않고, 내용 끝에서 등록 버튼이 이어지게 한다 */
+.cr.cr-split>.cr-side:has(>.cr-actions>[data-act=start]){align-self:start}
+.cr.cr-split>.cr-side:has(>.cr-actions>[data-act=start])>.cr-actions{margin-top:12px}
 /* 영입 화면: 영입·등급 다시 고르기 버튼을 한 줄에 */
 .cr.cr-split>.cr-side>.cr-actions:has(>[data-act=hire]){display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:8px;align-items:stretch}
 .cr.cr-split>.cr-side>.cr-actions:has(>[data-act=hire])>*{margin:0;min-width:0}
