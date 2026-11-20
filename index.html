@@ -2262,6 +2262,19 @@ body>.map-popup-layer>.map-popup-window.minimized .map-popup-titlebar{border-bot
 @media (max-width:600px){.map-popup-titlebar .popup-min{display:none}}
 /* 가방 설명: 양쪽 맞춤이지만 어절 단위로 줄을 바꾸고, 줄을 채우려고 띄어쓰기를 늘리지 않습니다. */
 .dock-win .bag-tix>p.small{text-align:justify;text-align-last:left;text-justify:inter-character;word-break:keep-all;overflow-wrap:break-word}
+/* 도감: 분류 칩 · 표 · 목록 */
+.dxsub{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.dxsub .chip{min-height:32px;padding:3px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
+.dxsub .chip small{font-weight:400;opacity:.75;margin-left:2px}
+.dx-sum{display:block;font-weight:700;color:var(--ink)}
+.dx-det{display:block;margin-top:3px}
+.dxtbl{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:12.5px;background:var(--paper);color:var(--ink)}
+.dxtbl th,.dxtbl td{padding:5px 7px;border:1px solid var(--line);text-align:left;vertical-align:top;line-height:1.45}
+.dxtbl thead th{background:var(--face);font-weight:700}
+.dxtbl tbody th{font-weight:700;white-space:nowrap}
+.dxl{margin:4px 0 10px;padding-left:18px;font-size:13px;line-height:1.55}
+.dxl li{margin:3px 0}
+@media (max-width:600px){.dxtbl{font-size:12px}.dxtbl th,.dxtbl td{padding:4px 5px}.dxtbl tbody th{white-space:normal}}
 </style>
 </head>
 <body>
@@ -2279,23 +2292,31 @@ const DICE=[2,4,6,8,12,20,24,30,48,60];
 const PO={atk:{n:5,l:'공격'},def:{n:5,l:'방어'},agi:{n:3,l:'민첩'}};
 /* 물리 직업 수치 (집행자 공격 주사위 보너스 · 연격 추가 피해 배율 · 추적자 피해 보너스(%) · 추적자 관통 비율) */
 /* 아군 탱커 수치 (받는 피해 감소 · 공격 피해 보너스(%) · 방어 태세 반격 배율) */
-const TANKTUNE={dr:.15,atk:0,counter:1};
-const JOBTUNE={exeAtk:.10,exeCombo:1,trkPct:20,trkPierce:.25};
+const TANKTUNE={dr:.2,atk:0,counter:2,shieldAtk:1};
+/* 반격: 방어 태세가 공격을 모두 막으면, 그 공격을 막고 남은 방어값 × 배율만큼 그 공격자에게 바로 피해.
+   공격자마다 따로 발동. 배율: 탱커가 아닌 아군 (탱커는 TANKTUNE.counter, 적은 ×1) */
+const COUNTER_ALLY=1.5;
+const counterMul=u=>u.side==='a'?(u.role==='tank'?TANKTUNE.counter:COUNTER_ALLY):1;
+/* 반사: 아군이 방어 태세로 공격을 막을 때마다, 막은 양 × 이 비율만큼 그 공격자에게 바로 돌려줍니다 */
+const RIPOSTE=.75;
+const JOBTUNE={exeAtk:.10,exeCombo:1,trkPct:20,trkPierce:.25,implPct:10};
+/* 보호막 상한: 최대 HP 대비 비율. 전투가 끝나면 보호막은 사라집니다. */
+const SHIELD_CAP=.3;
 const JOBS={
  근거리물리:{n:'집행자',sub:'근접 물리',melee:1,magic:0,tr:'근접 물리 · 피해 +20% · 공격 주사위 +10%',ab:'연격: 같은 눈 2개 이상·HP 피해 시 최고 눈만큼 추가 피해'},
  근거리마법:{n:'침식자',sub:'근접 마법',melee:1,magic:1,tr:'근접 마법 · 피해 +20% · 방어 태세 소모 ×2',ab:'마력 각인: HP 피해마다 1중첩, 3중첩 시 대상 최대 HP 10% 피해'},
  원거리물리:{n:'추적자',sub:'원거리 물리',melee:0,magic:0,tr:'원거리 물리 · 피해 +20% · 전열 저지 무시',ab:'관통: 방어 태세 흡수량의 25% 추가 피해'},
- 원거리마법:{n:'구현자',sub:'원거리 마법',melee:0,magic:1,tr:'원거리 마법 · 전열 저지 무시 · 방어 태세 소모 ×2',ab:'광역: 공격값 35 이상 시 같은 열 다른 적에게 1/3 피해'}
+ 원거리마법:{n:'구현자',sub:'원거리 마법',melee:0,magic:1,tr:'원거리 마법 · 피해 +10% · 전열 저지 무시 · 방어 태세 소모 ×2',ab:'광역: 공격값 35 이상 시 같은 열 다른 적에게 1/3 피해'}
 };
 const POS=[
- {k:0,n:'전열',sub:'전선 압박',ab:'근접 저지 · 직접 피격 시 역할 자원 +1(30%) · 공격 스탯의 5% 반사(20%)'},
+ {k:0,n:'전열',sub:'전선 압박',ab:'근접 저지 · 적의 직접 공격을 받을 때마다 역할 자원 +1(30%, 방어·보호막으로 막아도 판정) · HP 피해 시 공격 스탯의 5% 반사(20%)'},
  {k:1,n:'중열',sub:'전선 연계',ab:'공격 적중 시 역할 자원 +1(30%) · 일반/스침 적중 시 치명타 전환(20%) · 전열 뒤 근접 보호'},
  {k:2,n:'후열',sub:'후방 엄폐',ab:'역할 기술 자원 소모 -1 · 기술 사용 시 확률로 추가 -1(25%) · 앞선 열 뒤 근접 보호'}
 ];
 const ROLES={
- dealer:{k:'dealer',n:'딜러',threat:3,sub:'화력 집중',ab:'위협도 3 · 공격 피해 +15% · 처치 시 살기 +1 · 기습'},
- tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 받는 피해 -15% · 방어 주사위 +12% · 같은 열 엄호 · 결의 +1'},
- support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -20% · 자동 치유 · 은총 +1'}
+ dealer:{k:'dealer',n:'딜러',threat:3,sub:'화력 집중',ab:'위협도 3 · 공격 피해 +15% · 마무리(HP 50% 이하 적 피해 +20%) · 처치 시 살기 +1'},
+ tank:{k:'tank',n:'탱커',threat:5,sub:'아군 엄호',ab:'위협도 5(방어 시 7) · 최대 HP +20% · 받는 피해 -20% · 방어 주사위 +12% · 방패 공격 · 반사 · 반격 ×2 · 같은 열 엄호 · 결의 +1'},
+ support:{k:'support',n:'서포터',threat:2,sub:'회복 지원',ab:'위협도 2 · 공격 피해 -35%(혼자일 땐 없음) · 축복(회복시킨 아군 다음 공격 +15%) · 은총 +1'}
 };
 /* 역할 선택지 표시 순서 */
 const ROLE_ORDER=['tank','dealer','support'];
@@ -2307,10 +2328,10 @@ const ATTRS=[
   {n:'역린',ab:'잃은 HP 10%마다 공격 주사위 +12% (최대 +60%)',d:'잃은 HP가 최대 HP의 10%씩 늘 때마다 공격 주사위 합이 12% 늘어납니다. HP 50% 이하에서 최대치 +60%가 됩니다.'},
   {n:'보복',ab:'HP 피해를 받은 뒤 다음 공격: 공격 주사위 +50% · 출혈',d:'HP 피해를 받으면 보복이 준비되어, 다음 공격의 공격 주사위 합이 50% 늘어나고 HP 피해를 주면 출혈(3턴, 차례마다 최대 HP 3%)을 겁니다.'}]},
  {k:'envy',n:'시기',sin:1,opts:[
-  {n:'시샘',ab:'대상 HP 비율이 나보다 높으면 공격 주사위 +55%',d:'공격 대상의 HP 비율이 자신의 HP 비율보다 높으면 공격 주사위 합이 55% 늘어납니다.'},
+  {n:'시샘',ab:'대상 HP 비율이 나 이상이면 공격 주사위 +40%',d:'공격 대상의 HP 비율이 자신의 HP 비율과 같거나 높으면 공격 주사위 합이 40% 늘어납니다.'},
   {n:'강탈',ab:'공격 주사위 +20% · HP 피해 시 저주 · 저주 걸린 대상 +40%',d:'공격 주사위 합이 20% 늘어납니다. HP 피해를 주면 대상에게 저주(3턴간 공격 주사위 -15%)를 겁니다. 이미 저주에 걸린 대상을 공격할 때는 공격 주사위 합이 40% 더 늘어납니다.'}]},
  {k:'greed',n:'탐욕',sin:1,opts:[
-  {n:'착복',ab:'HP 피해의 15%를 보호막으로 · 마석 +2 (전투당 최대 20)',d:'공격으로 HP 피해를 줄 때마다 그 피해의 15%(올림)만큼 보호막을 얻습니다. 아군이라면 마석 2도 함께 얻으며, 전투 하나에서 최대 20까지입니다.'},
+  {n:'착복',ab:'HP 피해의 15%를 보호막으로 · 마석 +2 (파티 합산 전투당 최대 20)',d:'공격으로 HP 피해를 줄 때마다 그 피해의 15%(올림)만큼 보호막을 얻습니다. 아군이라면 마석 2도 함께 얻으며, 착복을 가진 동료 전체를 합쳐 전투 하나에서 최대 20까지입니다.'},
   {n:'수집가',ab:'공격 주사위 +15% · 대상의 디버프 1종마다 +25% (최대 +90%)',d:'공격 주사위 합이 항상 15% 늘어나고, 공격 대상에게 걸린 디버프 종류 하나마다 25%가 더해집니다(합계 최대 +90%).'}]},
  {k:'lust',n:'색욕',sin:1,opts:[
   {n:'매혹',ab:'HP 피해 시 유혹 (3턴간 빗맞음 35%) · 유혹 걸린 대상 공격 주사위 +35%',d:'HP 피해를 주면 3턴 동안 유혹을 겁니다. 유혹에 걸린 대상은 공격할 때 확률로 빗맞히며(35%), 그런 대상을 공격할 때는 공격 주사위 합이 35% 늘어납니다.'},
@@ -2328,17 +2349,17 @@ const ATTRS=[
   {n:'버티기',ab:'라운드마다 방어 주사위 +25%·받는 피해 -12% 누적 (최대 +75%·-36%), HP 피해를 받은 뒤엔 절반',d:'두 번째 라운드부터 라운드마다 방어 주사위 합이 25%씩, 받는 피해가 12%씩 쌓여 줄어듭니다(최대 방어 +75%·피해 -36%). 직전 라운드에 HP 피해를 받았다면 쌓인 수치가 절반으로 줄어든 뒤 쌓입니다.'},
   {n:'강단',ab:'HP 70% 이하: 방어 주사위 +70% · 받는 피해 -25%',d:'HP가 최대 HP의 70% 이하로 떨어지면 방어 주사위 합이 70% 늘어나고 받는 피해가 25% 줄어듭니다.'}]},
  {k:'chaste',n:'순결',sin:0,opts:[
-  {n:'정결',ab:'동료 전원 디버프·각인 면역 · 막을 때마다 막은 동료 최대 HP 5% 회복',d:'살아 있는 동안 자신을 포함한 같은 편 전원이 모든 디버프와 침식자의 각인에 걸리지 않으며, 디버프를 막아낼 때마다 막은 동료가 최대 HP의 5%(올림)를 회복합니다.'},
+  {n:'정결',ab:'동료 전원 디버프 면역 · 막은 동료 최대 HP 5% 회복 (대상별 라운드당 1회)',d:'살아 있는 동안 자신을 포함한 같은 편 전원이 모든 디버프에 걸리지 않습니다. 디버프를 막아낸 동료는 최대 HP의 5%(올림)를 회복하며, 이 회복은 동료마다 라운드당 1회입니다. 침식자의 각인은 막지 못합니다.'},
   {n:'광휘',ab:'라운드 시작: 디버프 걸린 동료 전원 정화 · 자신 최대 HP 4% 회복 · 방어 주사위 +30%',d:'라운드가 시작될 때 디버프에 걸린 동료(자신 포함) 전원의 디버프를 모두 지우고, 자신은 최대 HP의 4%(올림)를 회복합니다. 방어 주사위 합도 30% 늘어납니다.'}]},
  {k:'kind',n:'친절',sin:0,opts:[
-  {n:'보살핌',ab:'라운드 시작: HP 비율 최저 동료 최대 HP 5% 회복',d:'라운드가 시작될 때 자신을 제외하고 HP 비율이 가장 낮은 동료 1명이 그 동료 최대 HP의 5%(올림)를 회복합니다.'},
+  {n:'보살핌',ab:'라운드 시작: HP 비율 최저 동료 최대 HP 5% 회복',d:'라운드가 시작될 때 자신을 포함해 HP 비율이 가장 낮은 동료 1명이 그 동료 최대 HP의 5%(올림)를 회복합니다.'},
   {n:'격려',ab:'동료 전원 공격 주사위 +7%',d:'살아 있는 동안 자신을 포함한 같은 편 전원의 공격 주사위 합이 7% 늘어납니다. 격려가 여럿이어도 중복되지 않습니다.'}]},
  {k:'절제',n:'절제',sin:0,opts:[
-  {n:'중용',ab:'공격·방어·민첩 주사위 눈 40~80% 범위 보정 · 치명타 피해 -30%',d:'공격·방어·민첩 주사위의 눈이 항상 면 수의 40~80% 범위 안으로 맞춰지고, 치명타로 받는 피해가 30% 줄어듭니다. 예를 들어 D12는 5~9만 나옵니다.'},
-  {n:'침착',ab:'방어·민첩 주사위 +20% · 한 번에 최대 HP 30% 넘는 피해 차단',d:'방어 주사위 합과 민첩 주사위 합이 각각 20% 늘어나고, 한 번의 공격으로 최대 HP의 30%를 넘는 피해는 받지 않습니다.'}]},
+  {n:'중용',ab:'공격·방어·민첩 주사위 눈 40~80% 범위 보정 · 치명타 피해 -30%',d:'공격·방어·민첩 주사위의 눈이 항상 면 수의 40~80% 범위 안으로 맞춰지고, 치명타로 받는 피해가 30% 줄어듭니다. 예를 들어 D12는 5~9만 나옵니다. D2는 보정하지 않습니다.'},
+  {n:'침착',ab:'방어·민첩 주사위 +20% · 한 번에 최대 HP 30% 넘는 피해 차단',d:'방어 주사위 합과 민첩 주사위 합이 각각 20% 늘어나고, 보호막이 먼저 흡수한 뒤 한 번의 공격으로 최대 HP의 30%를 넘는 피해는 받지 않습니다.'}]},
  {k:'charity',n:'자선',sin:0,opts:[
   {n:'나눔',ab:'HP 60% 이상: 최대 HP 4%를 내어 최저 동료 최대 HP 10% 회복',d:'라운드가 시작될 때 자신의 HP가 60% 이상이면, 자기 최대 HP의 4%를 내어 HP 비율이 가장 낮은 동료 1명이 그 동료 최대 HP의 10%를 회복합니다.'},
-  {n:'가호',ab:'라운드 시작: 같은 열 동료(자신 포함) 전원에게 내 최대 HP 3% 보호막',d:'라운드가 시작될 때 같은 열에 선 살아 있는 동료(자신 포함) 전원에게 자기 최대 HP의 3%(올림)만큼 보호막을 씌웁니다.'}]},
+  {n:'가호',ab:'라운드 시작: 같은 열 동료(자신 포함) 전원에게 내 최대 HP 3% 보호막',d:'라운드가 시작될 때 같은 열에 선 살아 있는 동료(자신 포함) 전원에게 자기 최대 HP의 3%(올림)만큼 보호막을 씌웁니다. 가호를 가진 동료가 여럿이어도 동료마다 가장 큰 보호막 하나만 받습니다.'}]},
  {k:'dilig',n:'근면',sin:0,opts:[
   {n:'꾸준함',ab:'자기 차례마다 방어 주사위 +8%·받는 피해 -3% 누적 (최대 +64%·-24%) · 3·6번째 차례에 역할 자원 +1',d:'자기 차례가 올 때마다 꾸준함이 쌓여 방어 주사위 합이 8%씩, 받는 피해가 3%씩 줄어듭니다(최대 방어 +64%·피해 -24%). 3번째와 6번째 차례에는 역할 자원도 1 얻습니다. 전투가 끝나면 사라집니다.'},
   {n:'솔선',ab:'동료 전원 민첩 주사위 +30% · 첫 라운드 동료 전원 공격 주사위 +6%',d:'살아 있는 동안 자신을 포함한 같은 편 전원의 민첩 주사위 합이 30% 늘어나고, 첫 라운드에는 공격 주사위 합이 6% 더 늘어납니다. 솔선이 여럿이어도 중복되지 않습니다.'}]}
@@ -2349,7 +2370,7 @@ const AT=Object.fromEntries(ATTRS.map(a=>[a.k,a]));
 const abOf=u=>u&&(u.ab===1||u.ab==='1')?1:0;
 const attrOpt=(k,v)=>AT[k]?.opts[v===1||v==='1'?1:0];
 const attrAb=(k,v)=>{const o=attrOpt(k,v);return o?`「${o.n}」 ${o.ab}`:''};
-const TRAIT_RULE='고유 특성은 캐릭터마다 하나씩이고 두 효과 중 하나를 골라 씁니다. 주사위 보너스는 굴린 주사위 합에 대한 퍼센트로 계산하며, 몬스터는 그 2/3만 받습니다. 출전한 전투에서만 발동합니다. 회복량이 최대 HP를 넘으면 남는 양은 보호막이 됩니다. 디버프는 같은 편에게는 걸리지 않습니다. 보스는 항상, 다른 몬스터는 셋 중 하나꼴로 고유 특성을 가집니다.';
+const TRAIT_RULE='고유 특성은 캐릭터마다 하나씩이고 두 효과 중 하나를 골라 씁니다. 주사위 보너스는 굴린 주사위 합에 대한 퍼센트로 계산하며, 몬스터는 그 2/3만 받습니다. 출전한 전투에서만 발동합니다. 회복량이 최대 HP를 넘으면 남는 양은 보호막이 됩니다. 보호막은 최대 HP의 30%까지만 쌓이고 전투가 끝나면 사라집니다. 디버프는 같은 편에게는 걸리지 않습니다. 보스는 항상, 다른 몬스터는 셋 중 하나꼴로 고유 특성을 가집니다.';
 
 /* 공명은 캐릭터 본래의 고유 특성끼리만 판정한다. */
 const RESONANCES=[
@@ -2367,14 +2388,30 @@ const resonanceText=k=>{const r=RES_BY_ATTR[k];return r?`${AT[r.sin].n} · ${AT[
 const RES_LORE='상반된 고유 특성 2명이 공명합니다.';
 const RES_RULE='생존한 출전 캐릭터만 1:1 공명. 상대가 쓰러지면 재편성됩니다.';
 const DEBN={charm:'유혹',저주:'저주',leth:'무기력',stun:'기절',burn:'화상',frost:'동상',poison:'중독',bleed:'출혈'};
-/* 역할 자원: 자기 차례마다 +1, 역할별 추가 획득. 3칸이 다 차면 역할 기술을 쓸 수 있다 */
-const RMAX=3,RMAX_E=5;
+/* 역할 자원: 자기 차례마다 +1, 역할별 추가 획득. 최대 5칸. 3칸으로 1단계 기술, 5칸으로 2단계 기술 */
+const RMAX=5,RCOST1=3,RMAX_E=5;
+/* 성광 회복 비율(준 HP 피해 대비) · 철벽 피해 감소 */
+const SMITE_HEAL=.4,WALL_DR=.25;
+/* 서포터 치유: 은총 1칸부터 사용. 가진 은총을 모두 써서 그 수만큼(후열 +1) 가장 높은 스탯의 큰 주사위부터 굴림.
+   회복량 = 대상 최대 HP × base × 굴린 주사위 수 + 굴린 합 × k */
+const HEALTUNE={base:.03,k:1.5};
+/* 서포터 패시브 축복: 치유·성광으로 회복시킨 아군의 다음 공격 피해 +% */
+const BLESS_PCT=15;
+/* 딜러 패시브 마무리: HP 비율이 이 값 이하인 적에게 공격 피해 +% */
+const DEALTUNE={finishHp:.5,finishPct:20};
 const SKILL={
  tank:{a:'guard',n:'대신 맞기',r:'결의',d:'동료 1명 대신 피격 · 방어 주사위 +12%.'},
- support:{a:'heal',n:'치유',r:'은총',d:'1명 HP 회복(대상 최대 HP 18% + 공격·방어·민첩 주사위 면수 합 중 가장 큰 값 ×0.65) · 초과 회복은 보호막 · 정화.'},
+ support:{a:'heal',n:'치유',r:'은총',d:'은총 1칸부터 사용 · 가진 은총을 모두 써서 그 수만큼(후열 +1) 가장 높은 스탯의 큰 주사위부터 굴림 · 1명 HP 회복(주사위 1개당 대상 최대 HP 3% + 굴린 합 ×1.5) · 초과 회복은 보호막 · 정화 · 축복.'},
  dealer:{a:'ambush',n:'기습',r:'살기',d:'전열 저지·방어·엄호 무시 · 공격 피해 +30%.'}
 };
-const SKA=Object.fromEntries(Object.entries(SKILL).map(([r,v])=>[v.a,{...v,role:r}]));
+/* 2단계 역할 기술: 자원 5칸(후열 4칸). 아군 전용 */
+const SKILL2={
+ tank:{a:'bulwark',n:'철벽',r:'결의',d:'방어 태세(방어 주사위 +50%) · 다음 내 차례까지 아군 전원 받는 피해 -25%.'},
+ support:{a:'smite',n:'성광',r:'은총',d:'저지·방어 태세·엄호 무시 공격 · 준 HP 피해의 40%만큼 HP 비율이 가장 낮은 아군 1명 회복(초과 회복은 보호막).'},
+ dealer:{a:'execute',n:'처형',r:'살기',d:'저지·방어 태세·엄호 무시 · 공격 피해 +60% · 처치하면 살기 1 추가 획득.'}
+};
+const ATK_SKILLS=['ambush','execute','smite'];
+const SKA=Object.fromEntries([...Object.entries(SKILL).map(([r,v])=>[v.a,{...v,role:r,tier:1}]),...Object.entries(SKILL2).map(([r,v])=>[v.a,{...v,role:r,tier:2}])]);
 
 const ARTS=[
  {k:"lucky",n:"행운의 네잎클로버",d:"공격 주사위 최저 눈 재굴림. 높은 값 적용."},
@@ -2447,7 +2484,7 @@ ARTS.push(
  {k:"frostfan",n:"빙정 부채",d:"HP 피해 시 확률로 적군 동상(20%) · 민첩 주사위 -15%, 연속 행동 불가.",fx:{type:"inflict",v:20,cond:"all",debuff:"frost"}},
  {k:"powercell",n:"전술 축전지",d:"전투 시작: 역할 자원 +1.",fx:{"type":"rstart","v":1,"cond":"all"}},
  {k:"stunbell",n:"기절 방울",d:"HP 피해 시 확률로 적군 기절(12%) · 3턴 행동 불가.",fx:{type:"inflict",v:12,cond:"all",debuff:"stun"}},
- {k:"manaflask",n:"확장된 마력 용기",d:"역할 자원 최대치 +1 (기술 비용 3 유지).",fx:{"type":"rmax","v":1,"cond":"all"}},
+ {k:"manaflask",n:"확장된 마력 용기",d:"역할 자원 최대치 +1 (5칸 → 6칸, 기술 비용 유지).",fx:{"type":"rmax","v":1,"cond":"all"}},
  {k:"rehglass",n:"재충전 모래시계",d:"3라운드 시작: 역할 자원 +1.",fx:{"type":"rthird","v":1,"cond":"all"}},
  {k:"handmirror",n:"현혹의 손거울",d:"HP 피해 시 확률로 적군 유혹(20%) · 공격이 확률로 빗맞음(35%).",fx:{type:"inflict",v:20,cond:"all",debuff:"charm"}},
  {k:"omenbell",n:"불길한 금종",d:"HP 피해 시 확률로 적군 저주(20%) · 공격 주사위 -15%.",fx:{type:"inflict",v:20,cond:"all",debuff:"저주"}},
@@ -2510,7 +2547,7 @@ const ART_DETAIL_BASE = {
  "shieldf": "전투가 시작될 때 전열에 배치된 각 아군에게 자기 최대 HP의 15%만큼 보호막을 부여합니다. 보호막은 HP 피해를 받기 전에 먼저 소모됩니다.",
  "scope": "후열에 배치한 아군이 공격할 때 치명타 확률이 6% 증가합니다. 다른 위치에서는 적용되지 않습니다.",
  "mask": "공격하는 아군의 현재 HP가 최대 HP의 50% 이하라면 공격 피해가 15% 증가합니다. HP가 회복되어 기준을 초과하면 효과가 적용되지 않습니다.",
- "vamp": "공격으로 적의 실제 HP를 깎았을 때, 입힌 HP 피해의 8%만큼 공격자가 회복합니다(올림). 보호막에만 피해를 준 경우에는 회복되지 않으며 최대 HP를 넘지 않습니다.",
+ "vamp": "공격으로 적의 실제 HP를 깎았을 때, 입힌 HP 피해의 8%만큼 공격자가 회복합니다(올림). 보호막에만 피해를 준 경우에는 회복되지 않으며, 최대 HP를 넘는 회복량은 보호막이 됩니다.",
  "detector": "전투 승리로 지급되는 기본 마석을 17% 증가시킵니다. 다른 획득 방식의 마석에는 적용되지 않습니다.",
  "barrier": "전투 시작 시 살아 있는 출전 아군 전원에게 보호막을 부여합니다. 보호막 수치는 각자 최대 HP의 12%이며, 피해를 받으면 HP보다 먼저 소모됩니다.",
  "boots": "전투 중 아군 민첩 주사위 합이 10% 늘어납니다. 연속 행동 확률도 4% 증가하며, 연속 행동 확률에는 최대 50% 제한이 있습니다.",
@@ -2520,14 +2557,14 @@ const ART_DETAIL_BASE = {
  "leaf": "획득하는 순간 현재 보유한 모든 파티원의 최대 HP를 15% 늘리고(올림), 생존자의 현재 HP도 같은 양만큼 회복합니다. 이후 영입하는 동료도 최대 HP가 15% 증가합니다. 전투 승리 시 살아 있는 출전 아군은 자신의 최대 HP의 6%를 회복하며, 초과 회복량은 보호막이 됩니다.",
  "reaper": "이 아티팩트를 보유한 상태에서 아군이 적을 직접 처치하면, 처치한 캐릭터가 최대 HP의 5%(올림)를 회복하고 역할 자원을 1 얻습니다. 최대 HP를 초과하는 회복량은 보호막이 됩니다.",
  "horn": "1라운드 선제공격 판정에 필요한 민첩 우위가 8에서 6으로 완화됩니다. 선제공격의 추가 피해도 기본 10% 대신 15%가 적용됩니다.",
- "tome": "전투 승리로 얻는 경험치에 18% 보정을 적용합니다. 경험치는 출전 캐릭터 각각에게 지급됩니다.",
+ "tome": "전투 승리로 얻는 경험치에 18% 보정을 적용합니다. 경험치는 전투에서 살아남은 출전 캐릭터 각각에게 지급됩니다.",
  "medkit": "전투 중 회복 포션의 기본 회복량이 최대 HP의 40%에서 45%로 증가합니다. 포션은 그대로 1개 소모하며 행동 1회를 사용합니다.",
  "rally": "전투가 시작될 때 아군 각자의 역할 자원을 1 지급합니다. 3라운드가 시작될 때 살아 있는 아군에게 역할 자원을 추가로 1 지급합니다. 최대 보유량은 넘지 않습니다.",
  "phoenix": "전투에서 아군 한 명이 치명적인 피해를 받아 HP가 0이 되는 순간 한 번 발동합니다. 해당 캐릭터는 최대 HP의 15%(올림), 최소 1 HP로 살아남으며 깃털은 즉시 소멸합니다.",
  "bandage": "전투 승리 후 출전 파티에 쓰러진 동료가 있으면 한 명을 최대 HP의 25%로 부활시킵니다. 플레이어 캐릭터가 쓰러졌다면 우선 선택하며, 실제 부활에 사용되었을 때 소멸합니다.",
  "whet": "명중 결과가 일반 공격일 때 공격 주사위 합의 15%를 공격값에 더합니다. 스침과 치명타 공격에서는 발동하지 않습니다.",
  "prism": "마법 공격을 사용하는 직업의 공격 피해가 12% 증가합니다. 물리 공격 직업에는 적용되지 않습니다.",
- "quiver": "추적자 직업의 공격이 적 방어를 계산한 뒤 공격값의 10%만큼 방어 관통 피해를 더합니다. 다른 직업에는 적용되지 않습니다.",
+ "quiver": "추적자 직업이 방어 태세를 올린 적을 공격하면, 방어를 계산한 뒤 공격값의 10%만큼 관통 피해를 더합니다. 다른 직업에는 적용되지 않습니다.",
  "focus": "공격 대상의 현재 HP가 최대 HP의 50% 이하일 때 치명타 확률이 6% 증가합니다. 공격자의 HP와는 무관합니다.",
  "chain": "같은 아군이 연속 행동으로 두 번째 공격을 할 때 해당 공격의 피해가 15% 증가합니다. 첫 번째 공격에는 적용되지 않습니다.",
  "hymn": "매 라운드 시작 시 현재 HP 비율이 가장 낮은 부상 아군 한 명의 HP를 그 아군 최대 HP의 5%(올림)만큼 회복합니다. 부상자가 없으면 발동하지 않으며 초과 회복량은 보호막이 됩니다.",
@@ -2595,7 +2632,7 @@ function fullArtDescription(a){
   case 'nodevisit':return `헌터 영입소·협회 상점·안전 지대·보물 상자·돌발 퀘스트처럼 전투가 없는 지도 노드에 갈 때마다 마석 ${f.v}${JO(f.v,'을')} 받습니다.`;
   case 'nodecoin':return `헌터 영입소·협회 상점·안전 지대·보물 상자·돌발 퀘스트처럼 전투가 없는 지도 노드를 처음 방문하면 마석 ${f.v}${JO(f.v,'을')} 추가 지급합니다. 같은 노드에서는 한 번만 발동합니다.${sumCap}`;
   case 'rstart':return `전투가 시작될 때 출전 아군 각자에게 역할 자원 ${f.v}칸을 지급합니다. 탱커의 결의·서포터의 은총·딜러의 살기에 적용되며, 각 캐릭터의 최대 보유량을 넘지 않습니다.${sumCap}`;
-  case 'rmax':return `출전 아군의 역할 자원 최대 보유량이 ${f.v}칸 증가하여 기본 3칸에서 4칸이 됩니다. 역할 기술을 쓰는 데 필요한 자원 3칸은 그대로입니다.${sumCap}`;
+  case 'rmax':return `출전 아군의 역할 자원 최대 보유량이 ${f.v}칸 증가하여 기본 5칸에서 6칸이 됩니다. 역할 기술 비용(1단계 3칸·2단계 5칸)은 그대로입니다.${sumCap}`;
   case 'rthird':return `전투의 3라운드가 시작될 때 살아 있는 아군 각자에게 역할 자원 ${f.v}칸을 지급합니다. 최대 보유량을 넘어서 누적되지 않습니다.${sumCap}`;
   case 'promotion':return `파티 관리에서 출전한 헌터 1명을 선택하면 레벨·강화 조건과 마석 소모 없이 즉시 1단계 승급합니다. 일반 승급에서 받는 스탯 및 최대 HP 보너스도 지급됩니다. 이미 S급 이상이거나 등급이 잠긴 고정 NPC에게는 사용할 수 없으며, 사용 직후 아티팩트가 소멸합니다.`;
   default:return a.d;
@@ -2629,7 +2666,7 @@ const MI={
 const mi=k=>`<svg class="mi mi-${k}" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">${MI[k]}</svg>`;
 const NT={fight:{n:'일반 전투'},elite:{n:'정예 몬스터'},red:{n:'레드 게이트'},recruit:{n:'헌터 영입'},chest:{n:'보물 상자'},shop:{n:'협회 상점'},rest:{n:'안전 지대'},event:{n:'돌발 퀘스트'},boss:{n:'보스'}};
 Object.keys(NT).forEach(k=>NT[k].b=mi(k));
-const NTD={fight:'일반 몬스터 무리와 싸웁니다. 승리하면 마석과 경험치(살아남은 헌터만)를 얻고, 회복 포션(35%)·아티팩트 4개 중 1개 선택(20%)·영입권(6%)을 확률로 추가 획득합니다.',
+const NTD={fight:'일반 몬스터 무리와 싸웁니다. 승리하면 마석과 경험치(살아남은 헌터만)를 얻고, 회복 포션(35%)·아티팩트 선택권 1~3장(20%, 한 장마다 후보 2개 중 1개)·영입권(6%)을 확률로 추가 획득합니다.',
  elite:'2번 승강장부터 나오는 강한 정예 몬스터와 싸웁니다. 마석·경험치가 일반 전투의 2배 이상이고, 회복 포션(50%)·아티팩트 선택(60%)·영입권(12%)을 확률로 추가 획득합니다.',
  red:'파티 평균 전력보다 강한 변이 몬스터와 싸우는 위험한 전투입니다. 돌파하면 S급 확정 영입권을 얻으며, 회복 포션(60%)·아티팩트 선택(80%)·영입권(20%)을 확률로 추가 획득합니다. 드물게 특별 헌터 백무진을 만날 수 있습니다(1%). 백무진을 영입하면 S급 확정 영입권 대신 백무진을 얻습니다.',
  recruit:'마석을 내고 헌터를 영입합니다. F급은 항상 있고 승강장 번호가 높아질수록 높은 등급이 나오며(A·S급은 3번 승강장부터), 고정 NPC가 나오기도 합니다. 가진 영입권은 이 칸에서만 쓸 수 있습니다. 출전 자리가 차면 대기실(최대 8명)로 갑니다. 일반 헌터에게는 개인 서사가 있으며 영입 화면에서 미리 확인할 수 있습니다.',
@@ -3039,6 +3076,8 @@ function encounterRange(f,partySize){
 const MAX_FOES={normal:6,elite:8,red:10};
 /* 승강장이 올라갈수록 몬스터가 강해지는 정도 (1=기존, 낮을수록 완만) */
 const FLOOR_GROW=.75;
+/* 밸런스 패치 후 난이도 보정: 아군 역할 강화만큼 몬스터 세기 배율 (혼자일 때 제외) */
+const ENEMY_TUNE={boss:1,other:1.25};
 /* 1번 승강장: 한 번에 나오는 몬스터가 2마리인 확률 (나머지는 1마리) */
 const FLOOR1_TWO_RATE=.25;
 function mkEnemy(f,kind,partySize=1){
@@ -3089,7 +3128,7 @@ function mkEncounter(f,kind){
  const pm=floorScale(f,S.party);
  const base={1:{normal:.68,elite:.55,red:.5,boss:.5},2:{normal:.88,elite:.9,boss:.8}}[f]||{};
  /* 레드 게이트: 파티 평균 전력보다 약간 강하게 */
- es.forEach(e=>weaken(e,kind==='red'?pm*1.12:(base[e.kind]||1)*pm));
+ es.forEach(e=>weaken(e,(kind==='red'?pm*1.12:(base[e.kind]||1)*pm)*(e.kind==='boss'?ENEMY_TUNE.boss:ENEMY_TUNE.other)));
  /* 보스는 매 승강장 10라운드 이상 버티도록 체력을 보강 */
  es.forEach(e=>{if(e.kind!=='boss')return;e.maxHp=e.hp=Math.round(e.maxHp*(BOSS_HP[f]||BOSS_HP.x));
   e.budget=Math.max(40,roundEven(e.budget*(BOSS_ATK[f]||BOSS_ATK.x)));e.dice=autoAlloc(e.budget,roleRatio(e.role),true)});
@@ -3157,7 +3196,7 @@ const threatOf=u=>(ROLES[u.role]?.threat||3)+(u.role==='tank'&&u.stance?2:0);
 function weighted(list){if(!list.length)return null;let r=Math.random()*sum(list.map(threatOf));for(const u of list){if((r-=threatOf(u))<0)return u}return list[list.length-1]}
 function rollPool(u,faces,kind,c){
  const ally=u.side==='a';
- const dice=faces.map(s=>{let v=1+R(s);if(HA(c,u,'절제',0)){const lo=Math.max(1,Math.ceil(s*.4)),hi=Math.max(lo,Math.floor(s*.8));v=Math.max(lo,Math.min(hi,v))}return{s,v}});
+ const dice=faces.map(s=>{let v=1+R(s);if(HA(c,u,'절제',0)&&s>2){const lo=Math.max(1,Math.ceil(s*.4)),hi=Math.max(lo,Math.floor(s*.8));v=Math.max(lo,Math.min(hi,v))}return{s,v}});
  if(kind==='atk'&&ally&&has('lucky')&&dice.length){const lo=dice.reduce((a,d)=>d.v<a.v?d:a);lo.v=Math.max(lo.v,1+R(lo.s))}
  const bonus=statBonus(u.dice,kind);return{dice,sum:sum(dice.map(d=>d.v))+bonus,fixedBonus:bonus};
 }
@@ -3176,9 +3215,9 @@ function dicePct(c,u,kind,t){
  if(kind==='atk'){
   if(HA(c,u,'pride',0)&&hpR>=.8)P(45,'특성 오만');
   if(HA(c,u,'pride',1)&&!u._firstAtk)P(90,'특성 오만');
-  if(HA(c,u,'wrath',0))P(Math.min(60,Math.floor((1-hpR)*10)*12),'특성 분노');
+  if(HA(c,u,'wrath',0))P(Math.min(60,Math.floor((1-hpR)*10+1e-9)*12),'특성 분노');
   if(HA(c,u,'wrath',1)&&u._revenge)P(50,'특성 분노');
-  if(HA(c,u,'envy',0)&&t&&t.hp/t.maxHp>hpR)P(55,'특성 시기');
+  if(HA(c,u,'envy',0)&&t&&t.hp/t.maxHp>=hpR)P(40,'특성 시기');
   if(HA(c,u,'envy',1))P(20+(t&&debOn(c,t,'저주')?40:0),'특성 시기');
   if(HA(c,u,'greed',1))P(Math.min(90,15+(t?25*Object.keys(DEBN).filter(k=>debOn(c,t,k)).length:0)),'특성 탐욕');
   if(HA(c,u,'glut',0))P(u.feast||0,'특성 폭식');
@@ -3240,7 +3279,7 @@ function startResonances(c){
  for(const u of [...c.allies,...c.enemies].filter(liveU)){
   const r=RES_BY_ATTR[u.attr];if(!r||!resonating(c,u,r.k))continue;
   if(c.round===1)L(c,`공명 <b>${r.n}</b> → ${nm(u)} · ${r.ab}`);
-  if(r.k==='gold'){const v=positionShield(u,Math.ceil(u.maxHp*.06));u.shield=(u.shield||0)+v;L(c,`공명 ${r.n} → ${nm(u)} 보호막 +${v}`)}
+  if(r.k==='gold'){const v=addShield(u,positionShield(u,Math.ceil(u.maxHp*.06)));L(c,`공명 ${r.n} → ${nm(u)} 보호막 +${v}`)}
   if(r.k==='balance'){const h=receiveHealing(u,Math.ceil(u.maxHp*.04));if(h.hp||h.shield)L(c,`공명 ${r.n} → ${nm(u)} ${healText(h)}`)}
   if(r.k==='tempo'&&c.round===1){gainR(c,u,1);L(c,`공명 ${r.n} → ${nm(u)} 역할 자원 +1`)}
  }
@@ -3261,22 +3300,28 @@ const brk=r=>`주사위 ${r.pool.sum}${r.pool.fixedBonus?' (성장 보너스 +'+
 const dtxt=p=>p.dice.map(d=>`<span class="dz" title="D${d.s}">${d.v}</span>`).join('');
 /* 민첩: 기대 주사위값은 회피·치명타·추가 행동에, 매 라운드 실제 굴림은 선공에 적용. */
 const combatClamp=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
-const agiScore=u=>sum((u.dice.agi||[]).filter(Number.isFinite).map(n=>(n+1)/2))+statBonus(u.dice,'agi');
+/* 민첩 기대값: 라운드마다 계산한 민첩 퍼센트 보너스(_agPct)도 반영합니다. */
+const agiScore=u=>(sum((u.dice.agi||[]).filter(Number.isFinite).map(n=>(n+1)/2))+statBonus(u.dice,'agi'))*Math.max(.5,1+(u._agPct||0)/100);
 const powerScore=u=>Math.max(...['atk','def','agi'].map(k=>statSum(u,k)));
-const supportRegen=(u,t)=>Math.ceil(t.maxHp*.07)+Math.floor(powerScore(u)*.3);
-const supportBurst=(u,t)=>Math.ceil(t.maxHp*.18)+Math.floor(powerScore(u)*.65);
+/* 서포터 치유 스탯: 공격·방어·민첩 중 면수 합이 가장 큰 스탯 (같으면 공격 → 방어 → 민첩 순) */
+const STATN={atk:'공격',def:'방어',agi:'민첩'};
+const healStat=u=>['atk','def','agi'].reduce((b,k)=>statSum(u,k)>statSum(u,b)?k:b,'atk');
+const healPool=u=>(u.dice[healStat(u)]||[]).filter(Number.isFinite).slice().sort((a,b)=>b-a);
+/* 굴릴 치유 주사위 수: 아군은 가진 은총 수(후열 +1), 적은 주사위 전부. 그 스탯의 주사위 개수가 상한 */
+const healN=u=>{const m=healPool(u).length;return Math.max(1,Math.min(u.side==='a'?(u.rs||0)+(u.pos===2?1:0):m,m))};
 /* 회복/보호막 공통 계산. 포지션에 따른 증폭은 없습니다. */
 const positionAmount=(u,amount)=>Math.max(0,amount);
 const positionHeal=(u,amount)=>Math.min(Math.max(0,u.maxHp-u.hp),positionAmount(u,amount)); // 포션 전용: 초과 회복 소멸
 const positionShield=(u,amount)=>positionAmount(u,amount);
 /* 포션을 제외한 모든 회복 효과: 실제 HP 회복 후 남는 양을 보호막으로 전환. */
+/* 보호막 추가: 최대 HP의 SHIELD_CAP까지만 쌓입니다. 실제로 늘어난 양을 돌려줍니다. */
+function addShield(u,amount){const v=Math.max(0,Math.floor(Number(amount)||0));if(!u||!v)return 0;const room=Math.max(0,Math.ceil(u.maxHp*SHIELD_CAP)-(u.shield||0));const g=Math.min(v,room);if(g)u.shield=(u.shield||0)+g;return g}
 function receiveHealing(u,amount){
  const total=Math.max(0,Math.floor(Number(amount)||0));
  if(!u||u.hp<=0||total===0)return{hp:0,shield:0};
  const hp=Math.min(total,Math.max(0,u.maxHp-u.hp));
- const shield=total-hp;
  u.hp+=hp;
- if(shield)u.shield=(u.shield||0)+shield;
+ const shield=addShield(u,total-hp);
  return{hp,shield};
 }
 const healText=r=>`HP +${r.hp}${r.shield?' · 보호막 +'+r.shield:''}`;
@@ -3303,7 +3348,7 @@ function attackQuality(c,u,t,opening,duplicate){
  return 'normal';
 }
 
-const ACTL={atk:'공격',def:'방어',guard:'대신 맞기',heal:'치유',ambush:'기습',potheal:'포션 사용'};
+const ACTL={atk:'공격',def:'방어',guard:'대신 맞기',heal:'치유',ambush:'기습',bulwark:'철벽',smite:'성광',execute:'처형',potheal:'포션 사용'};
 const L=(c,x)=>{if(c.V)c.rec.ev.push(x)};
 
 /* 장기전 광폭: 40라운드부터 적의 공격 주사위 합이 라운드마다 7%씩 쌓여 오릅니다(40라운드 +7%, 41라운드 +14% …). 끝나지 않는 전투를 막습니다. */
@@ -3324,56 +3369,62 @@ function startRound(c){
  if(enrageAtk(c))L(c,`장기전 광폭 → ${c.round===ENRAGE_ROUND?'전투가 길어져 ':''}적 전원의 공격 주사위 +${enrageAtk(c)}%`);
  const lv=units.filter(liveU);
  if(has('hymn')){const t=lv.filter(u=>u.side==='a'&&u.hp<u.maxHp).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`아티팩트 ${AR.hymn.n} → ${nm(t)} ${healText(h)}`)}}
- if(c.round===3){for(const u of lv.filter(u=>u.side==='a')){if(has('hglass'))u.shield=(u.shield||0)+positionShield(u,Math.ceil(u.maxHp*.1));if(has('rally'))gainR(c,u,1);if(extraTotal('rthird'))gainR(c,u,extraTotal('rthird'))}if(has('hglass'))L(c,`아티팩트 ${AR.hglass.n} → 아군 보호막 +최대 HP 10%`);if(has('rally'))L(c,`아티팩트 ${AR.rally.n} → 3라운드 아군 역할 자원 +1`)}
+ if(c.round===3){for(const u of lv.filter(u=>u.side==='a')){if(has('hglass'))addShield(u,positionShield(u,Math.ceil(u.maxHp*.1)));if(has('rally'))gainR(c,u,1);if(extraTotal('rthird'))gainR(c,u,extraTotal('rthird'))}if(has('hglass'))L(c,`아티팩트 ${AR.hglass.n} → 아군 보호막 +최대 HP 10%`);if(has('rally'))L(c,`아티팩트 ${AR.rally.n} → 3라운드 아군 역할 자원 +1`)}
+ const gaho={};
  for(const u of lv){
   const low=()=>lv.filter(x=>x!==u&&x.side===u.side&&liveU(x)).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
-  if(HA(c,u,'kind',0)){const t=low();if(t){const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`특성 친절 → ${nm(u)}이(가) ${nm(t)}을(를) 보살핌 ${healText(h)}`)}}
+  const lowSelf=()=>lv.filter(x=>x.side===u.side&&liveU(x)).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
+  if(HA(c,u,'kind',0)){const t=lowSelf();if(t){const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`특성 친절 → ${nm(u)}이(가) ${nm(t)}을(를) 보살핌 ${healText(h)}`)}}
   if(HA(c,u,'charity',0)&&u.hp>=u.maxHp*.6){const t=low();if(t){const cost=Math.ceil(u.maxHp*.04);u.hp=Math.max(1,u.hp-cost);const h=receiveHealing(t,Math.ceil(t.maxHp*.1));L(c,`특성 자선 → ${nm(u)} HP ${cost}${JO(cost,'를')} 나눠 ${nm(t)} ${healText(h)}`)}}
-  if(HA(c,u,'charity',1)){for(const t of lv.filter(x=>x.side===u.side&&liveU(x)&&x.pos===u.pos)){const v=positionShield(t,Math.ceil(u.maxHp*.03));t.shield=(t.shield||0)+v;L(c,`특성 자선 → ${nm(u)}이(가) ${nm(t)}에게 보호막 +${v}`)}}
+  if(HA(c,u,'charity',1)){for(const t of lv.filter(x=>x.side===u.side&&liveU(x)&&x.pos===u.pos)){const v=positionShield(t,Math.ceil(u.maxHp*.03));if(!gaho[t.id]||gaho[t.id].v<v)gaho[t.id]={v,from:u,t}}}
   if(HA(c,u,'chaste',1)){const h=receiveHealing(u,Math.ceil(u.maxHp*.04));L(c,`특성 순결 광휘 → ${nm(u)} ${healText(h)}`)}
   if(HA(c,u,'chaste',1)){for(const t of lv.filter(x=>x.side===u.side&&liveU(x)&&hasDeb(x))){for(const k in t.deb)if(DEBN[k]){delete t.deb[k];if(t.debFrom)delete t.debFrom[k]}L(c,`특성 순결 → ${nm(u)}이(가) ${nm(t)}의 디버프를 정화`)}}
  }
+ for(const g of Object.values(gaho)){const v=addShield(g.t,g.v);L(c,`특성 자선 → ${nm(g.from)}이(가) ${nm(g.t)}에게 보호막 +${v}`)}
  for(const u of lv.filter(u=>u.side==='a'))receiveHealing(u,Math.ceil(u.maxHp*extraTotal('heal',u)/100));
- if(has('banner')){const t=lv.filter(u=>u.side==='a'&&u.pos===0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){t.shield=(t.shield||0)+positionShield(t,Math.ceil(t.maxHp*.05));L(c,`아티팩트 ${AR.banner.n} → ${nm(t)} 보호막 +${positionShield(t,Math.ceil(t.maxHp*.05))}`)}}
- for(const u of lv){const ag=rollPool(u,u.dice.agi,'agi',c);let g=ag.sum;for(const [v] of diceBonus(c,u,'agi',ag.sum))g+=v;const ap=k=>Math.round(ag.sum*k/100);if(debOn(c,u,'leth'))g-=ap(20);if(debOn(c,u,'frost'))g-=ap(15);if(u.side==='a'&&has('boots'))g+=ap(10);if(u.side==='a')g+=ap(extraTotal('agi',u));if(c.round===1&&u.side==='a'&&has('whistle'))g+=ap(15);if(c.round===1&&u.side==='e'&&has('bell'))g-=ap(15);u._g=g;u._ag=ag}
+ if(has('banner')){const t=lv.filter(u=>u.side==='a'&&u.pos===0).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];if(t){const v=addShield(t,positionShield(t,Math.ceil(t.maxHp*.05)));L(c,`아티팩트 ${AR.banner.n} → ${nm(t)} 보호막 +${v}`)}}
+ for(const u of lv){const ag=rollPool(u,u.dice.agi,'agi',c);let g=ag.sum;for(const [v] of diceBonus(c,u,'agi',ag.sum))g+=v;const ap=k=>Math.round(ag.sum*k/100);if(debOn(c,u,'leth'))g-=ap(20);if(debOn(c,u,'frost'))g-=ap(15);if(u.side==='a'&&has('boots'))g+=ap(10);if(u.side==='a')g+=ap(extraTotal('agi',u));if(c.round===1&&u.side==='a'&&has('whistle'))g+=ap(15);if(c.round===1&&u.side==='e'&&has('bell'))g-=ap(15);u._g=g;u._ag=ag;u._agPct=ag.sum?(g-ag.sum)/ag.sum*100:0}
  const ordered=lv.slice().sort((a,b)=>b._g-a._g||Math.random()-.5);
  c.queue=ordered.flatMap(u=>{if(debOn(c,u,'leth')||debOn(c,u,'frost'))return[u.id];const extra=extraTurnCount(u);return extra?Array(extra+1).fill(u.id):[u.id]});c.qi=0;
  {let i=0;while(i<c.queue.length){let j=i+1;while(j<c.queue.length&&c.queue[j]===c.queue[i])j++;const extra=j-i-1;if(extra>0){const u=unitC(c,c.queue[i]);L(c,`민첩 보너스 → ${nm(u)} 이번 라운드 연속 행동 ${extra}회`)}i=j}}
  c.rec.order=c.queue.map(id=>{const u=unitC(c,id);return{name:u.name,side:u.side,g:u._g}});
 }
-/* 내 차례가 다시 오면 방어 태세가 끝나며 남은 방어로 반격 */
+/* 내 차례가 다시 오면 방어 태세가 끝납니다(반격은 공격을 막는 순간 발동) */
 const gainR=(c,u,n)=>{if(liveU(u))u.rs=Math.min(rmaxOf(u),(u.rs||0)+n)};
 function beginTurn(c,u){
  if(debOn(c,u,'bleed')){const d=Math.max(1,Math.ceil(u.maxHp*.03));hit(c,null,u,d);L(c,`출혈 → ${nm(u)}에게 ${d} 기본 피해`);if(!liveU(u))return;}
  gainR(c,u,1);
  if(HA(c,u,'dilig',0)&&(u.grind||0)<8){u.grind=(u.grind||0)+1;L(c,`특성 근면 → ${nm(u)} 꾸준함 방어 ${u.grind*8}%`);if(u.grind===3||u.grind===6){gainR(c,u,1);L(c,`특성 근면 → ${nm(u)} 역할 자원 +1`)}}
- if(u.role==='support'){const t=friendsC(c,u).sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0];if(t){const h=receiveHealing(t,supportRegen(u,t));gainR(c,u,1);L(c,`역할 서포터 → ${nm(u)}이(가) ${nm(t)} ${healText(h)}`)}}
- if(u.role==='tank')[...c.allies,...c.enemies].forEach(x=>{if(x.guardBy===u.id)x.guardBy=null});
- const s=u.stance;if(!s)return;u.stance=null;
- if(s.left>0&&s.foes.length){const f=s.foes.map(x=>({u:unitC(c,x.id),p:x.p})).filter(x=>liveU(x.u)).sort((a,b)=>b.p-a.p)[0];
-  if(f){const v=hit(c,u,f.u,Math.round(s.left*(u.side==='a'&&u.role==='tank'?TANKTUNE.counter:1)));L(c,`${nm(u)} 방어 태세 종료: 남은 방어 ${s.left} → ${nm(f.u)}에게 반격 ${v}`)}}
+ if(u.role==='support')gainR(c,u,1);
+ if(u.role==='tank'){[...c.allies,...c.enemies].forEach(x=>{if(x.guardBy===u.id)x.guardBy=null});u._wall=0}
+ if(u.stance){u.stance=null;L(c,`${nm(u)} 방어 태세 종료`)}
+}
+/* 전열: 적의 직접 공격을 받으면(방어 태세·보호막으로 막아도) 역할 자원 +1 판정(30%). 지속 피해·반사 피해는 제외 */
+function frontResource(c,f,t){
+ if(!f||f.side===t.side||t.pos!==0||!liveU(t)||Math.random()>=.30)return;
+ const before=t.rs||0;gainR(c,t,1);
+ if(t.rs>before)L(c,`포지션 전열 → ${nm(t)} 역할 자원 +1`);
 }
 function hit(c,f,t,v){
  if(v<=0||!liveU(t))return 0;
- let d=v;if(HA(c,t,'humil',0))d=Math.max(1,Math.ceil(d*.75));if(HA(c,t,'sloth',0)&&f&&debOn(c,f,'leth'))d=Math.max(1,Math.ceil(d*.75));if(HA(c,t,'dilig',0)&&t.grind)d=Math.max(1,Math.ceil(d*(1-t.grind*.03)));if(HA(c,t,'절제',0)&&t._incomingQuality==='crit')d=Math.max(1,Math.ceil(d*.7));if(HA(c,t,'절제',1))d=Math.min(d,Math.max(1,Math.ceil(t.maxHp*.3)));if(HA(c,t,'patience',0)&&t.pat)d=Math.max(1,Math.ceil(d*(1-t.pat*.0048)));if(HA(c,t,'patience',1)&&t.hp<=t.maxHp*.7)d=Math.max(1,Math.ceil(d*.75));if(friendsC(c,t).some(x=>x!==t&&x.pos===t.pos&&HA(c,x,'humil',1)))d=Math.max(1,Math.ceil(d*.85));if(t.side==='a'&&t.role==='tank'&&TANKTUNE.dr)d=Math.max(1,Math.ceil(d*(1-TANKTUNE.dr)));if(t.side==='a'&&has('armor')&&t.role==='tank')d=Math.max(1,Math.ceil(d*.88));if(t.side==='a'&&has('helmet')&&t._incomingQuality==='crit')d=Math.max(1,Math.ceil(d*.75));if(t.side==='a'&&has('heart')&&t.hp<=t.maxHp*.4)d=Math.max(1,Math.ceil(d*.8));
+ let d=v;if(HA(c,t,'humil',0))d=Math.max(1,Math.ceil(d*.75));if(HA(c,t,'sloth',0)&&f&&debOn(c,f,'leth'))d=Math.max(1,Math.ceil(d*.75));if(HA(c,t,'dilig',0)&&t.grind)d=Math.max(1,Math.ceil(d*(1-t.grind*.03)));if(HA(c,t,'절제',0)&&t._incomingQuality==='crit')d=Math.max(1,Math.ceil(d*.7));if(HA(c,t,'patience',0)&&t.pat)d=Math.max(1,Math.ceil(d*(1-t.pat*.0048)));if(HA(c,t,'patience',1)&&t.hp<=t.maxHp*.7)d=Math.max(1,Math.ceil(d*.75));if(friendsC(c,t).some(x=>x!==t&&x.pos===t.pos&&HA(c,x,'humil',1)))d=Math.max(1,Math.ceil(d*.85));if(t.side==='a'&&t.role==='tank'&&TANKTUNE.dr)d=Math.max(1,Math.ceil(d*(1-TANKTUNE.dr)));if(t.side==='a'&&has('armor')&&t.role==='tank')d=Math.max(1,Math.ceil(d*.88));if(t.side==='a'&&has('helmet')&&t._incomingQuality==='crit')d=Math.max(1,Math.ceil(d*.75));if(t.side==='a'&&has('heart')&&t.hp<=t.maxHp*.4)d=Math.max(1,Math.ceil(d*.8));
  if(t.side==='a'&&extraTotal('reduce',t))d=Math.max(1,Math.ceil(d*(1-extraTotal('reduce',t)/100)));
+ if(f&&f.side!==t.side&&friendsC(c,t).some(x=>x._wall))d=Math.max(1,Math.ceil(d*(1-WALL_DR)));
  if(t.shield){const a=Math.min(t.shield,d);t.shield-=a;d-=a}
+ if(HA(c,t,'절제',1))d=Math.min(d,Math.max(1,Math.ceil(t.maxHp*.3)));
+ frontResource(c,f,t);
  t.hp=Math.max(0,t.hp-d);
  if(t.hp<=0&&t.side==='a'&&has('phoenix')&&!c.phx){c.phx=1;t.hp=Math.max(1,Math.ceil(t.maxHp*.15));if(c.V)consumeArt('phoenix');L(c,`아티팩트 ${AR.phoenix.n} → ${nm(t)} HP ${t.hp}${JO(t.hp,'로')} 부활했습니다. 깃털은 소멸했습니다.`)}
  const st=c.stat;if(f)(st[f.id]=st[f.id]||{d:0,t:0}).d+=d;(st[t.id]=st[t.id]||{d:0,t:0}).t+=d;
- if(d>0){t._patHit=true;if(t.pat){t.pat=0}if(f&&f.side!==t.side)t._revenge=1}
+ if(d>0){t._patHit=true;if(f&&f.side!==t.side)t._revenge=1}
  // 전열: 적 공격으로 HP 피해를 받으면 매번 독립 판정. 지속 피해/보호막만 손실 시 발동하지 않음.
  if(d>0&&f&&f.side!==t.side&&t.pos===0&&liveU(t)){
-  if(Math.random()<.30){
-   const before=t.rs||0;gainR(c,t,1);
-   if(t.rs>before)L(c,`포지션 전열 → ${nm(t)} 역할 자원 +1`);
-  }
   if(liveU(f)&&Math.random()<.20){
    const reflected=hit(c,null,f,Math.max(1,Math.round(statSum(t,'atk')*.05)));
-   if(reflected>0)L(c,`포지션 전열 → ${nm(t)} 피해 반사: ${nm(f)}에게 ${reflected}`);
+   if(reflected>0)L(c,`포지션 전열 → ${nm(t)} 반사: ${nm(f)} ${reflected} 피해`);
   }
  }
- if(t.hp<=0){t.stance=null;t.guardBy=null;L(c,`${nm(t)} 쓰러졌습니다!`);if(f&&f.role==='dealer')gainR(c,f,1);
+ if(t.hp<=0){t.stance=null;t.guardBy=null;t._wall=0;L(c,`${nm(t)} 쓰러졌습니다!`);if(f&&f.role==='dealer')gainR(c,f,1);
   if(f&&liveU(f)&&HA(c,f,'glut',0)){const h=receiveHealing(f,Math.ceil(f.maxHp*.2));f.feast=Math.min(70,(f.feast||0)+20);L(c,`특성 폭식 → ${nm(f)} 포식 ${healText(h)}, 공격 주사위 +${f.feast}%`)}
   if(f&&liveU(f)&&f.side==='a'){if(c.V){B.kills++;if(has('bounty'))B.gold+=6}if(has('reaper')){const h=receiveHealing(f,Math.ceil(f.maxHp*.05));gainR(c,f,1);L(c,`아티팩트 ${AR.reaper.n} → ${nm(f)} ${healText(h)}, 역할 자원 +1`)}}}
  return d;
@@ -3383,7 +3434,7 @@ const DEBUFF_TURNS=3;
 const debuff=(c,t,k,source=null)=>{
  if(!liveU(t)||source&&(source===t||source.side===t.side))return false;
  const ward=resonanceWard(c,t,k);
- if(friendsC(c,t).some(x=>HA(c,x,'chaste',0))){const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`특성 순결 → ${nm(t)} ${DEBN[k]} 막아냄 · ${healText(h)}`);return false}
+ if(friendsC(c,t).some(x=>HA(c,x,'chaste',0))){if(t._chasteRound!==c.round){t._chasteRound=c.round;const h=receiveHealing(t,Math.ceil(t.maxHp*.05));L(c,`특성 순결 → ${nm(t)} ${DEBN[k]} 막아냄 · ${healText(h)}`)}else L(c,`특성 순결 → ${nm(t)} ${DEBN[k]} 막아냄`);return false}
  if(ward)return false;
  t.deb=t.deb||{};t.deb[k]=c.round+DEBUFF_TURNS-1;
  t.debFrom=t.debFrom||{};
@@ -3402,12 +3453,14 @@ function offensiveDebuff(c,attacker,target,k){
 function skillTargets(c,u,act){
  if(act==='guard')return friendsC(c,u).filter(x=>x!==u);
  if(act==='heal')return sideOf(c,u).filter(liveU);
- if(act==='ambush')return foesC(c,u);
+ if(act==='ambush'||act==='execute'||act==='smite')return foesC(c,u);
+ if(act==='bulwark')return liveU(u)?[u]:[];
  return[];
 }
 const rmaxOf=u=>u.side==='a'?RMAX+extraTotal('rmax'):RMAX_E;
-const skillCost=u=>(u.side==='a'?RMAX:RMAX_E)-(u.pos===2?1:0);
-const canSkill=u=>(u.side==='a'||S.floor>=2)&&(u.rs||0)>=skillCost(u);
+/* tier 1: 아군 3칸 · tier 2: 아군 5칸 (후열 각 -1). 적은 1단계 기술만 5칸 */
+const skillCost=(u,tier=1)=>u.side==='a'&&tier===1&&u.role==='support'?1:(u.side==='a'?(tier===2?RMAX:RCOST1):RMAX_E)-(u.pos===2?1:0);
+const canSkill=(u,tier=1)=>(u.side==='a'||(tier===1&&S.floor>=2))&&(u.rs||0)>=skillCost(u,tier);
 /* 포션: 행동한 아군의 차례와 포션 1개를 씁니다. 자동 전투는 설정한 HP 이하인 아군 중 가장 많이 다친 생존자를 고릅니다. 포션으로 부활하지 않습니다. */
 const battlePotionTargets=c=>c.allies.filter(t=>liveU(t)&&t.hp<t.maxHp);
 const canBattlePotion=(c,u)=>!!u&&u.side==='a'&&liveU(u)&&
@@ -3436,12 +3489,14 @@ function bondChain(c,u,t){
 function doAction(c,u,a){
  if(a.a==='potheal'&&!canBattlePotion(c,u))a={a:'def'};
  if(a.a==='potheal'&&!battlePotionTargets(c).some(t=>t.id===a.t))a={a:'def'};
- if(SKA[a.a]&&(!canSkill(u)||SKILL[u.role].a!==a.a))a={a:'def'};
+ if(SKA[a.a]&&(SKA[a.a].role!==u.role||(SKA[a.a].tier===2&&u.side!=='a')||!canSkill(u,SKA[a.a].tier)))a={a:'def'};
  if(a.a==='heal'&&!skillTargets(c,u,'heal').some(t=>t.id===a.t))a={a:'def'};
- if(SKA[a.a]&&a.a!=='ambush'){const tl=skillTargets(c,u,a.a);let t=unitC(c,a.t);if(!tl.includes(t))t=tl.slice().sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0];if(!t)a={a:'def'};else a={a:a.a,t:t.id}}
+ if(SKA[a.a]&&!ATK_SKILLS.includes(a.a)){const tl=skillTargets(c,u,a.a);let t=unitC(c,a.t);if(!tl.includes(t))t=tl.slice().sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0];if(!t)a={a:'def'};else a={a:a.a,t:t.id}}
  const row={name:u.name,side:u.side,a:a.a,ag:u._ag,g:u._g,pool:null,p:null,tgt:null,res:''};
- if(SKA[a.a]){
-  let cost=skillCost(u);
+ let healDice=0;
+ if(a.a==='heal'){healDice=healN(u);if(u.side==='a'){const spend=Math.min(u.rs||0,healPool(u).length);u.rs=Math.max(has('battery')?1:0,(u.rs||0)-spend);L(c,`역할 기술 치유 → 은총 ${spend}칸 소모 · 주사위 ${healDice}개${u.pos===2?' (후열 +1)':''}`)}}
+ if(SKA[a.a]&&!(a.a==='heal'&&u.side==='a')){
+  let cost=skillCost(u,SKA[a.a].tier);
   if(u.pos===2&&Math.random()<.25){cost=Math.max(1,cost-1);L(c,`포지션 후열 → ${nm(u)} 기술 자원 추가 -1 (총 ${cost} 소모)`)}
   u.rs=Math.max(u.side==='a'&&has('battery')?1:0,(u.rs||0)-cost);
   if(u.rs&&u.side==='a'&&has('battery'))L(c,`아티팩트 ${AR.battery.n} → 역할 자원 1 보존`);
@@ -3459,34 +3514,36 @@ function doAction(c,u,a){
  }
  if(a.a==='heal'){
   const t=unitC(c,a.t);if(!t||!liveU(t)){a={a:'def'};}else{
-  const h=receiveHealing(t,supportBurst(u,t));
+  const hk=healStat(u),hn=healDice||healN(u),hr=rollPool(u,healPool(u).slice(0,hn),hk,c),amt=Math.ceil(t.maxHp*HEALTUNE.base*hn)+Math.round(hr.sum*HEALTUNE.k);
+  const h=receiveHealing(t,amt);t._bless=1;
   let cl=false;for(const k in t.deb||{})if(DEBN[k]){delete t.deb[k];if(t.debFrom)delete t.debFrom[k];cl=true}
   Object.assign(row,{tgt:t.name,res:`${healText(h)}${cl?' · 정화':''}`});
-  L(c,`역할 기술 <b>치유</b> → ${nm(u)}이(가) ${nm(t)} ${healText(h)}${cl?' · 정화':''}`);
+  L(c,`역할 기술 <b>치유</b> [${STATN[hk]} 주사위 ${hn}개 ${hr.dice.map(d=>'D'+d.s+':'+d.v).join('·')} = ${hr.sum} ×${HEALTUNE.k} + 최대 HP ${Math.round(HEALTUNE.base*hn*100)}%] → ${nm(u)}이(가) ${nm(t)} ${healText(h)}${cl?' · 정화':''} · 축복`);
   c.rec.rows.push(row);return;
   }
  }
  if(a.a==='guard'){const t=unitC(c,a.t);t.guardBy=u.id;row.tgt=t.name;L(c,`역할 기술 <b>대신 맞기</b> → ${nm(u)}이(가) 다음 차례까지 ${nm(t)}을(를) 노린 공격을 모두 대신 받습니다.`)}
- if(a.a==='def'||a.a==='guard'){
+ if(a.a==='bulwark'){u._wall=1;row.tgt=u.name;L(c,`역할 기술 <b>철벽</b> → ${nm(u)}의 다음 차례까지 아군 전원이 받는 피해 -${Math.round(WALL_DR*100)}%`)}
+ if(a.a==='def'||a.a==='guard'||a.a==='bulwark'){
   const pool=rollPool(u,u.dice.def,'def',c);let p=pool.sum;const notes=[];const add=(v,t)=>{if(v){p+=v;notes.push(t+(v>0?' +':' ')+v)}};
-  if(u.side==='a'&&has('mirror')){const dv=pool.dice.map(d=>d.v);if(new Set(dv).size<dv.length)add(Math.round(pool.sum*.25),AR.mirror.n+' +25%')}if(u.role==='tank')add(Math.round(pool.sum*.12),'역할 탱커 +12%');if(u.side==='a'&&extraTotal('def',u))add(Math.round(pool.sum*extraTotal('def',u)/100),`추가 아티팩트 +${extraTotal('def',u)}%`);for(const [v,n] of diceBonus(c,u,'def',pool.sum))add(v,n);
+  if(u.side==='a'&&has('mirror')){const dv=pool.dice.map(d=>d.v);if(new Set(dv).size<dv.length)add(Math.round(pool.sum*.25),AR.mirror.n+' +25%')}if(u.role==='tank')add(Math.round(pool.sum*.12),'역할 탱커 +12%');if(a.a==='bulwark')add(Math.round(pool.sum*.5),'역할 기술 철벽 +50%');if(u.side==='a'&&extraTotal('def',u))add(Math.round(pool.sum*extraTotal('def',u)/100),`추가 아티팩트 +${extraTotal('def',u)}%`);for(const [v,n] of diceBonus(c,u,'def',pool.sum))add(v,n);
   
   p=Math.max(0,p);u.stance={left:p,p,foes:[]};
-  Object.assign(row,{pool,p,notes,res:`방어 태세 ${p}`});if(a.a==='guard')row.res='대신 맞기 · '+row.res;
+  Object.assign(row,{pool,p,notes,res:`방어 태세 ${p}`});if(a.a==='guard')row.res='대신 맞기 · '+row.res;if(a.a==='bulwark')row.res='철벽 · '+row.res;
   L(c,`${nm(u)} 방어 태세 ${p} [${brk({pool,notes})}] — 다음 내 차례까지 유지`);
   c.rec.rows.push(row);return;
  }
  // 공격
- const amb=a.a==='ambush';
+ const amb=ATK_SKILLS.includes(a.a);
  let t=unitC(c,a.t);const okT=amb?foesC(c,u):validC(c,u);
  if(!t||!liveU(t)||!okT.includes(t)){const v=okT;if(!v.length){row.res='공격할 대상 없음';c.rec.rows.push(row);return}t=amb?v.slice().sort((x,y)=>x.hp-y.hp)[0]:weighted(v)}
- if(amb)L(c,`역할 기술 <b>기습</b> → ${nm(u)}이(가) 저지와 방어를 무시하고 ${nm(t)}을(를) 노립니다.`);
+ if(amb)L(c,`역할 기술 <b>${SKA[a.a].n}</b> → ${nm(u)}이(가) 저지와 방어를 무시하고 ${nm(t)}을(를) 노립니다.`);
  else{const g=t.guardBy&&unitC(c,t.guardBy);
   if(g&&g!==t&&liveU(g)){L(c,`대신 맞기 → ${nm(g)}이(가) ${nm(t)} 대신 공격을 받습니다.`);gainR(c,g,1);t=g}
   else{const tk=friendsC(c,t).find(k=>k!==t&&k.role==='tank'&&k.pos===t.pos);if(tk){L(c,`역할 탱커 → ${nm(tk)}이(가) 같은 열의 ${nm(t)} 대신 공격을 받습니다.`);gainR(c,tk,1);t=tk}}}
  const pool=rollPool(u,u.dice.atk,'atk',c);let p=pool.sum;const notes=[];const add=(v,x)=>{if(v){p+=v;notes.push(x+(v>0?' +':' ')+v)}};
  const vs=pool.dice.map(d=>d.v),dup=new Set(vs).size<vs.length,mx=pool.dice.filter(d=>d.v===d.s).length;
- if(u.job==='근거리물리'&&JOBTUNE.exeAtk)add(Math.round(pool.sum*JOBTUNE.exeAtk),`직업 집행자 +${Math.round(JOBTUNE.exeAtk*100)}%`);if(u.side==='a'&&extraTotal('atk',u))add(Math.round(pool.sum*extraTotal('atk',u)/100),`추가 아티팩트 +${extraTotal('atk',u)}%`);
+ if(u.side==='a'&&u.role==='tank'&&TANKTUNE.shieldAtk){const sp=rollPool(u,u.dice.def,'def',c);add(Math.round(sp.sum*TANKTUNE.shieldAtk),`역할 탱커 방패 공격 (방어 ${sp.sum}×${Math.round(TANKTUNE.shieldAtk*100)}%)`)}if(u.job==='근거리물리'&&JOBTUNE.exeAtk)add(Math.round(pool.sum*JOBTUNE.exeAtk),`직업 집행자 +${Math.round(JOBTUNE.exeAtk*100)}%`);if(u.side==='a'&&extraTotal('atk',u))add(Math.round(pool.sum*extraTotal('atk',u)/100),`추가 아티팩트 +${extraTotal('atk',u)}%`);
  const cnt={};vs.forEach(v=>cnt[v]=(cnt[v]||0)+1);const maxSame=Math.max(0,...Object.values(cnt)),ones=cnt[1]||0;
  const uq=[...new Set(vs)].sort((a,b)=>a-b);let run=uq.length?1:0,best=run;for(let i=1;i<uq.length;i++){run=uq[i]===uq[i-1]+1?run+1:1;best=Math.max(best,run)}
  if(u.side==='a'&&has('fullmoon')&&mx)add(Math.round(pool.sum*.1*mx),AR.fullmoon.n+` +${10*mx}%`);
@@ -3510,12 +3567,12 @@ function doAction(c,u,a){
    t._evadeCounterRound=c.round;
    const counter=combatClamp(Math.floor(sum((t.dice.atk||[]).map(x=>(x+1)/2))*.28),2,24);
    const dealt=hit(c,t,u,counter);
-   row.res+=` · 반격 ${dealt}`;
-   L(c,`${nm(t)} 회피 반격 → ${nm(u)} ${dealt} 피해 (라운드당 1회)`);
+   row.res+=` · 역습 ${dealt}`;
+   L(c,`${nm(t)} 회피 역습 → ${nm(u)} ${dealt} 피해 (라운드당 1회)`);
   }
   c.rec.rows.push(row);return;
  }
- const pcts=[];if(JOBS[u.job].melee)pcts.push([20,'근거리']);if(u.job==='원거리물리'&&JOBTUNE.trkPct)pcts.push([JOBTUNE.trkPct,'직업 추적자']);if(u.role==='dealer')pcts.push([15,'역할 딜러']);if(u.role==='tank'&&u.side==='a'&&TANKTUNE.atk)pcts.push([TANKTUNE.atk,'역할 탱커']);if(u.role==='support')pcts.push([-20,'역할 서포터']);if(amb)pcts.push([30,'역할 기술 기습']);if(opening)pcts.push([u.side==='a'&&has('horn')?15:10,'선제공격']);
+ const pcts=[];if(JOBS[u.job].melee)pcts.push([20,'근거리']);if(u.job==='원거리마법'&&JOBTUNE.implPct)pcts.push([JOBTUNE.implPct,'직업 구현자']);if(u.job==='원거리물리'&&JOBTUNE.trkPct)pcts.push([JOBTUNE.trkPct,'직업 추적자']);if(u.role==='dealer')pcts.push([15,'역할 딜러']);if(u.role==='dealer'&&t.hp/t.maxHp<=DEALTUNE.finishHp)pcts.push([DEALTUNE.finishPct,'딜러 마무리']);if(u._bless){pcts.push([BLESS_PCT,'서포터 축복']);u._bless=0}if(u.role==='tank'&&u.side==='a'&&TANKTUNE.atk)pcts.push([TANKTUNE.atk,'역할 탱커']);if(u.role==='support'&&!(u.side==='a'&&isSolo()))pcts.push([-35,'역할 서포터']);if(a.a==='ambush')pcts.push([30,'역할 기술 기습']);if(a.a==='execute')pcts.push([60,'역할 기술 처형']);if(opening)pcts.push([u.side==='a'&&has('horn')?15:10,'선제공격']);
  if(u.side==='a'&&extraTotal('pct',u))pcts.push([extraTotal('pct',u),'추가 아티팩트']);
  if(u.side==='a'){if(has('triple')&&maxSame>=3)pcts.push([100,AR.triple.n]);if(has('straight')&&best>=3)pcts.push([25,AR.straight.n]);if(has('parity'))pcts.push(pool.sum%2===0?[20,AR.parity.n+' 짝']:[-10,AR.parity.n+' 홀'])}
  if(u.side==='a'){if(has('prism')&&JOBS[u.job].magic)pcts.push([12,AR.prism.n]);if(has('mask')&&u.hp<=u.maxHp*.5)pcts.push([15,AR.mask.n]);if(has('chain')&&c.qi>0&&c.queue[c.qi-1]===u.id)pcts.push([15,AR.chain.n])}
@@ -3527,12 +3584,15 @@ function doAction(c,u,a){
 
  const magic=JOBS[u.job].magic;let dd,txt;
  /* 마법 직업(침식자·구현자)은 적의 방어 태세를 2배로 깎습니다. */
- if(!amb&&t.stance&&t.stance.left>0){const s=t.stance,ab=magic?Math.min(p,Math.floor(s.left/2)):Math.min(p,s.left);s.left-=magic?ab*2:ab;s.foes.push({id:u.id,p});
+ let riposte=0,counterV=0;
+ if(!amb&&t.stance&&t.stance.left>0){const s=t.stance,ab=magic?Math.min(p,Math.floor(s.left/2)):Math.min(p,s.left);s.left-=magic?ab*2:ab;s.foes.push({id:u.id,p});riposte=ab;if(ab>=p&&s.left>0)counterV=s.left;
   const nativePierce=u.job==='원거리물리'?Math.floor(ab*JOBTUNE.trkPierce):0;const artPierce=u.side==='a'&&has('quiver')&&u.job==='원거리물리'?Math.round(p*.1):0;const pierce=nativePierce+artPierce;dd=p-ab+pierce;txt=`방어로 ${ab} 막음${nativePierce?', 직업 추적자 관통 +'+nativePierce:''}${artPierce?', 아티팩트 '+AR.quiver.n+' +'+artPierce:''}, 남은 방어 ${s.left}`}
  else{dd=p;if(t.stance&&!amb)t.stance.foes.push({id:u.id,p});txt=amb&&t.stance&&t.stance.left>0?'기습으로 방어 무시':'방어 없음'}
  t._incomingQuality=quality;
   const priorHp=t.hp;
-  const real=hit(c,u,t,dd);
+  const real=hit(c,u,t,dd);if(dd<=0)frontResource(c,u,t);
+  if(riposte>0&&t.side==='a'&&liveU(t)&&liveU(u)){const v=hit(c,t,u,Math.max(1,Math.round(riposte*RIPOSTE)));row.res=(row.res?row.res+' · ':'')+`반사 ${v}`;L(c,`${nm(t)} 반사 → 막은 ${riposte}의 ${Math.round(RIPOSTE*100)}% · ${nm(u)} ${v} 피해`)}
+  if(counterV>0&&liveU(t)&&liveU(u)){const m=counterMul(t),v=hit(c,t,u,Math.max(1,Math.round(counterV*m)));row.res=(row.res?row.res+' · ':'')+`반격 ${v}`;L(c,`${nm(t)} 반격 → 공격을 모두 막고 남은 방어 ${counterV}${m!==1?' ×'+m:''} · ${nm(u)} ${v} 피해`)}
   // 중열: 공격이 방어를 뚫고 적중했다면 역할 자원 +1을 독립 판정합니다.
   if(u.pos===1&&dd>0&&liveU(u)&&Math.random()<.30){
    const before=u.rs||0;gainR(c,u,1);
@@ -3541,6 +3601,8 @@ function doAction(c,u,a){
   const hpDealt=Math.max(0,priorHp-t.hp);
   t._incomingQuality=null;
   resonanceStrike(c,u,hpDealt);
+  if(a.a==='smite'&&hpDealt>0&&liveU(u)){const amt=Math.ceil(hpDealt*SMITE_HEAL);friendsC(c,u).sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp).slice(0,1).forEach(x=>{const h=receiveHealing(x,amt);x._bless=1;L(c,`역할 기술 성광 → ${nm(x)} ${healText(h)} · 축복`)})}
+  if(a.a==='execute'&&!liveU(t)&&liveU(u)){gainR(c,u,1);L(c,`역할 기술 처형 → ${nm(u)} 살기 +1 추가`)}
   if(u.side==='a'&&hpDealt>0&&has('vamp')&&liveU(u)){const h=receiveHealing(u,Math.ceil(hpDealt*.08));if(h.hp||h.shield)L(c,`아티팩트 ${AR.vamp.n} → ${nm(u)} ${healText(h)}`)}
  Object.assign(row,{pool,p,notes,tgt:t.name,res:`${quality==='crit'?'치명타 · ':quality==='graze'?'스침 · ':opening?'선제공격 · ':''}${real} 피해`});
  L(c,`${nm(u)} ${quality==='crit'?'<b>치명타</b>':quality==='graze'?'<b>스침</b>':opening?'<b>선제공격</b>':'공격'} <b>${p}</b> [${brk({pool,notes})}]${magic?'(마법)':''} → ${nm(t)}: ${txt} → <b>${real}</b> 피해`);
@@ -3563,32 +3625,39 @@ function doAction(c,u,a){
    if(offensiveDebuff(c,u,t,status))L(c,`적 ${nm(u)}의 공격 → ${nm(t)} ${DEBN[status]} 적용`);
   }
   if(u.side==='a'&&has('doll')&&liveU(t)&&Math.random()<.35&&offensiveDebuff(c,u,t,'저주'))L(c,`아티팩트 ${AR.doll.n} → ${nm(t)} 저주: 공격 주사위 -15%`);
-  if(t.side==='a'&&has('thorn')&&hpDealt>0&&liveU(u)&&!amb){const v=hit(c,null,u,Math.max(1,Math.round(hpDealt*.2)));if(v)L(c,`아티팩트 ${AR.thorn.n} → ${nm(u)}에게 가시 피해 ${v}`)}
+  if(t.side==='a'&&has('thorn')&&hpDealt>0&&liveU(u)&&!amb){const v=hit(c,null,u,Math.max(1,Math.round(hpDealt*.2)));if(v)L(c,`아티팩트 ${AR.thorn.n} → 반사: ${nm(u)} ${v} 피해`)}
   if(u.job==='근거리물리'&&dup&&liveU(t)){const v=Math.round(Math.max(...vs)*JOBTUNE.exeCombo);L(c,`직업 집행자 연격 +${v}`);hit(c,u,t,v)}
-  if(u.job==='근거리마법'&&!friendsC(c,t).some(x=>HA(c,x,'chaste',0))&&liveU(t)){t.marks=(t.marks||0)+1;if(t.marks>=3){t.marks=0;const bv=Math.max(1,Math.ceil(t.maxHp*.1));L(c,`직업 침식자 각인 폭발: ${nm(t)} ${bv}`);hit(c,u,t,bv)}}
+  if(u.job==='근거리마법'&&liveU(t)){t.marks=(t.marks||0)+1;if(t.marks>=3){t.marks=0;const bv=Math.max(1,Math.ceil(t.maxHp*.1));L(c,`직업 침식자 각인 폭발: ${nm(t)} ${bv}`);hit(c,u,t,bv)}}
   if(hpDealt>0&&(HA(c,u,'lust',0)||HA(c,u,'lust',1)&&Math.random()<.5)&&offensiveDebuff(c,u,t,'charm'))L(c,`특성 색욕 → ${nm(t)} 유혹: 공격 시 확률로 빗맞힘(35%)`);
   if(hpDealt>0&&(HA(c,u,'pride',1)&&firstAtk||HA(c,u,'envy',1))&&offensiveDebuff(c,u,t,'저주'))L(c,`특성 ${AT[u.attr].n} → ${nm(t)} 저주: 3턴간 공격 주사위 -15%`);
   if(hpDealt>0&&HA(c,u,'wrath',1)&&revenge&&offensiveDebuff(c,u,t,'bleed'))L(c,`특성 분노 보복 → ${nm(t)} 출혈`);
   if(hpDealt>0&&HA(c,u,'glut',1)&&liveU(u)){const h=receiveHealing(u,Math.ceil(hpDealt*.1));const p=offensiveDebuff(c,u,t,'poison');L(c,`특성 폭식 탐식 → ${nm(u)} ${healText(h)}${p?` · ${nm(t)} 중독`:''}`)}
   if(hpDealt>0&&HA(c,u,'sloth',0)&&offensiveDebuff(c,u,t,'leth'))L(c,`특성 나태 → ${nm(t)} 무기력: 민첩 주사위 -20%, 연속 행동 불가`);
-  if(hpDealt>0&&HA(c,u,'greed',0)&&liveU(u)){const sv=Math.ceil(hpDealt*.15);u.shield=(u.shield||0)+sv;let g='';if(u.side==='a'&&c.V&&(B.greed||0)<20){B.greed=(B.greed||0)+2;B.gold+=2;g=', 마석 +2'}L(c,`특성 탐욕 → ${nm(u)} 착복: 보호막 +${sv}${g}`)}
+  if(hpDealt>0&&HA(c,u,'greed',0)&&liveU(u)){const sv=addShield(u,Math.ceil(hpDealt*.15));let g='';if(u.side==='a'&&c.V&&(B.greed||0)<20){B.greed=(B.greed||0)+2;B.gold+=2;g=', 마석 +2'}L(c,`특성 탐욕 → ${nm(u)} 착복: 보호막 +${sv}${g}`)}
  }
  if(u.job==='원거리마법'&&p>=35){const o=foesC(c,u).filter(x=>x!==t&&x.pos===t.pos);if(o.length){const v=Math.floor(p/3);L(c,`직업 구현자 광역: ${o.map(nm).join(', ')}에게 ${v}`);o.forEach(x=>hit(c,u,x,v))}}
  c.rec.rows.push(row);
 }
 /* AI: 근거리는 닿는 적이 없으면 앞으로 나온다 */
 function aiSkill(c,u){
- if(!canSkill(u))return null;const sk=SKILL[u.role].a,tl=skillTargets(c,u,sk);if(!tl.length)return null;
  const ratio=x=>x.hp/x.maxHp;
- if(sk==='heal'){const t=tl.slice().sort((x,y)=>ratio(x)-ratio(y))[0];return ratio(t)<.6||hasDeb(t)?{a:'heal',t:t.id}:null}
- if(sk==='guard'){const t=tl.slice().sort((x,y)=>ratio(x)-ratio(y))[0];return ratio(t)<.75||t.isP?{a:'guard',t:t.id}:null}
- const t=tl.slice().sort((x,y)=>x.hp-y.hp||y.pos-x.pos)[0];return{a:'ambush',t:t.id};
+ /* 2단계 기술(아군): 자원 5칸이 모이면 우선 사용 (서포터는 위급한 아군 치유가 먼저) */
+ if(u.side==='a'&&u.role==='support'&&canSkill(u)){const t=skillTargets(c,u,'heal').sort((x,y)=>ratio(x)-ratio(y))[0];if(t&&(ratio(t)<.5||hasDeb(t)))return{a:'heal',t:t.id}}
+ if(u.side==='a'&&SKILL2[u.role]&&canSkill(u,2)){const s2=SKILL2[u.role].a,fs=foesC(c,u);
+  if(fs.length){if(s2==='bulwark')return{a:'bulwark',t:u.id};const t=fs.slice().sort((x,y)=>x.hp-y.hp||y.pos-x.pos)[0];return{a:s2,t:t.id}}}
+ if(!canSkill(u))return null;const sk=SKILL[u.role].a,tl=skillTargets(c,u,sk);if(!tl.length)return null;
+ if(sk==='heal'){const t=tl.slice().sort((x,y)=>ratio(x)-ratio(y))[0];return ratio(t)<.5||hasDeb(t)||(ratio(t)<.75&&(u.side!=='a'||(u.rs||0)>=3))?{a:'heal',t:t.id}:null}
+ if(sk==='guard'){const t=tl.slice().sort((x,y)=>ratio(x)-ratio(y))[0];return ratio(t)<.75?{a:'guard',t:t.id}:null}
+ const t=tl.slice().sort((x,y)=>x.hp-y.hp||y.pos-x.pos)[0];
+ return{a:'ambush',t:t.id};
 }
 function aiAct(c,u,ally){
  const sk=aiSkill(c,u);if(sk)return sk;
  const fr=friendsC(c,u),vt=validC(c,u),r=Math.random(),low=u.hp<u.maxHp*(ally&&u.isP?.4:.25);
  // 저체력 탱커도 아래의 공통 방어 확률을 따릅니다. 양쪽이 방어만 반복하는 교착을 막습니다.
  if(u.role==='tank'&&r<.45)return{a:'def'};
+ // 방어형 분배(방어 > 공격) 아군은 방어 태세의 반사·반격을 활용합니다.
+ if(ally&&u.role!=='tank'&&statSum(u,'def')>statSum(u,'atk')&&vt.length&&r<.35)return{a:'def'};
  if(!vt.length)return{a:'def'};
  if(low&&r<.5)return{a:'def'};
  if(!ally&&r<.08)return{a:'def'};
@@ -3614,7 +3683,8 @@ function advance(c,stopAlly,limitRound){
 function pushRec(c){c.hist.unshift(c.rec);if(c.hist.length>200)c.hist.pop()}
 function startBattle(kind,bonus){
  const es=mkEncounter(S.floor,kind);
- S.party.forEach(u=>Object.assign(u,{marks:0,deb:{},debFrom:{},pat:0,_resMirrorRound:0,_resWardRound:0,_patHit:false,grind:0,feast:0,_firstAtk:0,_revenge:0,stance:null,guardBy:null,_opened:0,_evadeCounterRound:0,_lastBeginRound:0,rs:(has('rally')?1:0)+extraTotal('rstart'),shield:u.hp>0?(u.shield||0)+positionShield(u,Math.ceil(u.maxHp*((has('barrier')?12:0)+(has('shieldf')&&u.pos===0?15:0)+extraTotal('shield',u))/100)):0,_incomingQuality:null}));
+ S.party.forEach(u=>Object.assign(u,{marks:0,deb:{},debFrom:{},pat:0,_resMirrorRound:0,_resWardRound:0,_patHit:false,grind:0,feast:0,_firstAtk:0,_revenge:0,stance:null,guardBy:null,_opened:0,_evadeCounterRound:0,_lastBeginRound:0,rs:(has('rally')?1:0)+extraTotal('rstart'),shield:0,_wall:0,_bless:0,_agPct:0,_chasteRound:0,_incomingQuality:null}));
+ S.party.forEach(u=>{if(u.hp>0)addShield(u,positionShield(u,Math.ceil(u.maxHp*((has('barrier')?12:0)+(has('shieldf')&&u.pos===0?15:0)+extraTotal('shield',u))/100)))});
  
  S.party.forEach(u=>u.rs=Math.min(rmaxOf(u),u.rs));
  B={phx:0,kind,bonus:bonus||1,potions:S.potions,allies:S.party,enemies:es,round:0,queue:[],qi:0,cur:null,over:null,gold:0,kills:0,hist:[],stat:{},V:true,showAll:false,sel:null};
@@ -3642,6 +3712,7 @@ const TRIALS=200;
 function optionsFor(c,u){
  const o=validC(c,u).map(t=>({a:'atk',t:t.id}));o.push({a:'def'});
  if(canSkill(u)){const sk=SKILL[u.role].a;skillTargets(c,u,sk).forEach(t=>o.push({a:sk,t:t.id}))}
+ if(u.side==='a'&&SKILL2[u.role]&&canSkill(u,2)){const sk=SKILL2[u.role].a;skillTargets(c,u,sk).forEach(t=>o.push({a:sk,t:t.id}))}
  return o;
 }
 function cloneBattle(){
@@ -3682,11 +3753,13 @@ const RED_GATE_S_TICKET_ITEM='<b>S급 확정 영입권</b> (레드 게이트 돌
 function reAlloc(u){const p=presetOf(u),B0=dtotal(u.dice)||1,r=p?RATIO[p]:STAT_KEYS.map(k=>diceStat(u.dice,k)/B0);u.dice=autoAlloc(totalBudget(u),r);if(p)u.preset=p}
 /* 영입 시작 레벨: 1·2번 승강장 Lv2, 3번 승강장부터 (승강장 번호 −1)×1.4(소수 버림)+2 → 3번 승강장 Lv4, 4번 승강장 Lv6, 5번 승강장 Lv7, 6번 승강장 Lv9 … */
 const recruitLevel=()=>{const f=S&&S.floor||1;return f<=2?2:Math.floor(1.4*(f-1))+2};
-function levelUpTo(u,lv){let n=0;while(u.lvl<lv){u.lvl++;u.maxHp+=10;u.hp=u.maxHp;u.budget+=LVB;n++}if(n)reAlloc(u);return n}
-function gainExp(u,x){u.exp+=x;const ups=[];while(u.exp>=expNeed(u.lvl)){u.exp-=expNeed(u.lvl);u.lvl++;u.maxHp+=10;if(u.hp>0)u.hp+=10;u.budget+=LVB;ups.push(u.lvl)}if(ups.length)reAlloc(u);return ups}
+/* 레벨당 최대 HP: 탱커는 +20%가 유지되도록 12 */
+const lvlHp=u=>u.role==='tank'?12:10;
+function levelUpTo(u,lv){let n=0;while(u.lvl<lv){u.lvl++;u.maxHp+=lvlHp(u);u.hp=u.maxHp;u.budget+=LVB;n++}if(n)reAlloc(u);return n}
+function gainExp(u,x){u.exp+=x;const ups=[];while(u.exp>=expNeed(u.lvl)){u.exp-=expNeed(u.lvl);u.lvl++;u.maxHp+=lvlHp(u);if(u.hp>0)u.hp+=lvlHp(u);u.budget+=LVB;ups.push(u.lvl)}if(ups.length)reAlloc(u);return ups}
 function finishBattle(){
  S.stats.battles++;S.stats.kills+=B.kills;
- S.party.forEach(u=>{u.stance=null;u.act=null;u.deb={};u.debFrom={}});
+ S.party.forEach(u=>{u.stance=null;u.act=null;u.deb={};u.debFrom={};u.shield=0;u._wall=0;u._agPct=0;u._bless=0});
  if(B.over==='lose'){S.screen='end';S.end={win:false,why:`${floorLabel(S.floor)} ${KIND[B.kind]}에서 파티가 전멸했습니다.`};B=null;return}
  S.party.forEach(u=>{u.guardBy=null;u.rs=0});
  let revive='';
@@ -3730,7 +3803,7 @@ const PROMO={F:[3,1],E:[5,2],D:[7,3],C:[9,4],B:[12,5],A:[15,6]};
 const nextG=g=>GRADES[GRADES.indexOf(g)+1];
 const promoCost=u=>Math.round(40*(GRADES.indexOf(u.tier)+1)*(1+.1*(S.floor-1)));
 const canPromo=u=>{if(isLockedNpc(u))return false;const r=PROMO[u.tier];return!!r&&u.lvl>=r[0]&&u.up>=r[1]};
-function promote(u){if(isLockedNpc(u))return;const n=nextG(u.tier),a=TIERS[u.tier],b=TIERS[n],dh=b.hp-a.hp+5;u.tier=n;u.budget+=b.b-a.b+4;u.maxHp+=dh;if(u.hp>0)u.hp+=dh;S.edit={id:u.id,dice:cloneD(u.dice),must:true,unlock:true,img:u.img,name:u.name,promo:true}}
+function promote(u){if(isLockedNpc(u))return;const n=nextG(u.tier),a=TIERS[u.tier],b=TIERS[n],dh=Math.round((b.hp-a.hp+5)*(u.role==='tank'?1.2:1));u.tier=n;u.budget+=b.b-a.b+4;u.maxHp+=dh;if(u.hp>0)u.hp+=dh;S.edit={id:u.id,dice:cloneD(u.dice),must:true,unlock:true,img:u.img,name:u.name,promo:true}}
 const promoHTML=u=>{if(isLockedNpc(u))return '';const r=PROMO[u.tier];if(!r)return '';const ok=canPromo(u),c=promoCost(u);return `<button class="ghost ${ok?'pr':''}" data-act="promo" data-v="${u.id}" ${ok&&S.gold>=c?'':'disabled'} title="조건: Lv ${r[0]} 이상, 강화 ${r[1]}회 이상">승급 → ${gname(nextG(u.tier))} · ${ok?'마석 '+c:`Lv ${u.lvl}/${r[0]} · 강화 ${u.up}/${r[1]}`}</button>`};
 const upCost=u=>Math.round(30*(1+.6*u.up)*TIERS[u.tier].mult*(1+.1*(S.floor-1)));
 /* 강화·훈련은 스탯을 직접 올리지 않고 경험치를 준다. 스탯은 레벨이 오를 때만 오른다 */
@@ -5043,14 +5116,14 @@ const hpb=(u,showDefense=true)=>{
  const max=Math.max(1,u.maxHp),hp=Math.min(max,Math.max(0,u.hp||0));
  const sh=shieldAmount(u),stance=stanceAmount(u);
  const tip=`HP ${hp}/${max}`;
- const defense=`${sh?`<span class="defense-value shield-value" title="보호막은 HP보다 피해를 먼저 흡수합니다.">보호막 ${sh}</span>`:''}${stance?`<span class="defense-value stance-value" title="방어 태세는 다음 자기 차례까지 유지되고, 남은 값으로 반격합니다.">방어 태세 ${stance}</span>`:''}`;
+ const defense=`${sh?`<span class="defense-value shield-value" title="보호막은 HP보다 피해를 먼저 흡수합니다.">보호막 ${sh}</span>`:''}${stance?`<span class="defense-value stance-value" title="방어 태세는 다음 자기 차례까지 유지됩니다. 공격을 막을 때마다 막은 양의 75%를 공격자에게 반사하고, 공격을 모두 막으면 남은 방어값만큼 그 공격자에게 반격합니다(반격: 아군 탱커 ×2, 다른 아군 ×1.5).">방어 태세 ${stance}</span>`:''}`;
  return `<div class="hpbar ${hp<max*.25?'low':hp<max*.5?'mid':''}" title="${tip}" role="img" aria-label="${tip}"><i style="width:${100*hp/max}%"></i></div>${showDefense&&defense?`<div class="defense-readout">${defense}</div>`:''}`;
 };
 const presetOf=u=>{if(u.preset!==undefined)return u.preset;const B0=dtotal(u.dice)||1,v=STAT_KEYS.map(k=>diceStat(u.dice,k)/B0);let best=null,bd=.02;for(const k in RATIO){const d=sum(RATIO[k].map((r,i)=>(r-v[i])**2));if(d<bd){bd=d;best=k}}return best};
 const presetTxt=u=>{const p=presetOf(u);return p?`${PRESETN[p]} (빠른 분배)`:'직접 분배'};
 const meTag=u=>u.isP?'<span class="me-t">나</span>':'';
 const downTag=u=>u.hp<=0?'<span class="down-t">전투 불능</span>':'';
-const pips=u=>{const k=SKILL[u.role];if(!k)return'';const n=u.rs||0,m=rmaxOf(u),cost=skillCost(u),bonus=u.pos===2?' · 확률로 추가 1칸 할인(25%)':'';return `<span class="rs tp ${n>=cost?'full':''}" data-tip="${esc(`${k.r} ${n}/${m} · 기술 소모 ${cost}칸${bonus}: ${k.n} · ${k.d}`)}">${k.r} ${'<b></b>'.repeat(n)}${'<i></i>'.repeat(m-n)}</span>`};
+const pips=u=>{const k=SKILL[u.role];if(!k)return'';const k2=u.side==='a'?SKILL2[u.role]:null,n=u.rs||0,m=rmaxOf(u),cost=skillCost(u),bonus=u.pos===2?' · 확률로 추가 1칸 할인(25%)':'';return `<span class="rs tp ${n>=cost?'full':''}" data-tip="${esc(`${k.r} ${n}/${m}${bonus} · ${k.n}(${cost}칸): ${k.d}${k2?` · ${k2.n}(${skillCost(u,2)}칸): ${k2.d}`:''}`)}">${k.r} ${'<b></b>'.repeat(n)}${'<i></i>'.repeat(m-n)}</span>`};
 const artIc=(k,sz=32)=>{
  const art=AR[k],svg=px(art?k:'unknown',sz);
  if(!art)return svg;
@@ -5060,7 +5133,7 @@ const artIc=(k,sz=32)=>{
            .replace(/(<svg\b[^>]*>)/,`$1<title>${name}</title>`);
 };
 /* 마우스를 올리면 뜨는 설명 */
-const GL={stance:'방어 태세: 방어 주사위로 굴린 값만큼 다음 자기 차례까지 들어오는 공격을 막습니다. 차례가 돌아오면 남은 값으로 가장 세게 때린 적에게 반격합니다.',
+const GL={stance:'방어 태세: 방어 주사위로 굴린 값만큼 다음 자기 차례까지 들어오는 공격을 막습니다. 아군은 공격을 막을 때마다 막은 양의 75%를 그 적에게 반사합니다. 공격을 모두 막으면 그 공격을 막고 남은 방어값만큼 그 공격자에게 바로 반격합니다(공격자마다 발동, 아군 탱커 ×2, 다른 아군 ×1.5, 적 ×1).',
  shield:'보호막: 받는 피해를 HP보다 먼저 이 값만큼 흡수합니다.',marks:'마력 각인: 침식자의 공격으로 실제 HP 피해를 입으면 1중첩. 3중첩 시 대상 최대 HP의 10%만큼 피해를 주고 중첩이 초기화됩니다.',
  pat:'인내: HP 피해 없이 넘긴 라운드만큼 쌓인 방어값 보너스입니다. HP 피해를 받으면 사라집니다.',grind:'근면: 자기 차례마다 쌓이는 방어값 보너스입니다(최대 +8).',feast:'포식: 폭식 특성으로 적을 쓰러뜨려 얻은 공격값 보너스입니다(최대 +9).',charm:'유혹(디버프): 3턴 동안 공격하면 확률로 빗맞힙니다(35%).',
  저주:'저주(디버프): 3턴간 공격 주사위 -15%.',leth:'무기력(디버프): 3턴 동안 민첩 주사위 -20%, 연속 행동 불가.',
@@ -5070,7 +5143,7 @@ const tp=(label,desc,cls='')=>`<span class="tp ${cls}" data-tip="${esc(desc)}">$
 const TS=(label,k)=>`<i class="tp" data-tip="${esc(GL[k])}">${label}</i>`;
 const tJob=k=>tp(JOBS[k].n,`${JOBS[k].n} (${JOBS[k].sub}) — ${JOBS[k].tr}. ${JOBS[k].ab}`);
 const tPos=p=>tp(POS[p].n,`${POS[p].n} — ${POS[p].ab}`);
-const tRole=r=>tp(ROLES[r].n,`${ROLES[r].n} — ${ROLES[r].ab}. 역할 기술 「${SKILL[r].n}」(${SKILL[r].r}${JO(SKILL[r].r,'가')} 다 차면): ${SKILL[r].d}`);
+const tRole=r=>tp(ROLES[r].n,`${ROLES[r].n} — ${ROLES[r].ab}. 역할 기술 「${SKILL[r].n}」(${SKILL[r].r} ${r==='support'?'1칸 이상':RCOST1+'칸'}): ${SKILL[r].d} · 「${SKILL2[r].n}」(${SKILL2[r].r} ${RMAX}칸): ${SKILL2[r].d}`);
 const tAttr=(k,v)=>tp(AT[k].n+(v!=null?' · '+attrOpt(k,v).n:''),`${AT[k].n} (${AT[k].sin?'7대죄':'7주선'}) — ${v!=null?attrAb(k,v):AT[k].opts.map((o,i)=>attrAb(k,i)).join(' / ')}`);
 const tags=u=>`${tJob(u.job)} · ${tPos(u.pos)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr,abOf(u)):''}`;
 const head=(t,d,kick)=>`<header class="head">${kick?`<div class="kick">${kick}</div>`:''}<h1>${t}</h1>${d?`<p>${d}</p>`:''}</header>`;
@@ -5209,20 +5282,21 @@ function queueHTML(){
 }
 function turnPanel(){
  const u=unitC(B,B.cur);if(!u)return'';
- const info=targetInfo(B,u),vt=info.filter(x=>x.ok),SK=SKILL[u.role],ready=canSkill(u),skT=ready?skillTargets(B,u,SK.a):[],canPot=canBattlePotion(B,u),potT=canPot?battlePotionTargets(B):[];
+ const info=targetInfo(B,u),vt=info.filter(x=>x.ok),SK=SKILL[u.role],SK2=SKILL2[u.role],ready=canSkill(u),ready2=canSkill(u,2),skT1=ready?skillTargets(B,u,SK.a):[],skT2=ready2?skillTargets(B,u,SK2.a):[],canPot=canBattlePotion(B,u),potT=canPot?battlePotionTargets(B):[];
  const sel=B.sel||(vt.length?{a:'atk',t:vt[0].t.id}:{a:'def'});
- const chip=(t,a,ok,why,extra='')=>`<button class="tgt ${sel.a===a&&sel.t===t.id?'on':''}" data-act="pickT" data-a="${a}" data-v="${t.id}" ${ok?'':'disabled'}>${esc(t.name)} · ${POS[t.pos].n}${extra}${ok&&a!=='heal'&&a!=='guard'?`<small class="wr" data-wr="${a}:${t.id}"></small>`:ok?'':` <small>(${why})</small>`}</button>`;
+ const selSk=SKA[sel.a]||SK,skT=sel.a===SK2.a?skT2:skT1;
+ const chip=(t,a,ok,why,extra='')=>`<button class="tgt ${sel.a===a&&sel.t===t.id?'on':''}" data-act="pickT" data-a="${a}" data-v="${t.id}" ${ok?'':'disabled'}>${esc(t.name)} · ${POS[t.pos].n}${extra}${ok&&a!=='heal'&&a!=='guard'&&a!=='bulwark'?`<small class="wr" data-wr="${a}:${t.id}"></small>`:ok?'':` <small>(${why})</small>`}</button>`;
  const melee=JOBS[u.job].melee;
  const hint=melee?'근접 공격 · 자신의 배치와 관계없이 적 최전방 열만 타격합니다. 해당 열 전멸 시 다음 열로 공격 범위 확장 · 공격 피해 +20%.':'원거리 공격 · 전열 저지를 무시하고 모든 열의 적을 지정할 수 있습니다.';
- const defHint=`방어 태세: 방어 주사위를 굴려 다음 내 차례까지 들어오는 공격을 막고, 남은 값으로 반격합니다.${u.role==='tank'?' 탱커는 같은 열 아군을 노린 공격을 대신 받으니 방어가 특히 중요합니다.':''}`;
+ const defHint=`방어 태세: 방어 주사위를 굴려 다음 내 차례까지 들어오는 공격을 막습니다. 막을 때마다 막은 양의 75%를 반사하고, 공격을 모두 막으면 남은 방어값의 ${u.role==='tank'?'2':'1.5'}배로 그 공격자에게 반격합니다.${u.role==='tank'?' 탱커는 같은 열 아군을 노린 공격을 대신 받으니 방어가 특히 중요합니다.':''}`;
  let body;
  if(sel.a==='atk')body=`<div class="tgts">${info.map(({t,ok,why})=>chip(t,'atk',ok,why)).join('')}</div><p class="small mute">${hint}</p>`;
  else if(sel.a==='def')body=`<p class="small mute">${defHint}</p>`;
  else if(sel.a==='potheal')body=`<div class="tgts">${potT.map(t=>chip(t,'potheal',true,'',` · HP ${t.hp}/${t.maxHp}`)).join('')}</div><p class="small mute">플레이어가 지시한 아이템 행동입니다. 지금 차례인 ${esc(u.name)}의 행동 1회를 사용하고 포션 1개를 소비합니다. 살아 있는 아군 최대 HP 40% 회복(야전 구급함 보유 시 45%, 성수병 보유 시 최대 HP 7% 추가 및 정화).</p>`;
- else body=`<div class="tgts">${skT.map(t=>chip(t,sel.a,true,'',sel.a==='ambush'?'':` · HP ${t.hp}/${t.maxHp}${t.hp<=0?' · 쓰러짐':''}`)).join('')}</div><p class="small mute"><b>${SK.n}</b> — ${SK.d}</p>`;
+ else body=`<div class="tgts">${skT.map(t=>chip(t,sel.a,true,'',ATK_SKILLS.includes(sel.a)?'':` · HP ${t.hp}/${t.maxHp}${t.hp<=0?' · 쓰러짐':''}`)).join('')}</div><p class="small mute"><b>${selSk.n}</b> — ${selSk.d}</p>`;
  const okRun=sel.a==='atk'?vt.length:sel.a==='def'?1:sel.a==='potheal'?potT.length:skT.length;
  return `<div class="win turn ${turnPop.on||isMob()?'turn-pop':''}" data-t="지금 차례 — ${esc(u.name)}" ${turnPop.on&&!isMob()?`style="left:${turnPopXY()[0]}px;top:${turnPopXY()[1]}px"`:''}>${turnPop.on||isMob()?`<div class="map-popup-titlebar turn-titlebar" aria-label="지금 차례 창 이동"><span class="popup-grip" aria-hidden="true">⠿</span><span class="popup-caption">지금 차례 — ${esc(u.name)}</span><button class="popup-close turn-in" type="button" data-act="turndock" aria-label="화면에 넣기" title="화면에 넣기">×</button></div>`:'<div class="turn-titlebar" title="끌어서 창으로 빼기" aria-hidden="true"></div><div class="turn-grip" title="끌어서 창으로 빼기"><span>⠿ 끌어서 창으로</span></div>'}<h3>${B.qi>0&&B.queue[B.qi-1]===u.id?'<span class="nowt">민첩 추가 행동</span>':''}${badge(u)}<span>${esc(u.name)} <span class="small mute">HP ${u.hp}/${u.maxHp} · 민첩 ${u._g} · ${tPos(u.pos)} · ${tJob(u.job)} · ${tRole(u.role)}${u.attr?' · '+tAttr(u.attr):''}</span> ${pips(u)}</span></h3>
- <div class="seg"><button class="${sel.a==='atk'?'on':''}" data-act="pickA" data-v="atk" ${vt.length?'':'disabled'}>공격<small class="wr" data-wr="atk*"></small></button><button class="${sel.a==='def'?'on':''}" data-act="pickA" data-v="def">방어<small class="wr" data-wr="def"></small></button><button class="sk ${sel.a===SK.a?'on':''} ${ready?'ready':''}" data-act="pickA" data-v="${SK.a}" ${ready&&skT.length?'':'disabled'} title="${SK.d}">${SK.n}${ready?(SK.a==='ambush'?`<small class="wr" data-wr="${SK.a}*"></small>`:'<small>사용 가능</small>'):`<small>${SK.r} ${u.rs||0}/${rmaxOf(u)}</small>`}</button></div>
+ <div class="seg"><button class="${sel.a==='atk'?'on':''}" data-act="pickA" data-v="atk" ${vt.length?'':'disabled'}>공격<small class="wr" data-wr="atk*"></small></button><button class="${sel.a==='def'?'on':''}" data-act="pickA" data-v="def">방어<small class="wr" data-wr="def"></small></button><button class="sk ${sel.a===SK.a?'on':''} ${ready?'ready':''}" data-act="pickA" data-v="${SK.a}" ${ready&&skT.length?'':'disabled'} title="${SK.d}">${SK.n}${ready?(SK.a==='ambush'?`<small class="wr" data-wr="${SK.a}*"></small>`:SK.a==='heal'?`<small>주사위 ${healN(u)}개</small>`:'<small>사용 가능</small>'):`<small>${SK.r} ${u.rs||0}/${skillCost(u)}</small>`}</button><button class="sk ${sel.a===SK2.a?'on':''} ${ready2?'ready':''}" data-act="pickA" data-v="${SK2.a}" ${ready2&&skT2.length?'':'disabled'} title="${SK2.d}">${SK2.n}${ready2?(ATK_SKILLS.includes(SK2.a)?`<small class="wr" data-wr="${SK2.a}*"></small>`:'<small>사용 가능</small>'):`<small>${SK2.r} ${u.rs||0}/${skillCost(u,2)}</small>`}</button></div>
  <div class="item-actions"><span class="item-caption">아이템 명령 · 행동 1회 소모</span><button class="${sel.a==='potheal'?'on':''}" data-act="pickA" data-v="potheal" ${canPot?'':'disabled'} title="직접 지시하거나, 설정에서 자동 포션을 켠 경우 HP가 ${autoPotionThreshold}% 이하인 아군에게 자동으로 사용합니다. 행동 1회와 포션 1개를 소비합니다."> ${px('potion',17)} 포션 사용 (${S.potions}개)</button></div>
  ${body}
  <div class="battle-action-footer"><div class="battle-action-buttons"><button class="btn" data-act="doact" ${okRun?'':'disabled'}>${ACTL[sel.a]} 실행</button><button class="ghost" data-act="autoall">자동 전투</button></div><div class="battle-potion-state small mute">자동 포션 ${autoPotionEnabled?'ON':'OFF'} · HP ${autoPotionThreshold}% 이하</div></div></div>`;
@@ -5233,16 +5307,16 @@ function roundTable(h){
 }
 const RULES=`<details><summary>전투 규칙</summary><ul class="ev">
 <li><b>공격 범위</b>: 근접은 적의 가장 앞 열, 원거리는 모든 열 지정 가능.</li>
-<li><b>배치</b>: 전열 피격 시 자원 +1(30%)·공격 스탯의 5% 반사(20%), 중열 적중 시 자원 +1(30%)·일반/스침 치명타 전환(20%), 후열 기술 소모 -1·확률로 추가 -1(25%). 앞 열은 근접 공격을 저지합니다.</li>
-<li><b>역할</b>: 탱커 위협도 5(방어 시 7), 딜러 3, 서포터 2. 서포터는 자동 치유.</li><li><b>초과 회복</b>: 포션 외 회복량이 최대 HP를 넘으면 남은 양이 보호막으로 쌓입니다. 보호막은 HP보다 먼저 피해를 막습니다.</li>
+<li><b>배치</b>: 전열 직접 공격을 받을 때 자원 +1(30%, 막아도 판정)·HP 피해 시 공격 스탯의 5% 반사(20%), 중열 적중 시 자원 +1(30%)·일반/스침 치명타 전환(20%), 후열 기술 소모 -1·확률로 추가 -1(25%). 앞 열은 근접 공격을 저지합니다.</li>
+<li><b>역할</b>: 탱커 위협도 5(방어 시 7), 딜러 3, 서포터 2. 서포터의 회복은 행동(치유·성광)으로만 하며, 회복시킨 아군에게 축복(다음 공격 +15%). 딜러는 HP 50% 이하 적에게 마무리(피해 +20%).</li><li><b>초과 회복</b>: 포션 외 회복량이 최대 HP를 넘으면 남은 양이 보호막으로 쌓입니다. 보호막은 HP보다 먼저 피해를 막고, 최대 HP의 30%까지만 쌓이며, 전투가 끝나면 사라집니다.</li>
 <li><b>주사위</b>: 민첩 굴림으로 행동 순서 결정. 스침 피해 35%, 치명타 150%. 연속 행동 확률은 민첩 주사위 기대값의 14 초과분 × 1% (신속의 부츠 +4%p, 1회 판정당 최대 50%). 민첩이 월등히 빠르면 라운드당 최대 2회까지 거듭 추가 행동.</li>
 <li><b>공명</b>: 상반된 특성의 생존자 2명씩 발동.</li>
 <li><b>신뢰 연계</b>: 신뢰 4 이상인 두 아군(플레이어는 항상 충족) 중 한 명의 공격이 적중하면, 다른 한 명이 같은 적을 이어서 공격합니다. 둘 중 낮은 신뢰 기준 4: 15%·공격 기대값 40% / 6: 25%·50% / 8: 35%·60%·역할 자원 +1. 각자 라운드당 1회.</li>
-<li><b>역할 기술</b>: 아군 기본 3칸 소모(후열 2칸 · 확률로 1칸(25%)). 탱커: 대신 맞기, 서포터: 치유, 딜러: 기습.</li>
+<li><b>역할 기술</b>: 역할 자원은 최대 5칸. 1단계 3칸(서포터 치유는 1칸부터, 가진 은총 전부 사용) · 2단계 5칸 소모(후열 각 1칸 할인 · 확률로 1칸 더(25%), 치유는 후열이면 주사위 +1개). 탱커: 대신 맞기/철벽, 서포터: 치유/성광, 딜러: 기습/처형.</li>
 <li><b>상태이상</b>: 유혹·저주·무기력·기절·화상·동상·중독·출혈. 기본 지속 3턴.</li>
 <li><b>정화</b>: 걸린 상태이상을 제거합니다. 서포터의 치유 기술 또는 정화의 성수병을 보유한 상태에서 사용하는 포션으로 발동합니다.</li>
 <li><b>파티</b>: 기본 5명, 확장 유물로 최대 8명.</li>
-<li><b>레벨</b>: 최대 HP +10, 스탯 +${LVB}. 전투 불능은 안전 지대 또는 부활 유물로 회복.</li>
+<li><b>레벨</b>: 최대 HP +10(탱커 +12), 스탯 +${LVB}. 전투 불능은 안전 지대 또는 부활 유물로 회복.</li>
 <li><b>승률</b>: 이번 라운드 ${TRIALS}회 예측.</li></ul></details>`;
 function battleScreen(){
  const over=B.over,pdead=!alive(P());
@@ -5376,32 +5450,201 @@ function editOv(){
  ${allocHTML('edit',locked?u.dice:E.dice,totalBudget(u),locked||!E.unlock)}${locked?`<p class="small mute">고정 NPC 총량: 기본 ${u.budget} × 115% = ${totalBudget(u)} (짝수로 반올림)</p>`:''}
  <div class="row c" style="margin-top:12px">${locked?'<button class="btn" data-act="editclose">닫기</button>':`<button class="btn" data-act="editsave" ${ok&&S.gold>=total?'':'disabled'}>저장${total?' · 마석 '+total:''}</button>`}</div></div></div>`;
 }
-const DEXT={art:'아티팩트',item:'소모품',role:'역할·직업',trait:'고유 특성'};
-/* 도감용 상세 설명 (게임 규칙과 같은 수치를 씁니다) */
+/* ============================================================
+   도감 (재작성)
+   - 수치는 게임 규칙 상수(JOBTUNE · TANKTUNE · HEALTUNE · BOND_TIERS · TIERS 등)를 직접 읽어 표시합니다.
+     규칙을 조정해도 도감이 어긋나지 않습니다.
+   - 탭: 아티팩트 / 소모품·재화 / 직업·역할 / 고유 특성 / 전투·성장 규칙
+   - 아티팩트 탭은 분류 칩을 'art:분류' 형태의 dexTab 값으로 처리합니다(별도 액션 불필요).
+   ============================================================ */
+const DEXT={art:'아티팩트',item:'소모품·재화',role:'직업·역할',trait:'고유 특성',rule:'전투·성장 규칙'};
+const dxPc=n=>Math.round(n*100);
+
+/* ---------- 아티팩트 분류 ---------- */
+const ART_CATS=[['atk','공격'],['def','방어·피해 감소'],['sup','회복·보호막'],['sts','상태이상'],['res','역할 자원'],['spd','민첩·선제'],['eco','마석·경험치·탐험'],['party','파티·성장']];
+const ART_CAT_BASE={
+ lucky:'atk',twin:'atk',scope:'atk',mask:'atk',crit:'atk',whet:'atk',prism:'atk',quiver:'atk',focus:'atk',chain:'atk',triple:'atk',fullmoon:'atk',snake:'atk',straight:'atk',parity:'atk',
+ armor:'def',phoenix:'def',helmet:'def',thorn:'def',heart:'def',mirror:'def',
+ shieldf:'sup',vamp:'sup',barrier:'sup',medkit:'sup',bandage:'sup',hymn:'sup',banner:'sup',salve:'sup',hglass:'sup',
+ doll:'sts',
+ reaper:'res',rally:'res',battery:'res',
+ boots:'spd',horn:'spd',dagger:'spd',whistle:'spd',bell:'spd',
+ detector:'eco',tome:'eco',bounty:'eco',chart:'eco',coupon:'eco',compass:'eco',lantern:'eco',contract:'eco',
+ leaf:'party'
+};
+const ART_CAT_FX={atk:'atk',pct:'atk',crit:'atk',def:'def',reduce:'def',shield:'sup',heal:'sup',inflict:'sts',party:'party',promotion:'party',rstart:'res',rmax:'res',rthird:'res',nodevisit:'eco',nodecoin:'eco',agi:'spd'};
+const artCat=a=>ART_CAT_BASE[a.k]||(a.fx&&ART_CAT_FX[a.fx.type])||'party';
+
+/* ---------- 직업 · 역할 상세 ---------- */
 const JOB_DETAIL={
- 근거리물리:['<b>근접 직업</b>입니다. 내 배치와 상관없이 적의 <b>가장 앞 열</b>만 공격할 수 있고, 그 열이 모두 쓰러지면 다음 열로 범위가 넓어집니다.','모든 공격 피해가 <b>+20%</b>이고, 공격 주사위 합에 <b>+10%</b>가 따로 붙습니다.','<b>연격</b>: 공격 주사위에서 같은 눈이 2개 이상 나오고 HP 피해가 들어가면, 나온 눈 중 가장 큰 눈만큼 추가 피해를 한 번 더 줍니다. 공격 주사위가 많을수록 잘 터집니다.'],
- 근거리마법:['<b>근접 직업</b>입니다. 적의 가장 앞 열만 공격할 수 있고, 모든 공격 피해가 <b>+20%</b>입니다.','마법 공격이라 상대의 <b>방어 태세를 2배로 깎습니다</b>. 같은 공격이라도 방어 태세가 막아 주는 양이 절반이 되어, 방어를 굳힌 적에게 강합니다.','<b>마력 각인</b>: HP 피해를 줄 때마다 대상에게 각인이 1중첩 쌓이고, 3중첩이 되면 폭발해 대상 최대 HP의 <b>10%</b>(최소 1) 피해를 줍니다. 폭발 뒤에는 처음부터 다시 쌓입니다.'],
- 원거리물리:['<b>원거리 직업</b>입니다. 앞 열의 <b>저지를 무시</b>하고 어느 열의 적이든 고를 수 있으며, 모든 공격 피해가 <b>+20%</b>입니다.','<b>관통</b>: 방어 태세를 올린 적을 공격하면, 방어가 막아 낸 양의 <b>25%</b>가 추가 피해로 들어갑니다. 방어 태세를 자주 쓰는 탱커 적에게 특히 효과적입니다.'],
- 원거리마법:['<b>원거리 직업</b>입니다. 앞 열의 <b>저지를 무시</b>하고 어느 열의 적이든 고를 수 있습니다. 마법 공격이라 상대의 <b>방어 태세를 2배로 깎습니다</b>.','<b>광역</b>: 공격값이 <b>35 이상</b>이면 같은 열에 있는 다른 적 모두에게 공격값의 <b>1/3</b>만큼 피해를 줍니다. 적이 한 열에 몰려 있을수록 유리합니다.']
+ 근거리물리:[
+  '<b>근접 직업</b>: 내가 어느 열에 서 있든 상대의 <b>가장 앞 열</b>만 공격할 수 있습니다. 그 열이 모두 쓰러지면 다음 열로 범위가 넓어집니다.',
+  `공격 피해 <b>+20%</b>, 공격 주사위 합 <b>+${dxPc(JOBTUNE.exeAtk)}%</b>.`,
+  `<b>연격</b>: 공격 주사위에서 같은 눈이 2개 이상 나오고 HP 피해가 들어가면, 굴린 눈 중 가장 큰 값${JOBTUNE.exeCombo!==1?' ×'+JOBTUNE.exeCombo:''}만큼 추가 피해를 한 번 더 줍니다. 주사위가 많을수록 잘 터집니다.`],
+ 근거리마법:[
+  '<b>근접 직업</b>: 상대의 가장 앞 열만 공격할 수 있습니다. 공격 피해 <b>+20%</b>.',
+  '<b>마법 공격</b>: 상대의 방어 태세가 막아 주는 양이 절반이 되고, 막을 때 방어값은 2배로 소모됩니다. 방어를 굳힌 적에게 강합니다.',
+  '<b>마력 각인</b>: HP 피해를 줄 때마다 대상에게 각인 1중첩(순결의 디버프 방어로도 막을 수 없음). 3중첩이 되면 폭발해 대상 최대 HP의 <b>10%</b>(최소 1) 피해를 주고 처음부터 다시 쌓입니다.'],
+ 원거리물리:[
+  '<b>원거리 직업</b>: 앞 열의 저지를 무시하고 어느 열의 적이든 고를 수 있습니다. 공격 피해 <b>+'+JOBTUNE.trkPct+'%</b>.',
+  `<b>관통</b>: 방어 태세를 올린 적을 공격하면 방어가 막아 낸 양의 <b>${dxPc(JOBTUNE.trkPierce)}%</b>가 추가 피해로 들어갑니다. 방어 태세를 자주 쓰는 탱커 적에게 효과적입니다.`],
+ 원거리마법:[
+  `<b>원거리 직업</b>: 앞 열의 저지를 무시하고 어느 열의 적이든 고를 수 있습니다. 공격 피해 <b>+${JOBTUNE.implPct}%</b>.`,
+  '<b>마법 공격</b>: 상대의 방어 태세가 막아 주는 양이 절반이 되고, 막을 때 방어값은 2배로 소모됩니다.',
+  '<b>광역</b>: 최종 공격값이 <b>35 이상</b>이면 같은 열의 다른 적 모두에게 공격값의 <b>1/3</b>(내림)만큼 피해를 줍니다. 적이 한 열에 몰려 있을수록 유리합니다.']
 };
 const ROLE_DETAIL={
- dealer:['공격 피해 <b>+15%</b>. 적이 자동으로 고르는 공격 대상의 가중치(위협도)는 <b>3</b>입니다.','역할 자원 <b>살기</b>는 내 차례가 시작될 때마다 +1, 적을 <b>쓰러뜨릴 때</b> 추가로 +1이 쌓입니다. 가득 차면 <b>기습</b>(저지·방어 태세·엄호 무시, 공격 피해 +30%)을 쓸 수 있습니다.'],
- tank:['<b>최대 HP +20%</b>, 받는 모든 피해 <b>-15%</b>(아군 탱커만 적용), 방어 주사위 합 <b>+12%</b>. 위협도는 <b>5</b>(방어 태세 중에는 <b>7</b>)라서 적의 공격이 가장 많이 몰립니다.','<b>엄호</b>: 같은 열의 다른 아군이 공격받으면 탱커가 대신 맞고, 그때마다 역할 자원 <b>결의</b>가 +1 쌓입니다. 결의는 내 차례마다 +1도 쌓입니다.','<b>방어 태세</b>는 다음 내 차례까지 들어오는 공격을 막고, 끝날 때 남은 방어값으로 가장 강하게 때린 적에게 반격합니다. 결의가 가득 차면 <b>대신 맞기</b>로 동료 1명을 노린 공격을 모두 대신 받습니다.'],
- support:['공격 피해 <b>-20%</b>. 대신 위협도가 <b>2</b>로 가장 낮아 적의 공격을 덜 받습니다.','<b>자동 치유</b>: 내 차례가 시작될 때마다 HP 비율이 가장 낮은 아군 1명을 대상 최대 HP의 <b>7%</b> + 공격·방어·민첩 주사위 면수 합 중 가장 큰 값의 <b>30%</b>만큼 회복하고, 역할 자원 <b>은총</b>이 +1 더 쌓입니다.','은총이 가득 차면 <b>치유</b>(대상 최대 HP의 <b>18%</b> + 같은 값의 <b>65%</b> 회복, 초과 회복은 보호막, 디버프 정화)를 쓸 수 있습니다.']
+ dealer:[
+  `공격 피해 <b>+15%</b>. 적이 자동으로 공격 대상을 고를 때의 가중치(위협도)는 <b>${ROLES.dealer.threat}</b>.`,
+  `<b>마무리</b>: HP가 <b>${dxPc(DEALTUNE.finishHp)}% 이하</b>인 적을 공격하면 피해 <b>+${DEALTUNE.finishPct}%</b>.`,
+  `<b>살기</b>: 내 차례가 시작될 때마다 +1, 적을 <b>쓰러뜨릴 때</b> 추가로 +1. ${RCOST1}칸이면 <b>기습</b>(저지·방어 태세·엄호 무시, 공격 피해 +30%), ${RMAX}칸이면 <b>처형</b>(같은 무시 효과, 공격 피해 +60%, 처치하면 살기 +1 추가)을 쓸 수 있습니다.`],
+ tank:[
+  `<b>최대 HP +20%</b>(레벨 업 HP도 +${lvlHp({role:'tank'})}), 받는 모든 피해 <b>-${dxPc(TANKTUNE.dr)}%</b>(아군 탱커만 적용), 방어 주사위 합 <b>+12%</b>. 위협도는 <b>${ROLES.tank.threat}</b>(방어 태세 중에는 <b>${ROLES.tank.threat+2}</b>)라서 적의 공격이 가장 많이 몰립니다.`,
+  `<b>방패 공격</b>: 공격할 때 방어 주사위도 함께 굴려 그 합${TANKTUNE.shieldAtk!==1?'의 '+dxPc(TANKTUNE.shieldAtk)+'%':''}만큼 공격값에 더합니다(아군 한정).`,
+  '<b>엄호</b>: 같은 열의 다른 아군이 공격받으면 탱커가 대신 맞고, 그때마다 <b>결의</b> +1. 기습·처형·성광은 엄호를 무시합니다.',
+  `<b>방어 태세</b>는 다음 내 차례까지 들어오는 공격을 막습니다. 막을 때마다 막은 양의 <b>${dxPc(RIPOSTE)}%</b>를 공격자에게 <b>반사</b>하고(모든 아군 공통), 공격을 <b>모두 막으면</b> 남은 방어값의 <b>${TANKTUNE.counter}배</b>로 즉시 <b>반격</b>합니다(다른 아군은 ${COUNTER_ALLY}배, 몬스터는 1배. 공격자마다 발동).`,
+  `<b>결의</b>: 내 차례마다 +1, 엄호·대신 맞기를 할 때마다 +1. ${RCOST1}칸이면 <b>대신 맞기</b>(동료 1명을 노린 공격을 다음 내 차례까지 모두 대신 받음), ${RMAX}칸이면 <b>철벽</b>(방어 주사위 +50%, 다음 내 차례까지 아군 전원이 받는 피해 -${dxPc(WALL_DR)}%)을 씁니다.`],
+ support:[
+  `공격 피해 <b>-35%</b>(혼자일 때는 페널티 없음). 위협도 <b>${ROLES.support.threat}</b>로 가장 낮아 적의 공격을 덜 받습니다.`,
+  `<b>축복</b>: 치유·성광으로 회복시킨 아군은 다음 공격의 피해가 <b>+${BLESS_PCT}%</b>.`,
+  `<b>은총</b>: 내 차례마다 <b>+2</b>(모든 역할 공통 +1에 서포터 +1). 서포터의 회복은 모두 행동을 씁니다.`,
+  `<b>치유</b>(은총 <b>1칸</b>부터): 가진 은총을 쓰고(주사위 수가 상한), 쓴 칸 수만큼(후열은 +1개) 공격·방어·민첩 중 면수 합이 가장 큰 스탯의 주사위를 <b>큰 것부터</b> 굴립니다. 회복량은 주사위 1개당 대상 최대 HP의 <b>${dxPc(HEALTUNE.base)}%</b> + 굴린 합의 <b>${HEALTUNE.k}배</b>이며, 초과 회복은 보호막이 되고 디버프를 정화합니다.`,
+  `<b>성광</b>(은총 ${RMAX}칸): 저지·방어 태세·엄호를 무시하고 공격한 뒤, 준 HP 피해의 <b>${dxPc(SMITE_HEAL)}%</b>만큼 HP 비율이 가장 낮은 아군 1명을 회복합니다. 공격 스탯으로 회복하는 공격형 서포터의 핵심 기술입니다.`]
 };
 const dexDetail=a=>a.map(s=>`<span class="trait-one" style="margin-top:6px">${s}</span>`).join('');
+
+/* ---------- 규칙 탭 보조 ---------- */
+const dxTbl=(head,rows,cls='')=>`<table class="dxtbl ${cls}"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>i?`<td>${c}</td>`:`<th scope="row">${c}</th>`).join('')}</tr>`).join('')}</tbody></table>`;
+const dxList=a=>`<ul class="dxl">${a.map(s=>`<li>${s}</li>`).join('')}</ul>`;
+
+function dexRuleHTML(){
+ const dm=DEBUFF_TURNS;
+ const nodes=Object.keys(NT).map(k=>`<div class="dx"><span class="ae">${NT[k].b}</span><div><b>${NT[k].n}</b><div class="small mute">${NTD[k]||''}</div></div></div>`).join('');
+ const bonds=BOND_TIERS.slice().reverse().map(([b,ch,mul,n])=>[`신뢰 ${b}${b>=8?'':'~'+(({4:5,6:7})[b]||b)}`,n,dxPc(ch)+'%',`연계 동료의 공격 주사위 기댓값 합 × ${dxPc(mul)}%`+(b>=8?' · 동료 역할 자원 +1':'')]);
+ const grades=GRADES.map(g=>{const T=TIERS[g];return [gname(g),T.b,T.hp,g==='SS'?'—':(T.cost||'무료'),g==='SS'?'특별 NPC 전용':T.p+'%']});
+ const promos=Object.keys(PROMO).map(g=>[`${gname(g)} → ${gname(nextG(g))}`,'Lv '+PROMO[g][0]+' 이상',PROMO[g][1]+'회 이상']);
+ return `
+ <h3 class="sub l">능력치와 주사위</h3>
+ ${dxList([
+  '모든 캐릭터는 <b>공격 주사위 5개 · 방어 주사위 5개 · 민첩 주사위 3개</b>를 가집니다. 주사위는 D2~D60 중 짝수 면수이며, 13개 면수의 합이 <b>스탯 총량</b>(등급·레벨로 결정)입니다.',
+  '행동할 때마다 해당 주사위를 모두 굴려 합을 구합니다. 주사위만으로 나타낼 수 없는 고레벨의 초과분은 짝수 단위 <b>성장 보너스</b>로 합에 고정 가산됩니다.',
+  '특성·역할·아티팩트의 <b>“주사위 +%”</b>는 굴린 합에 곱해지고, <b>“피해 +%”</b>는 최종 공격값에 한꺼번에 더해 곱해집니다. 몬스터는 특성·공명의 주사위 보너스를 2/3만 받습니다.'
+ ])}
+
+ <h3 class="sub l">한 라운드의 흐름</h3>
+ ${dxList([
+  '<b>라운드 시작</b>: 만료된 상태이상 제거 → 화상·중독 피해 → 특성·공명·아티팩트의 라운드 효과(회복·보호막 등).',
+  '<b>순서 결정</b>: 모두 민첩 주사위를 굴려 높은 쪽이 먼저 움직입니다. 민첩이 높으면 <b>연속 행동</b>이 붙을 수 있습니다.',
+  `<b>내 차례</b>: 출혈 피해 → 역할 자원 +1(서포터 +2) → 지난 방어 태세 해제 → <b>공격 · 방어 · 역할 기술 · 포션</b> 중 하나를 고릅니다. 자원은 최대 ${RMAX}칸입니다(확장된 마력 용기로 +1).`,
+  `<b>끝나는 조건</b>: 한쪽이 전멸하면 종료. ${ENRAGE_ROUND}라운드부터는 몬스터의 공격 주사위 합이 라운드마다 <b>+${ENRAGE_STEP}%</b>씩 누적됩니다(장기전 광폭).`
+ ])}
+
+ <h3 class="sub l">공격 판정</h3>
+ <p class="small mute">공격 1회마다 아래 중 하나가 정해집니다. 상대의 민첩(기댓값과 이번 라운드 굴림)이 나보다 높을수록 완전 회피·빗맞음·스침이 늘고 치명타가 줄어듭니다. 확률은 기본값이며 범위 안에서 변합니다.</p>
+ ${dxTbl(['결과','기본 확률','범위','효과'],[
+  ['완전 회피','1%','0~11%','피해 0. 방어한 쪽이 라운드당 1회 <b>역습</b>(자기 공격 주사위 기댓값 합의 28%, 2~24)'],
+  ['빗맞음','4%','1~18%','피해 0'],
+  ['스침','8%','4~19%','피해 ×35%'],
+  ['치명타','5% + 민첩 기댓값 × 0.12%','3~35%','피해 ×150% (치명타 칩: ×165%)'],
+  ['일반','나머지','—','그대로 적용']
+ ])}
+ ${dxList([
+  '<b>선제공격</b>: 1라운드의 첫 공격에서 내 민첩 굴림이 상대보다 <b>8 이상</b> 높으면(돌격 나팔: 6) 치명타 확률 +8%, 피해 +10%(돌격 나팔: +15%).',
+  `<b>연속 행동</b>: 민첩 기댓값이 14를 넘는 만큼 1%p당 +1%의 확률(최대 50%)로 같은 라운드에 한 번 더 행동합니다. 라운드당 최대 ${MAX_EXTRA_TURNS}회까지, 동상·무기력일 때는 불가능합니다.`,
+  '<b>저지</b>: 근접 직업은 상대의 가장 앞 열만 공격할 수 있고, 원거리 직업과 기습·처형·성광은 저지를 무시합니다.'
+ ])}
+
+ <h3 class="sub l">피해와 방어</h3>
+ ${dxList([
+  '<b>공격값</b> = 주사위 합 → ‘주사위 +%’ 적용 → ‘피해 +%’(직업·역할·기술·선제·아티팩트) 합산 적용 → 스침/치명타 배율.',
+  '<b>방어 태세</b>: 방어를 고르면 방어 주사위로 방어값을 만들고 다음 내 차례까지 유지합니다. 들어오는 공격마다 방어값이 깎이며, 막은 만큼 피해가 줄어듭니다. 마법 공격은 막는 양이 절반(방어값 2배 소모), 기습·처형·성광은 무시합니다.',
+  '<b>받는 피해 처리 순서</b>: 방어 태세가 막고 남은 피해 → 받는 피해 감소(특성·역할·아티팩트) → 보호막 → HP. 철벽의 아군 전원 피해 감소도 여기에 곱해집니다.',
+  `<b>보호막</b>: 최대 HP의 ${dxPc(SHIELD_CAP)}%까지만 쌓이고 전투가 끝나면 사라집니다. 포션을 제외한 모든 회복은 <b>최대 HP를 넘는 양이 보호막</b>이 됩니다.`
+ ])}
+
+ <h3 class="sub l">상태이상</h3>
+ <p class="small mute">걸린 라운드를 포함해 ${dm}라운드 지속됩니다. 같은 상태이상을 다시 걸면 기간만 갱신됩니다(중첩 없음). 같은 편에게는 걸리지 않고, 전투가 끝나면 모두 사라집니다. 순결 특성·공명 ‘닿지 않는 손’으로 막을 수 있습니다.</p>
+ ${dxTbl(['상태','효과'],[
+  ['화상',`라운드 시작마다 최대 HP의 3% 기본 피해`],
+  ['중독',`라운드 시작마다 최대 HP의 4% 기본 피해`],
+  ['출혈',`행동 시작마다 최대 HP의 3% 기본 피해`],
+  ['기절','행동할 수 없음(차례를 건너뜀)'],
+  ['동상','민첩 주사위 합 -15% · 연속 행동 불가'],
+  ['무기력','민첩 주사위 합 -20% · 연속 행동 불가'],
+  ['유혹','공격이 35% 확률로 빗맞음'],
+  ['저주','공격 주사위 합 -15%']
+ ])}
+ <p class="small mute">몬스터는 HP 피해를 줄 때 7% 확률로 직업에 따라 상태이상을 겁니다: 집행자형 출혈 · 추적자형 중독 · 구현자형 동상 · 침식자형 화상.</p>
+
+ <h3 class="sub l">신뢰 연계</h3>
+ <p class="small">개인 서사가 있는 헌터는 대화와 이야기 선택으로 플레이어와의 <b>신뢰(0~8)</b>를 쌓습니다(플레이어는 모든 동료와 이어진 것으로 8로 칩니다). 두 아군의 신뢰가 모두 <b>4 이상</b>이면 한 명의 공격이 HP 피해를 준 직후 다른 한 명이 같은 적을 이어서 공격할 수 있습니다. 한 라운드에 한 쌍이 1회씩, 두 사람 중 낮은 신뢰로 단계가 정해집니다.</p>
+ ${dxTbl(['신뢰','단계','발동 확률','연계 공격'],bonds)}
+
+ <h3 class="sub l">레벨 · 등급 · 승급</h3>
+ ${dxList([
+  `<b>레벨 업</b>: 경험치가 <b>40 + 30 × 현재 레벨</b>만큼 쌓이면 오릅니다. 스탯 총량 +${LVB}(자동 재분배), 최대 HP +10(탱커 +${lvlHp({role:'tank'})}), 현재 HP도 같은 양만큼 늘어납니다. 경험치는 전투에서 <b>살아남은 출전 인원</b>만 받습니다.`,
+  `<b>강화</b>(상점)는 마석을 내고 다음 레벨까지 필요한 경험치를 한 번에 채워 레벨을 올립니다. <b>훈련</b>(안전 지대)은 경험치 ${'40 + 15 × 승강장 번호'}를 줍니다. 둘 다 ‘강화 횟수’로 세어져 승급 조건에 쓰입니다. 스탯은 레벨이 오를 때만 오릅니다.`,
+  '<b>승급</b>(상점): 등급이 한 단계 오르고 스탯 총량·최대 HP가 늘어납니다. 아래 조건을 채워야 하며 마석이 듭니다. S급 이상과 고정 NPC는 승급할 수 없습니다.'
+ ])}
+ ${dxTbl(['등급','스탯 총량','기본 HP','영입 비용(마석)','각성 확률'],grades)}
+ ${dxTbl(['승급','필요 레벨','필요 강화'],promos)}
+
+ <h3 class="sub l">지도의 칸</h3>
+ <div class="dxg">${nodes}</div>`;
+}
+
+/* ---------- 도감 본문 ---------- */
 function dexOv(){
- const tab=S.dexTab||'art',own=k=>S.arts&&S.arts.includes(k);
+ const [t0,s0]=String(S.dexTab||'art').split(':');
+ const tab=DEXT[t0]?t0:'art',sub=s0||'all';
+ const own=k=>S.arts&&S.arts.includes(k),seen=k=>DEXSEEN.has(k)||own(k);
  const ent=(ic,n,d,extra='',cls='')=>`<div class="dx ${cls}"><span class="ae">${ic}</span><div><b>${n}</b>${extra}<div class="small mute">${d}</div></div></div>`;
+ const unk=(txt='아직 얻지 않았습니다.')=>ent(px('unknown'),'??',txt,'','unk');
  let body='';
- const seen=k=>DEXSEEN.has(k)||own(k),unk=()=>ent(px('unknown'),'??','아직 얻지 않았습니다.','','unk');
- if(tab==='art'){const one=a=>seen(a.k)?ent(artIc(a.k),a.n,fullArtDescription(a),own(a.k)?' <span class="own">보유</span>':'',own(a.k)?'on':''):unk();
-  body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시</p><div class="dxg">${ARTS.map(one).join('')}</div>`}
- else if(tab==='item')body=`<div class="dxg">${seen('potion')?ent(px('potion'),'회복 포션','HP 40% 회복 · 전투 중 행동 1회 소모'):unk()}${seen('ticket')?ent(px('ticket'),'영입권','지정 등급 헌터 1명 무료 영입 · 가방에서 버리고 헌터에게 경험치로 줄 수도 있음 (등급이 높을수록 많음)'):unk()}${ent(px('gold'),'마석','영입·상점·강화 등에 사용')}${ent(px('exp'),'경험치','출전 인원 획득 · 레벨 업 시 HP +10, 스탯 +'+LVB+' (자동 분배).')}</div>`;
- else if(tab==='role')body=`<h3 class="sub l">직업 효과 · 4종</h3><div class="dxg">${Object.entries(JOBS).map(([r,k])=>ent(jobIc(r,26),`${k.n} — ${k.sub}`,`${k.tr}<br><b>고유 효과:</b> ${k.ab}${dexDetail(JOB_DETAIL[r]||[])}`)).join('')}</div><h3 class="sub l">역할 · 3종</h3><div class="dxg">${ROLE_ORDER.map(r=>ent(roleIc(r,26),`${ROLES[r].n} — ${ROLES[r].sub}`,`${ROLES[r].ab}${dexDetail(ROLE_DETAIL[r]||[])}`)).join('')}</div><h3 class="sub l">포지션 · 3종</h3><div class="dxg">${POS.map(p=>ent(posIc(p.k,26),`${p.n} — ${p.sub}`,p.ab)).join('')}</div><p class="small mute">위협도: 탱커 5(방어 시 7) · 딜러 3 · 서포터 2</p><h3 class="sub l">역할 기술 · 3종</h3><div class="dxg">${Object.entries(SKILL).map(([r,k])=>ent(roleIc(r,26),`${ROLES[r].n} — ${k.n}`,`${ROLES[r].ab}<br><b>${k.r}</b> 기본 소모 ${RMAX}칸(후열 ${RMAX-1}칸 · 확률로 ${RMAX-2}칸(25%) · 적은 기본 ${RMAX_E}칸) · ${k.d}`)).join('')}</div>`;
- else body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p><div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].opts.map(o=>`<span class="trait-one"><b>「${o.n}」</b> ${o.d}</span>`).join(''))).join('')}</div></section>`).join('')}</div>`;
+
+ if(tab==='art'){
+  const inCat=c=>ARTS.filter(a=>c==='all'||artCat(a)===c);
+  const cnt=c=>{const l=inCat(c);return [l.filter(a=>seen(a.k)).length,l.length]};
+  const card=a=>ent(artIc(a.k),a.n,`<span class="dx-sum">${a.d}</span><span class="dx-det">${fullArtDescription(a)}</span>`,own(a.k)?' <span class="own">보유</span>':'',own(a.k)?'on':'');
+  const grid=c=>{const l=inCat(c),f=l.filter(a=>seen(a.k)),h=l.length-f.length;return `<div class="dxg">${f.map(card).join('')}${h?unk(`아직 얻지 못한 아티팩트 ${h}종`):''}</div>`};
+  const chips=[['all','전체'],...ART_CATS].map(([k,n])=>{const [s,t]=cnt(k);return `<button class="chip ${sub===k?'on':''}" data-act="dextab" data-v="art:${k}">${n} <small>${s}/${t}</small></button>`}).join('');
+  const caps=[['atk','공격 주사위 +'],['pct','공격 피해 +'],['def','방어 주사위 +'],['reduce','받는 피해 -'],['crit','치명타 확률 +'],['shield','전투 시작 보호막 '],['heal','라운드 회복 ']].map(([k,n])=>n+EXTRA_CAP[k]+'%').join(' · ');
+  const list=sub==='all'?ART_CATS.map(([k,n])=>{const [s,t]=cnt(k);return `<h3 class="sub l">${n} <small class="mute">${s}/${t}</small></h3>${grid(k)}`}).join(''):grid(ART_CATS.some(x=>x[0]===sub)?sub:'all');
+  body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시되며, 사용하면 사라지는 아티팩트도 발견 기록은 남습니다. 한 회차에서 같은 아티팩트는 두 번 얻을 수 없습니다.</p>
+  <div class="dxsub">${chips}</div>${list}
+  <p class="small mute">‘추가 아티팩트’(수치형 효과)는 같은 유형끼리 합산하되 상한이 있습니다: ${caps}. 출전 인원 증가 유물은 가장 큰 하나만 적용되며 최대 ${PARTY_MAX}명까지 편성할 수 있습니다.</p>`;
+ }
+
+ else if(tab==='item'){
+  const tix=GRADES.filter(g=>TIX_EXP[g]&&g!=='SS').map(g=>`${g} ${TIX_EXP[g]}`).join(' · ');
+  body=`<h3 class="sub l">소모품</h3><div class="dxg">
+  ${seen('potion')?ent(px('potion'),'회복 포션',`아군 1명의 HP를 최대 HP의 ${dxPc(.4)}%만큼 회복합니다(야전 구급함 ${dxPc(.45)}%, 정화의 성수병 +7%·정화). 전투 중에는 그 캐릭터의 <b>행동 1회</b>를 쓰고, 쓰러진 동료는 살리지 못하며 초과분은 사라집니다. 가방에서 평소에도 쓸 수 있습니다. 전투·상자·이벤트에서 얻거나 상점에서 삽니다.`):unk()}
+  ${seen('ticket')?ent(px('ticket'),'영입권',`‘헌터 영입’ 칸에서 해당 등급 헌터 1명을 <b>무료</b>로 영입합니다. 가방에서 헌터에게 경험치로 줄 수도 있습니다(${tix}). 전투 보상·이벤트·상점에서 얻고, 레드 게이트를 돌파하면 S급 확정 영입권을 받습니다.`):unk()}
+  </div>
+  <h3 class="sub l">재화 · 성장</h3><div class="dxg">
+  ${ent(px('gold'),'마석','전투·상자·이벤트에서 얻습니다. 헌터 영입, 상점 구매, 강화·승급, 옆 경로 이동, 안전 지대 의무실에 씁니다.')}
+  ${ent(px('exp'),'경험치',`전투에서 살아남은 출전 인원이 얻습니다. 필요량은 40 + 30 × 레벨. 레벨 업마다 스탯 총량 +${LVB}(자동 분배), 최대 HP +10(탱커 +${lvlHp({role:'tank'})}).`)}
+  </div>`;
+ }
+
+ else if(tab==='role'){
+  body=`<h3 class="sub l">직업 효과 · 4종</h3><div class="dxg">${Object.entries(JOBS).map(([r,k])=>ent(jobIc(r,26),`${k.n} — ${k.sub}`,`${k.tr}${dexDetail(JOB_DETAIL[r]||[])}`)).join('')}</div>
+  <h3 class="sub l">역할 · 3종</h3><div class="dxg">${ROLE_ORDER.map(r=>ent(roleIc(r,26),`${ROLES[r].n} — ${ROLES[r].sub}`,`${dexDetail(ROLE_DETAIL[r]||[])}`)).join('')}</div>
+  <p class="small mute">위협도(적이 자동으로 공격 대상을 고를 때의 가중치): 탱커 ${ROLES.tank.threat}(방어 태세 중 ${ROLES.tank.threat+2}) · 딜러 ${ROLES.dealer.threat} · 서포터 ${ROLES.support.threat}</p>
+  <h3 class="sub l">포지션 · 3종</h3><div class="dxg">${POS.map(p=>ent(posIc(p.k,26),`${p.n} — ${p.sub}`,p.ab)).join('')}</div>
+  <h3 class="sub l">역할 기술 · 6종</h3><p class="small mute">역할 자원은 최대 ${RMAX}칸(확장된 마력 용기가 있으면 +1)입니다. 후열은 기술 비용이 1칸 줄고 25% 확률로 1칸 더 줄어듭니다. 몬스터는 1단계 기술만 ${RMAX_E}칸으로 씁니다.</p>
+  <div class="dxg">${Object.entries(SKILL).map(([r,k])=>{const k2=SKILL2[r];return ent(roleIc(r,26),`${ROLES[r].n} — ${k.n} · ${k2.n}`,`<b>자원: ${k.r}</b><br><b>1단계 ${k.n}</b> (${r==='support'?'1칸 이상':RCOST1+'칸'}) · ${k.d}<br><b>2단계 ${k2.n}</b> (${RMAX}칸) · ${k2.d}`)}).join('')}</div>`;
+ }
+
+ else if(tab==='trait'){
+  body=`<h3 class="sub l">공명 · 7개의 짝</h3><p class="small">${RES_LORE}</p><p class="small mute">${RES_RULE}</p><p class="small mute">${TRAIT_RULE}</p>
+  <div class="resonance-codex">${RESONANCES.map(r=>`<section class="resonance-detail"><div class="resonance-heading"><b>${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small"><b>공명 효과</b> · ${r.ab}</p><div class="dxg">${[r.sin,r.virt].map(k=>ent(sigSvg(k),`${AT[k].n} · ${AT[k].sin?'7대죄':'7주선'}`,AT[k].opts.map(o=>`<span class="trait-one"><b>「${o.n}」</b> ${o.d}</span>`).join(''))).join('')}</div></section>`).join('')}</div>`;
+ }
+
+ else body=dexRuleHTML();
+
  return `<div class="ov" data-k="dex"><div class="win common-modal dex-panel" data-t="도감"><div class="common-modal-bar"><strong>도감</strong><button class="ghost" data-act="dex">닫기</button></div>
- <div class="seg dxtab">${Object.entries(DEXT).map(([k,v])=>`<button class="${tab===k?'on':''}" data-act="dextab" data-v="${k}">${v}</button>`).join('')}</div><div class="dex-scroll" tabindex="0" role="region" aria-label="도감 내용">${body}</div></div></div>`;
+  <div class="seg dxtab">${Object.entries(DEXT).map(([k,v])=>`<button class="${tab===k?'on':''}" data-act="dextab" data-v="${k}">${v}</button>`).join('')}</div><div class="dex-scroll" tabindex="0" role="region" aria-label="도감 내용">${body}</div></div></div>`;
 }
 function settingsOv(){
  const themeCards=Object.entries(SKINS).map(([k,v])=>`<button class="setc theme-choice ${k===skin?'on':''}" data-act="setskin" data-v="${k}" aria-pressed="${k===skin}"><span class="sw">${v.c.map((c,i)=>{const r=['d','b','a','t'][i];return `<i style="background:${ucolor[r]==='theme'?c:previewColor(c,r,k)}"></i>`}).join('')}</span><b>${v.n}</b><small>${v.d}</small></button>`).join('');
@@ -5665,7 +5908,7 @@ const ACT={
   else if(t==='shop'){const m=1+.1*(f-1);S.shop={items:artOpts(4).map(r=>({...r,price:Math.round((60+R(41))*m*(has('coupon')?.82:1))})),pp:Math.round(20*m*(has('coupon')?.75:1)),tg:shopTicketGrade(f),tk:false};S.shop.tp=shopTicketPrice(S.shop.tg,f);S.screen='shop'}
   else if(t==='rest'){S.rest={pick:false};S.screen='rest'}
   else if(t==='event'){S.event=rollHunterEvent(firstVisit)||{e:pick(EVENTS),result:null,closed:false};S.screen='event'}},
- pickA:v=>{const u=unitC(B,B.cur);if(!u)return;if(v==='atk'){const t=validC(B,u)[0];B.sel=t?{a:'atk',t:t.id}:{a:'def'}}else if(v==='potheal'){if(!canBattlePotion(B,u))return;const t=battlePotionTargets(B).slice().sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];B.sel={a:v,t:t.id}}else if(SKA[v]){const t=aiSkill(B,u)||{t:(skillTargets(B,u,v)[0]||{}).id};B.sel={a:v,t:t.t}}else B.sel={a:'def'}},
+ pickA:v=>{const u=unitC(B,B.cur);if(!u)return;if(v==='atk'){const t=validC(B,u)[0];B.sel=t?{a:'atk',t:t.id}:{a:'def'}}else if(v==='potheal'){if(!canBattlePotion(B,u))return;const t=battlePotionTargets(B).slice().sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];B.sel={a:v,t:t.id}}else if(SKA[v]){if(SKA[v].role!==u.role||!canSkill(u,SKA[v].tier))return;const s=aiSkill(B,u);const t=s&&s.a===v?s:{t:(skillTargets(B,u,v).slice().sort((x,y)=>x.hp/x.maxHp-y.hp/y.maxHp)[0]||{}).id};B.sel={a:v,t:t.t}}else B.sel={a:'def'}},
  pickT:(v,b)=>{const u=unitC(B,B.cur),a=b&&b.dataset.a||'atk',t=unitC(B,+v);if(!u||!t)return;if(a==='potheal'&&(!canBattlePotion(B,u)||!battlePotionTargets(B).includes(t)))return;if(a==='heal'&&!skillTargets(B,u,a).includes(t))return;B.sel={a,t:t.id}},
  doact:()=>{const u=unitC(B,B.cur);if(!u)return;let s=B.sel;if(!s){const t=validC(B,u)[0];s=t?{a:'atk',t:t.id}:{a:'def'}}act(s)},
  autoall:()=>autoAll(),
