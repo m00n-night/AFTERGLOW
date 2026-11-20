@@ -1512,6 +1512,8 @@ body>.map-popup-layer .map-popup-body .head .kick{display:none}
 .dex-panel .trait-more{display:block;margin-top:4px}
 .dex-panel .trait-one{display:block}.dex-panel .trait-one+.trait-one{margin-top:8px}
 :is(#app,body) .dex-panel .dex-scroll .dx .small :is(.trait-sum,.trait-more,.trait-one){word-break:inherit;line-break:inherit;text-align:inherit;text-align-last:inherit}
+/* 아티팩트 요약·상세 설명도 어절이 아닌 글자 단위로 줄바꿈 */
+:is(#app,body) .dex-panel .dex-scroll .dx .small :is(.dx-sum,.dx-det){word-break:break-all;line-break:strict;text-align:justify;text-align-last:left;text-justify:inter-character;overflow-wrap:normal}
 
 /* 헌터 생성/영입: 설명창은 원래 정렬을 유지하고 선택 버튼의 부가 설명만 중앙 정렬. */
 #app .mainwin .cr .chips .choice-chip .choice-sub{
