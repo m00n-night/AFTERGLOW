@@ -69,12 +69,6 @@ button:disabled,.opt:disabled{opacity:.45;cursor:not-allowed}
 .av{position:relative;display:inline-block;flex:none;vertical-align:middle}
 .av>svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .av .ph{position:absolute;inset:0;background-repeat:no-repeat}
-.em .fr{fill:var(--paper);stroke:var(--ink);stroke-width:2.6;stroke-linejoin:round}
-.em .fr.fill{fill:var(--ink)}
-.em .fr.none{fill:none}
-.em.tk .fr{stroke-width:3.6}
-.em .orn{fill:var(--ink)}
-.em .cr{fill:var(--paper);stroke:var(--ink);stroke-width:1.8}
 .ae{line-height:1;font-family:"Noto Sans Symbols 2","Segoe UI Symbol",var(--bf)}
 /* ----- 설정 ----- */
 .setc{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 12px;text-align:left;min-height:44px}
@@ -241,7 +235,6 @@ summary{cursor:pointer;font-size:13px;padding:3px 0}
 .pl .info{flex:1 1 220px}
 .end{text-align:center;padding:24px 0}
 .end .big{font-size:56px;font-weight:900;line-height:1;margin-bottom:14px}
-.em .sg{fill:var(--ink)}
 .mi{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .mi .f{fill:currentColor;stroke:none}
 .node span .mi{width:22px;height:22px}
@@ -526,25 +519,35 @@ html[data-skin=message] .map .ln{stroke:var(--line);stroke-width:3}
 html[data-skin=message] .map .ln.walk{stroke:var(--acc);stroke-width:5}
 /* ----- 빠른 분배 선택 상태: 모든 테마에서 강조색 하나로 ----- */
 .ghost.on[data-act="preset"]{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:700}
-/* ----- 문장 아이콘: 틀 모양 = 포지션, 바깥 표식 = 역할 ----- */
+/* ----- 문장 아이콘: 원 안 문양 = 직업, 원 테두리 = 포지션, 아래 받침 = 역할, 맨 위 보석 = 특성 ----- */
 .hx{overflow:visible}
-.hx .fld{fill:var(--paper)}
-.hx .sh{fill:none;stroke:var(--ink);stroke-width:3.4;stroke-linejoin:round}
 .hx .jm{fill:var(--ink)}
-.hx .rm{fill:var(--ink)}
-.hx .rm .ln2{fill:none;stroke:var(--ink);stroke-width:3.6;stroke-linecap:round}
-.hx.en .fld{fill:var(--ink)}
 .hx.en .jm{fill:var(--paper)}
-.hx.en .rm{fill:var(--bad)}
-.hx.en .rm .ln2{stroke:var(--bad)}
+/* ----- 펜던트 문장 ----- */
+.hx .dsc{fill:var(--paper);stroke:var(--ink);stroke-width:9;stroke-linejoin:round}
+.hx.en .dsc{fill:var(--ink)}
+.hx .dfl{fill:var(--paper)}
+.hx.en .dfl{fill:var(--ink)}
+.hx .dln{fill:none;stroke:var(--ink);stroke-width:9;stroke-linejoin:round}
+.hx .rmk,.hx .rgf{fill:var(--ink);stroke:none}
+.hx .rgs{fill:none;stroke:var(--ink)}
+.hx.en .rmk,.hx.en .rgf{fill:var(--bad)}
+.hx.en .rgs{stroke:var(--bad)}
+.hx .jm .jst{stroke:var(--ink)}
+.hx .jm .jn{fill:var(--paper)}
+.hx.en .jm .jn{fill:var(--ink)}
+.hx.en .jm .jst{stroke:var(--paper)}
+.ic .jm .jst{stroke:currentColor}
+.ic .jm .jn{display:none}
+.ic .rmk,.ic .rgf{fill:currentColor;stroke:none}
+.ic .rgs,.ic .dsc{fill:none;stroke:currentColor;stroke-linejoin:round}
 .jewel-setting{fill:var(--paper);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
 .jewel-prong{fill:var(--ink)}
 .hm{flex:none;vertical-align:-3px;overflow:visible}
 .hm .jewel-setting{fill:none;stroke:currentColor}
 .hm .jewel-prong{fill:currentColor}
 .ic{flex:none;overflow:visible;vertical-align:-3px}
-.ic .jm,.ic .rm{fill:currentColor}
-.ic .rm .ln2{fill:none;stroke:currentColor;stroke-width:3.6;stroke-linecap:round}
+.ic .jm{fill:currentColor}
 .ic .ghostsh{fill:none;stroke:currentColor;stroke-width:3;opacity:.45}
 .av.avimg{overflow:hidden;border:2px solid var(--ink);border-radius:var(--rad);background:var(--paper)}
 /* ----- 설정 창 ----- */
@@ -597,7 +600,6 @@ html[data-skin=receipt] .msg{background:transparent;border:2px solid var(--acc);
 html[data-skin=receipt] .win,html[data-skin=receipt] .card{background:var(--rb-y,rgba(255,250,238,.6)) var(--rb-n,oklch(from var(--uc-b) calc(0.924 * (1 - var(--bn-m,0)) + (0.924 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.12 * var(--bk,1)) h / 0.6))}
 html[data-skin=receipt] .tb .ti::before{content:"* "}
 html[data-skin=receipt] .tb .ti::after{content:" *"}
-.hx .rm .stem{stroke-width:2.2}
 .ic .rm .stem{stroke-width:3}
 .chips.choice-role .choice-icon,.chips.choice-role .choice-icon svg{width:38px!important;height:38px!important;min-width:38px}
 /* 영수증: 설정 창 불투명 */
@@ -632,9 +634,6 @@ html[data-skin=channel] .ov .win{background:var(--rb-y,#fff) var(--rb-n,oklch(fr
 /* 유리 온실·녹색 (기본 색) */
 html[data-skin=greenhouse]{color-scheme:dark;--bg:var(--rd-y,#07100b) var(--rd-n,oklch(from var(--uc-d) calc(0.162 * (1 - var(--bp-m,0)) + var(--bp-l,0.5) * var(--bp-m,0)) calc(c * 0.55) h));--bgpat:radial-gradient(ellipse at 20% 0,var(--rd-y,rgba(90,190,120,.12)) var(--rd-n,oklch(from var(--uc-d) calc(0.723 * (1 - var(--bp-m,0)) + var(--bp-l,0.5) * var(--bp-m,0)) calc(c * 0.55) h / 0.12)),transparent 55%),radial-gradient(ellipse at 85% 100%,var(--rd-y,rgba(40,120,80,.14)) var(--rd-n,oklch(from var(--uc-d) calc(0.513 * (1 - var(--bp-m,0)) + var(--bp-l,0.5) * var(--bp-m,0)) calc(c * 0.55) h / 0.14)),transparent 50%);--face:var(--rb-y,rgba(14,30,22,.92)) var(--rb-n,oklch(from var(--uc-b) calc(0.218 * (1 - var(--bn-m,0)) + (0.218 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.12 * var(--bk,1)) h / 0.92));--btn:var(--raT-y,rgba(30,58,42,.75)) var(--raT-n,oklch(from var(--uc-a) calc(0.321 * (1 - var(--bn-m,0)) + (0.321 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.280) h / 0.75));--paper:var(--rb-y,rgba(10,24,17,.85)) var(--rb-n,oklch(from var(--uc-b) calc(0.193 * (1 - var(--bn-m,0)) + (0.193 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.12 * var(--bk,1)) h / 0.85));--ink:var(--rb-y,#e3f2e6) var(--rb-n,oklch(from var(--uc-b) calc(0.908 * (1 - var(--bn-m,0)) + (0.908 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.12 * var(--bk,1)) h));--muted:var(--raT-y,#93b39c) var(--raT-n,oklch(from var(--uc-a) calc(0.736 * (1 - var(--bn-m,0)) + (0.736 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.300) h));--line:var(--ra-y,#3f6b4e) var(--ra-n,oklch(from var(--uc-a) 0.487 calc(c * 0.424) h));--soft:var(--raT-y,#1d3527) var(--raT-n,oklch(from var(--uc-a) calc(0.304 * (1 - var(--bn-m,0)) + (0.304 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.250) h));--acc:var(--ra-y,#5fd08a) var(--ra-n,oklch(from var(--uc-a) calc(0.774 + (var(--ua-l,0.5) - 0.774) * var(--ua-m,0)) calc(c * 0.905) h));--acc-ink:var(--rb-y,#05140b) var(--rb-n,oklch(from var(--uc-b) 0.174 calc(c * 0.12 * var(--bk,1)) h));--title:transparent;--title-ink:var(--raT-y,#a8f0c0) var(--raT-n,oklch(from var(--uc-a) calc(0.895 * (1 - var(--bn-m,0)) + (0.895 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.610) h));--enemy:transparent;--enemy-ink:#f09a8a;--bw:1px;--bcr:var(--ra-y,#4d7d5d) var(--ra-n,oklch(from var(--uc-a) 0.546 calc(c * 0.454) h));--bcs:var(--ra-y,#2f5440) var(--ra-n,oklch(from var(--uc-a) 0.412 calc(c * 0.342) h));--raise:none;--sunk:none;--rad:10px;--hl:var(--raT-y,#1e3a2a) var(--raT-n,oklch(from var(--uc-a) calc(0.321 * (1 - var(--bn-m,0)) + (0.321 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.280) h));--good:#7ee29c;--bad:#ec7a6a;--gold:#e2c86a;--hp:var(--ra-y,#5fd08a) var(--ra-n,oklch(from var(--uc-a) calc(0.774 + (var(--ua-l,0.5) - 0.774) * var(--ua-m,0)) calc(c * 0.905) h));--hpmid:#d8c25a;--hplow:#ec7a6a;--shadow:0 30px 70px var(--rb-y,rgba(0,0,0,.6)) var(--rb-n,oklch(from var(--uc-b) calc(0.000 * (1 - var(--bn-m,0)) + (0.000 * var(--bn-s,1) + var(--bn-o,0)) * var(--bn-m,0)) calc(c * 0.12 * var(--bk,1)) h / 0.6));--display:'Gothic A1',var(--bf)}
 
-.hx .rm .tk{fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round}
-.hx.en .rm .tk{stroke:var(--bad)}
-.ic .rm .tk{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .turn .item-actions{flex-wrap:wrap}
 .turn .item-actions{justify-content:flex-start}
 .turn .item-actions .item-caption{flex-basis:100%}
@@ -790,10 +789,6 @@ html[data-skin=receipt] .mainwin>main.wrap.scr-map{padding-bottom:10px}
   .mainwin::before,.mainwin::after{display:none}
 }
 /* 딜러 테두리: 가는 선 + 반짝이 */
-.hx .rm .ol{fill:none;stroke:var(--ink);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
-.hx .rm .sp{fill:var(--ink);stroke:none}
-.hx.en .rm .ol{stroke:var(--bad)}
-.hx.en .rm .sp{fill:var(--bad)}
 .ic .rm .ol{fill:none;stroke:currentColor;stroke-width:3.4;stroke-linecap:round}
 .ic .rm .sp{fill:currentColor}
 /* 태블릿 폭: 지도와 파티를 위아래로, 지도 높이 고정 */
@@ -4995,114 +4990,87 @@ const itemIllustration=(()=>{
  };
 })();
 const px=(k,sz=32)=>itemIllustration(k,sz);
-/* ---------- 문장 아이콘: 포지션=틀 모양, 역할=둘레 장식, 직업=중앙 문양, 특성=상단 보석 ---------- */
-const SH={
-  0:'M50 8C50 8 82 42 82 61A32 32 0 0 1 18 61C18 42 50 8 50 8Z',
-  1:'M50 13A37 37 0 1 1 49.9 13Z',
-  2:'M50 19C53 13 59 9 67 9C81 9 91 20 91 36C91 60 70 76 50 92C30 76 9 60 9 36C9 20 19 9 33 9C41 9 47 13 50 19Z',
-  c:'M50 24A28 28 0 1 1 49.9 24Z'
-};
-/* 직업 문양: 100×100 안의 단색 실루엣 (구멍은 evenodd) */
-const JOB={
- 근거리물리:'<path fill-rule="evenodd" d="M50 6L59 20V64H41V20ZM48.4 23H51.6V60H48.4Z"/><rect x="26" y="64" width="48" height="8" rx="2"/><rect x="45" y="72" width="10" height="13"/><circle cx="50" cy="90" r="5.5"/>',
- 근거리마법:'<g transform="translate(14 0)"><rect x="47" y="8" width="8" height="86" rx="2"/><rect x="47" y="52" width="16" height="6" rx="2"/><path d="M50 12C34 6 14 12 2 34C18 24 34 22 50 28Z"/></g>',
- 원거리물리:'<path d="M6 68C20 30 80 30 94 68L84 71C72 44 28 44 16 71Z"/><path fill-rule="evenodd" d="M11 60A8 8 0 1 1 10.99 60ZM11 64.5A3.5 3.5 0 1 0 11.01 64.5ZM89 60A8 8 0 1 1 88.99 60ZM89 64.5A3.5 3.5 0 1 0 89.01 64.5Z"/><path d="M12 72L50 84L88 72L88 76L50 88L12 76Z"/><rect x="47" y="14" width="6" height="74"/><path d="M50 0L62 20H38Z"/><path d="M50 82L58 90V99L50 94L42 99V90Z"/><rect x="40" y="34" width="20" height="14" rx="3"/>',
- 원거리마법:'<path fill-rule="evenodd" d="M50 6A17 17 0 1 1 49.99 6ZM43 13A4.5 4.5 0 1 0 43.01 13Z"/><path d="M27 18C26 39 37 50 50 50C63 50 74 39 73 18C70 34 61 44 50 44C39 44 30 34 27 18Z"/><rect x="46" y="48" width="8" height="38" rx="2"/><path d="M41 84H59L55 95H45Z"/>'
-};
-/* 좌우 대칭 복제 */
-const mir=x=>x+`<g transform="translate(100 0) scale(-1 1)">${x}</g>`;
-/* 좌표 반올림 */
-const P2=(n)=>Math.round(n*10)/10;
-/* 포지션 틀의 둘레를 따라 고르게 찍은 점과 바깥 방향 (역할 표식이 테두리에서 시작하도록) */
-const FRAMEPTS={};
-function framePts(p){if(FRAMEPTS[p])return FRAMEPTS[p];
- const dense=[],cub=(a,b,c,d)=>{for(let t=0;t<=1;t+=.02)dense.push([(1-t)**3*a[0]+3*(1-t)**2*t*b[0]+3*(1-t)*t*t*c[0]+t**3*d[0],(1-t)**3*a[1]+3*(1-t)**2*t*b[1]+3*(1-t)*t*t*c[1]+t**3*d[1]])},lin=(a,b)=>{for(let t=0;t<1;t+=.02)dense.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t])};
- if(p===0){cub([50,8],[50,8],[82,42],[82,61]);for(let t=0;t<1;t+=.01){const a=t*Math.PI;dense.push([50+32*Math.cos(a),61+32*Math.sin(a)])}cub([18,61],[18,42],[50,8],[50,8])}
- else if(p===2){cub([50,19],[53,13],[59,9],[67,9]);cub([67,9],[81,9],[91,20],[91,36]);cub([91,36],[91,60],[70,76],[50,92]);cub([50,92],[30,76],[9,60],[9,36]);cub([9,36],[9,20],[19,9],[33,9]);cub([33,9],[41,9],[47,13],[50,19])}
- else for(let t=0;t<1;t+=.004){const a=t*Math.PI*2-Math.PI/2;dense.push(p==='c'?[50+28*Math.cos(a),52+28*Math.sin(a)]:[50+37*Math.cos(a),50+37*Math.sin(a)])}
- const cum=[0];for(let i=1;i<dense.length;i++)cum.push(cum[i-1]+Math.hypot(dense[i][0]-dense[i-1][0],dense[i][1]-dense[i-1][1]));
- const tot=cum[cum.length-1],N=120,pts=[];let k=0;
- for(let i=0;i<N;i++){const d=tot*i/N;while(cum[k+1]<d)k++;const a=dense[k],b=dense[Math.min(k+1,dense.length-1)],f=(d-cum[k])/((cum[k+1]-cum[k])||1),P=[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
-  const tx=b[0]-a[0],ty=b[1]-a[1],m=Math.hypot(tx,ty)||1;let n=[ty/m,-tx/m];if(n[0]*(P[0]-50)+n[1]*(P[1]-52)<0)n=[-n[0],-n[1]];const rd=Math.hypot(P[0]-50,P[1]-52)||1,r=[(P[0]-50)/rd,(P[1]-52)/rd],bl=[n[0]+r[0]*1.2,n[1]+r[1]*1.2],bm=Math.hypot(bl[0],bl[1])||1;pts.push({P,n0:n,n:[bl[0]/bm,bl[1]/bm],t:[tx/m,ty/m],notch:false})}
- /* 뾰족한 꼭짓점(물방울 끝, 하트 홈·끝)은 바깥 방향을 위·아래로 고정해 장식이 한쪽으로 쏠리지 않게 */
- const fixN=(i,v)=>{if(pts[i]){pts[i].n0=v;pts[i].n=v}};
- if(p===0)fixN(0,[0,-1]);
- if(p===2){fixN(0,[0,-1]);fixN(N/2,[0,1])}
- return FRAMEPTS[p]=pts}
-/* 역할 표식과 틀 사이 간격 */
-const RGAP=4;
-/* 딜러: 틀을 따라 두른 가는 테두리 + 중간중간 크고 작은 별 장식 */
-const thornVine=p=>{const pts=framePts(p),L=pts.length,sc=p==='c'?1.35:1,R0=RGAP+5.4*sc;
- const at=i=>{const q=pts[((i%L)+L)%L],n=q.n0||q.n;return[q.P[0]+n[0]*R0,q.P[1]+n[1]*R0]};
- const orn=[[.25,6.4,'s'],[.75,6.4,'s'],[.5,5,'s'],[.13,3.6,'s'],[.87,3.6,'s'],[.375,3,'s'],[.625,3,'s']].map(([f,r,k])=>({i:Math.round(f*L),r:r*sc,k}));
- const gap=i=>orn.some(o=>{const a=at(i),b=at(o.i);return Math.hypot(a[0]-b[0],a[1]-b[1])<o.r+1.6*sc});
- let o='',d='',on=false;
- for(let i=0;i<=L;i++){if(gap(i)){on=false;continue}const P=at(i);d+=(on?'L':'M')+P2(P[0])+' '+P2(P[1]);on=true}
- o+=`<path class="ol" d="${d}"/>`;
- for(const q of orn){const [x,y]=at(q.i),r=q.r;
-  o+=q.k==='d'?`<circle class="sp" cx="${P2(x)}" cy="${P2(y)}" r="${P2(r)}"/>`:`<path class="sp" d="M${P2(x)} ${P2(y-r)}Q${P2(x)} ${P2(y)} ${P2(x+r)} ${P2(y)}Q${P2(x)} ${P2(y)} ${P2(x)} ${P2(y+r)}Q${P2(x)} ${P2(y)} ${P2(x-r)} ${P2(y)}Q${P2(x)} ${P2(y)} ${P2(x)} ${P2(y-r)}Z"/>`}
- return o};
-/* 서포터: 두 겹 테두리. 안쪽은 틀을 따라 두른 얇은 선, 바깥쪽은 양옆에만 두른 선에 별과 점이 박힘 */
-const star4=(x,y,r)=>`<path class="sp" d="M${P2(x)} ${P2(y-r)}Q${P2(x)} ${P2(y)} ${P2(x+r)} ${P2(y)}Q${P2(x)} ${P2(y)} ${P2(x)} ${P2(y+r)}Q${P2(x)} ${P2(y)} ${P2(x-r)} ${P2(y)}Q${P2(x)} ${P2(y)} ${P2(x)} ${P2(y-r)}Z"/>`;
-const twinRing=p=>{const pts=framePts(p),N=pts.length,R1=RGAP+1.2,R2=RGAP+5.4;
- const at=(i,r)=>{const q=pts[((i%N)+N)%N],n=q.n0||q.n;return[q.P[0]+n[0]*r,q.P[1]+n[1]*r]};
- let inner='';for(let i=0;i<N;i++){const P=at(i,R1);inner+=(i?'L':'M')+P2(P[0])+' '+P2(P[1])}
- /* 큰 별은 모든 포지션에서 같은 높이(y=50)의 왼쪽 가장자리에 */
- let li=-1;const yOf=i=>at(i,R2)[1];pts.forEach((q,i)=>{if(q.P[0]<50&&(li<0||Math.abs(yOf(i)-50)<Math.abs(yOf(li)-50)))li=i});
- const S=Math.round(N*.16),orn=[[0,6,'s'],[-.55,1.8,'d'],[.55,1.8,'d']].map(([f,r,k])=>({i:li+Math.round(f*S),r,k}));
- const gap=i=>orn.some(o=>{const a=at(i,R2),b=at(o.i,R2);return Math.hypot(a[0]-b[0],a[1]-b[1])<o.r+1.4});
- let d='',on=false;for(let i=li-S;i<=li+S;i++){if(gap(i)){on=false;continue}const P=at(i,R2);d+=(on?'L':'M')+P2(P[0])+' '+P2(P[1]);on=true}
- let side=`<path class="ol" d="${d}"/>`;
- for(const k of [-S-3,S+3]){const [x,y]=at(li+k,R2);side+=`<circle class="sp" cx="${P2(x)}" cy="${P2(y)}" r="1.4"/>`}
- for(const o of orn){const [x,y]=at(o.i,R2);side+=o.k==='s'?star4(x,y,o.r):`<circle class="sp" cx="${P2(x)}" cy="${P2(y)}" r="${o.r}"/>`}
- return `<path class="tk" d="${inner}Z"/>`+mir(side)};
-/* 탱커: 아래에서 위로 테두리를 감싸 오르는 월계수 가지 (왼쪽을 그리고 좌우 대칭) */
-const laurelL=p=>{const pts=framePts(p),N=pts.length;let bi=0;pts.forEach((q,i)=>{if(q.P[1]>pts[bi].P[1]||(q.P[1]===pts[bi].P[1]&&q.P[0]<pts[bi].P[0]))bi=i});
- const seq=[];for(let k=1;k<N*.45;k++)seq.push(pts[(bi+k)%N]);
- const off=2.6+RGAP,stem=seq.map(q=>[q.P[0]+q.n[0]*off,q.P[1]+q.n[1]*off]);
- let o=`<path class="ln2 stem" d="M${stem.map(q=>P2(q[0])+' '+P2(q[1])).join('L')}"/>`;
- const leaf=(c,ang,rx,ry)=>`<ellipse cx="${P2(c[0])}" cy="${P2(c[1])}" rx="${P2(rx)}" ry="${P2(ry)}" transform="rotate(${P2(ang)} ${P2(c[0])} ${P2(c[1])})"/>`;
- for(let k=3;k<seq.length-3;k+=5){const q=seq[k],a=stem[k],b=stem[k+1],dir=Math.atan2(b[1]-a[1],b[0]-a[0]),f=1-.3*k/seq.length,rx=6.4*f,ry=2.6*f;
-  const nx=q.n[0],ny=q.n[1],d=[Math.cos(dir),Math.sin(dir)],side=(nx*-d[1]+ny*d[0])>0?1:-1;
-  const out=[a[0]+nx*4.6+d[0]*3.4,a[1]+ny*4.6+d[1]*3.4],inn=[a[0]+nx*.6+d[0]*5.2,a[1]+ny*.6+d[1]*5.2];
-  o+=leaf(out,dir*180/Math.PI+side*42,rx,ry)+leaf(inn,dir*180/Math.PI+side*8,rx*.8,ry*.85)}
- const e=stem[stem.length-1],e2=stem[Math.max(0,stem.length-3)],dd=Math.atan2(e[1]-e2[1],e[0]-e2[0]);
- return o+leaf([e[0]+Math.cos(dd)*2,e[1]+Math.sin(dd)*2],dd*180/Math.PI,3.6,1.7)};
-/* 역할 표식: 딜러 = 가는 테두리와 반짝이, 탱커 = 월계수 가지, 서포터 = 얇은 안쪽 선 + 양옆에 별·점이 박힌 바깥 선 */
-const RMCACHE={};
-const rmark=(r,p)=>RMCACHE[r+p]||(RMCACHE[r+p]=r==='dealer'?thornVine(p):r==='tank'?mir(laurelL(p)):twinRing(p));
-
 const GEMC={pride:'#e2b21c',humil:'#e2b21c',wrath:'#d0213b',patience:'#d0213b',envy:'#1f9d55',kind:'#1f9d55',greed:'#e0701a',charity:'#e0701a',lust:'#e0559a',chaste:'#e0559a',glut:'#8e44c9',절제:'#8e44c9',sloth:'#2d6cdf',dilig:'#2d6cdf'};
-function gem(k,cx,cy,s){
- const c=GEMC[k],sin=AT[k].sin,t=`translate(${cx} ${cy}) scale(${s})`;
- return sin
- ? `<g class="sin-jewel" transform="${t}">
-    <path class="jewel-setting" d="M0-13L11 0 0 13-11 0Z"/>
-    <path fill="${c}" d="M0-10L8 0 0 10-8 0Z"/>
-    <path fill="#fff" fill-opacity=".30" d="M0-10L-8 0H0Z"/>
-    <path fill="#000" fill-opacity=".24" d="M0 0L8 0 0 10Z"/>
-    <path fill="none" stroke="#fff" stroke-opacity=".65" stroke-width=".75" d="M0-10L0 10M-8 0H8M0-10L-8 0M0-10L8 0"/>
-    <path class="jewel-prong" d="M0-15l2.4 4H-2.4ZM0 15l2.4-4H-2.4ZM-13 0l4-2.4v4.8ZM13 0l-4-2.4v4.8Z"/>
-   </g>`
- : `<g class="virtue-jewel" transform="${t}">
-    <circle class="jewel-setting" r="11"/>
-    <circle fill="${c}" r="8.5"/>
-    <circle fill="#fff" fill-opacity=".2" r="6.6"/>
-    <circle fill="#fff" fill-opacity=".8" cx="-2.6" cy="-3" r="1.7"/>
-   </g>`;
+function gem(k,cx,cy,s,v=0){
+ const c=GEMC[k],sin=AT[k].sin,t=`translate(${cx} ${cy}) scale(${s})`,pr='<path class="jewel-prong" d="M0-15l2.4 4H-2.4ZM0 15l2.4-4H-2.4ZM-13 0l4-2.4v4.8ZM13 0l-4-2.4v4.8Z"/>',
+  W=(d,o)=>`<path fill="#fff" fill-opacity="${o}" d="${d}"/>`,K=(d,o)=>`<path fill="#000" fill-opacity="${o}" d="${d}"/>`,L=(d,o=.6,w=.7)=>`<path fill="none" stroke="#fff" stroke-opacity="${o}" stroke-width="${w}" d="${d}"/>`;
+ if(sin&&!v)/* 밝은 브릴리언트 컷: 가운데 평평한 윗면 + 위쪽 면은 빛나고 아래쪽 면은 그늘 */
+  return `<g class="sin-jewel sin-bril" transform="${t}"><path class="jewel-setting" d="M0-13L11 0 0 13-11 0Z"/><path fill="${c}" d="M0-10L8 0 0 10-8 0Z"/>
+   ${W('M0-10L-3-2.4 0-4 3-2.4Z',.5)}${W('M0-10L-8 0-3-2.4Z',.32)}${W('M0-10L8 0 3-2.4Z',.12)}${K('M-8 0L0 10-3 2.4Z',.1)}${K('M8 0L0 10 3 2.4Z',.28)}${K('M-3 2.4L0 10 0 4Z',.2)}${K('M3 2.4L0 10 0 4Z',.34)}
+   ${W('M-3-2.4 0-4 3-2.4 3 2.4 0 4-3 2.4Z',.42)}
+   ${L('M0-10V-4M-8 0L-3-2.4M8 0L3-2.4M-8 0L-3 2.4M8 0L3 2.4M0 10V4M-3-2.4L0-10M3-2.4L0-10M-3 2.4L0 10M3 2.4L0 10',.7)}${L('M-3-2.4 0-4 3-2.4 3 2.4 0 4-3 2.4Z',.7)}
+   ${pr}</g>`;
+ if(sin)/* 깊은 별빛 컷: 중심에서 8면이 퍼지는 어두운 별 모양 */
+  return `<g class="sin-jewel sin-star" transform="${t}"><path class="jewel-setting" d="M0-13L11 0 0 13-11 0Z"/><path fill="${c}" d="M0-10L8 0 0 10-8 0Z"/>${K('M0-10L8 0 0 10-8 0Z',.2)}
+   ${W('M0 0L0-10 4-5Z',.3)}${K('M0 0L4-5 8 0Z',.24)}${W('M0 0L8 0 4 5Z',.14)}${K('M0 0L4 5 0 10Z',.34)}${W('M0 0L0 10-4 5Z',.1)}${K('M0 0L-4 5-8 0Z',.28)}${W('M0 0L-8 0-4-5Z',.32)}${K('M0 0L-4-5 0-10Z',.2)}
+   ${L('M0-10L0 10M-8 0H8M-4-5L4 5M4-5L-4 5',.5)}<path fill="#fff" fill-opacity=".92" d="${'M0-3.4C.5-.5.5-.5 3.4 0 .5.5.5.5 0 3.4-.5.5-.5.5-3.4 0-.5-.5-.5-.5 0-3.4Z'}"/>${pr}</g>`;
+ if(!v){/* 밝은 라운드 브릴리언트: 팔각 윗면 + 16면 */
+  const o=[...Array(8)].map((_,i)=>{const a=(22.5+45*i)*Math.PI/180;return [3.8*Math.sin(a),-3.8*Math.cos(a)]}),g=[...Array(8)].map((_,i)=>{const a=45*i*Math.PI/180;return [8.5*Math.sin(a),-8.5*Math.cos(a)]});
+  const P=q=>q[0].toFixed(2)+' '+q[1].toFixed(2),oct='M'+o.map(P).join('L')+'Z',ln=o.map((q,i)=>'M'+P(q)+'L'+P(g[i])+'M'+P(q)+'L'+P(g[(i+1)%8])).join(''),wd=g.map((q,i)=>(i%2?K:W)(`M${P(o[i])}L${P(g[i])}L${P(o[(i+7)%8])}Z`,i%2?.16:.24)).join('');
+  return `<g class="virtue-jewel virtue-bril" transform="${t}"><circle class="jewel-setting" r="11"/><circle fill="${c}" r="8.5"/>${wd}${L(ln,.55,.55)}${W(oct,.4)}${L(oct,.65,.6)}</g>`}
+ /* 깊은 단 컷: 둥근 계단식 층 */
+ return `<g class="virtue-jewel virtue-step" transform="${t}"><circle class="jewel-setting" r="11"/><circle fill="${c}" r="8.5"/><circle fill="#000" fill-opacity=".26" r="8.5"/><circle fill="${c}" r="6.4"/><circle fill="#000" fill-opacity=".12" r="6.4"/><circle fill="${c}" r="4.2"/><circle fill="#fff" fill-opacity=".3" r="4.2"/>
+  <circle fill="none" stroke="#fff" stroke-opacity=".55" stroke-width=".6" r="6.4"/><circle fill="none" stroke="#fff" stroke-opacity=".7" stroke-width=".6" r="4.2"/>
+  <path fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".5" d="M0-8.5V-6.4M0 8.5V6.4M-8.5 0H-6.4M8.5 0H6.4M-6-6L-4.5-4.5M6-6L4.5-4.5M-6 6L-4.5 4.5M6 6L4.5 4.5"/><circle fill="#fff" fill-opacity=".85" cx="-1.2" cy="-1.3" r="1.2"/></g>`;
 }
+/* ---------- 펜던트 문장: 원 안 직업 · 테두리 배치 · 아래 받침+침 역할 · 위 보석 특성 ---------- */
+let MCID=0;
+const MS=.34,MCY=47,MR=107;
+const mf=n=>Math.round(n*10)/10;
+const mSm=(P,cont)=>{let d=(cont?'L':'M')+mf(P[0][0])+' '+mf(P[0][1]);for(let i=0;i<P.length-1;i++){const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[i+1],p3=P[Math.min(P.length-1,i+2)];d+=`C${mf(p1[0]+(p2[0]-p0[0])/6)} ${mf(p1[1]+(p2[1]-p0[1])/6)} ${mf(p2[0]-(p3[0]-p1[0])/6)} ${mf(p2[1]-(p3[1]-p1[1])/6)} ${mf(p2[0])} ${mf(p2[1])}`}return d};
+const mStar=(r,k=.16)=>{const a=k*r;return `M0 ${mf(-r)}C${mf(a)} ${mf(-a)} ${mf(a)} ${mf(-a)} ${mf(r)} 0C${mf(a)} ${mf(a)} ${mf(a)} ${mf(a)} 0 ${mf(r)}C${mf(-a)} ${mf(a)} ${mf(-a)} ${mf(a)} ${mf(-r)} 0C${mf(-a)} ${mf(-a)} ${mf(-a)} ${mf(-a)} 0 ${mf(-r)}Z`};
+const mArc=(a1,a2,T,r0=106,p=.65,n=22)=>{const out=[],inn=[];for(let i=0;i<=n;i++){const u=i/n,th=(a1+(a2-a1)*u)*Math.PI/180,ro=r0+T*Math.pow(Math.sin(Math.PI*u),p);out.push([ro*Math.sin(th),ro*Math.cos(th)]);inn.push([r0*Math.sin(th),r0*Math.cos(th)])}inn.reverse();return mSm(out)+mSm(inn,true)+'Z'};
+const mMir=(d,a='')=>`<path d="${d}" ${a}/><path d="${d}" transform="scale(-1 1)" ${a}/>`;
+const mDim='opacity=".62"';
+function mountParts(role){
+ let mount;
+ if(role==='tank')mount=`<path d="${mArc(26,56,15)}" ${mDim}/><path d="${mArc(-56,-26,15)}" ${mDim}/><path d="${mArc(-21,21,22)}"/><path d="M-20 124H20L12 148 0 160-12 148Z"/>`;
+ else if(role==='dealer')mount=`${mMir('M10 108C36 112 64 100 87 62 73 108 46 130 12 130Z')}${mMir('M8 126C24 130 42 126 58 112 50 136 32 148 10 146Z')}<path d="M0 126L13 144 0 172-13 144Z"/>`;
+ else{const pet=(deg,len,w,dim)=>`<path ${dim?mDim:''} transform="rotate(${deg} 0 142)" d="M0 142C${-w} ${142-len*.25} ${-w} ${142-len*.75} 0 ${142-len} ${w} ${142-len*.75} ${w} ${142-len*.25} 0 142Z"/>`;
+  mount=`${pet(-68,44,13,1)}${pet(68,44,13,1)}${pet(-38,58,15,1)}${pet(38,58,15,1)}${pet(0,46,14)}<path d="M0 138C11 150 9 162 0 176-9 162-11 150 0 138Z"/><circle cx="-24" cy="156" r="3.2"/><circle cx="24" cy="156" r="3.2"/>`}
+ return {needle:'<path d="M-5 128C-3 154-1 172 0 190 1 172 3 154 5 128Z"/>',mount,spark:`<path transform="translate(0 119)" d="${mStar(27,.16)}"/>`};
+}
+const mStrip=s=>s.replace(/\s(fill|stroke|opacity|stroke-width)="[^"]*"/g,'');
+/* 겹치는 부분이 서로 잘리게: 반짝이가 받침을, 받침이 침을 오려냄 */
+function mountArt(role,id){
+ const p=mountParts(role),mk=(n,inner)=>`<mask id="${n}${id}" maskUnits="userSpaceOnUse" x="-130" y="30" width="260" height="190"><rect x="-130" y="30" width="260" height="190" fill="#fff"/><g fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round">${mStrip(inner)}</g></mask>`;
+ return {defs:mk('mc',p.spark)+mk('nc',p.mount),body:`<g class="rmk"><g mask="url(#nc${id})">${p.needle}</g><g mask="url(#mc${id})">${p.mount}</g>${p.spark}</g>`,sil:mStrip(p.needle+p.mount+p.spark)};
+}
+function ringSparks(p){const sp=(x,r)=>`<path class="rgf" transform="translate(${x} 0)" d="${mStar(r)}"/>`;return p===1?sp(MR,19)+sp(-MR,19):p===2?sp(MR,30)+sp(-MR,30):''}
+function ringsSvg(p,k=1,sparks){
+ const sk=sparks?ringSparks(p):'';
+ if(p===0)return `<circle r="${MR}" class="rgs" stroke-width="${5*k}"/>`;
+ if(p===1)return `<circle r="${MR}" class="rgs" stroke-width="${9*k}" stroke-linecap="round" stroke-dasharray="0.1 17.6"/>${sk}`;
+ return `<circle r="${MR}" class="rgs" stroke-width="${6*k}" stroke-linecap="round" stroke-dasharray="30 18"/>${sk}`;
+}
+/* 별이 기본 원 위에 겹치는 곳은 별이 아니라 원의 선이 잘림 */
+function ringCut(p){
+ const st=r=>`<path transform="translate(${MR} 0)" d="${mStar(r)}" stroke-width="10"/><path transform="translate(${-MR} 0)" d="${mStar(r)}" stroke-width="10"/>`;
+ return p===1?st(19):p===2?st(30):'';
+}
+const mGemSil=u=>u.attr?(AT[u.attr].sin?'<path d="M0-17L14 0 0 17-14 0Z"/>':'<circle r="12.5"/>'):'';
+/* 직업 문양 (원 중심 기준 ±60): 장검 · 낫 · 활 · 빛 */
+const JI={
+ 근거리물리:`<path d="M0-57 5.4-41 5 17H0Z" opacity=".68"/><path d="M0-57-5.4-41-5 17H0Z"/><path d="M0-50V12" class="jst" stroke-width="1.2" fill="none" opacity=".5"/><path d="M-21 19Q0 14 21 19V24Q0 20-21 24Z"/><circle cx="-21" cy="21.5" r="3.2"/><circle cx="21" cy="21.5" r="3.2"/><rect x="-3.6" y="24" width="7.2" height="19" rx="2" opacity=".85"/><path d="M-3.6 30H3.6M-3.6 36H3.6" class="jst" stroke-width="1.2" fill="none" opacity=".5"/><path d="M0 42 7.5 47.5 0 56-7.5 47.5Z"/>`,
+ 근거리마법:`<path d="M-17 57 8-42" class="jst" stroke-width="6.6" stroke-linecap="round" fill="none"/><path d="M6-54C40-60 64-34 61-2 50-28 30-40 3-36Z"/><path d="M6-54C40-60 64-34 61-2 56-14 52-22 46-28 36-34 22-34 3-36Z" opacity=".68"/><circle cx="6" cy="-41" r="6.8"/><path d="M-4-26 12-31" class="jst" stroke-width="3.2" stroke-linecap="round" fill="none"/><path d="M-21 51-14 64-7 51Z"/>`,
+ 원거리물리:`<path d="M0-26C20-30 40-20 50 0 52 4 51 8 47 8 44 4 41-4 36-8 26-17 14-19 0-18-14-19-26-17-36-8-41-4-44 4-47 8-51 8-52 4-50 0-40-20-20-30 0-26Z"/><path d="M-47 6 0 36 47 6" class="jst" stroke-width="1.8" stroke-linejoin="round" fill="none" opacity=".75"/><path d="M0-47V46" class="jst" stroke-width="3.2" fill="none"/><path d="M0-58 6-41 0-45-6-41Z"/><path d="M0 33-6 41M0 39-6 47M0 33 6 41M0 39 6 47" class="jst" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M0 44 0 53" class="jst" stroke-width="2.4" stroke-linecap="round" fill="none"/>`,
+ 원거리마법:`<path d="${mStar(60,.1)}"/><path d="${mStar(34,.14)}" transform="rotate(45)" opacity=".68"/><circle r="6"/><circle r="12" class="jst" stroke-width="1" fill="none" opacity=".7"/>`
+};
 function crest(u){
- const p=u.pos;
- return `<svg class="hx ${u.side==='e'?'en':''}" viewBox="0 0 100 100" aria-hidden="true"><g class="rm">${rmark(u.role,p)}</g><path class="fld" d="${SH[p]}"/><g class="jm" transform="translate(50 ${[55,52,48][p]}) scale(${[.46,.5,.46][p]}) translate(-50 -50)">${JOB[u.job]}</g><path class="sh" d="${SH[p]}"/>${u.attr?gem(u.attr,50,[9,10,11][p],1.28):''}</svg>`;
+ const p=u.pos,id=++MCID,T=`translate(50 ${MCY}) scale(${MS})`,A=mountArt(u.role,id),GY=MGY,GS=1.15;
+ const cut=p===0?'':`<circle cx="${MR}" r="${p===1?28:40}" stroke="none"/><circle cx="${-MR}" r="${p===1?28:40}" stroke="none"/>`;
+ const gsil=u.attr?`<g transform="translate(50 ${GY}) scale(${GS})" fill="#000" stroke="#000" stroke-width="2.6" stroke-linejoin="round">${mGemSil(u)}</g>`:'';
+ const defs=`<defs>${A.defs}<mask id="dm${id}" maskUnits="userSpaceOnUse" x="-130" y="-130" width="260" height="260"><rect x="-130" y="-130" width="260" height="260" fill="#fff"/><g fill="#000" stroke="#000" stroke-linejoin="round">${ringCut(p)}</g></mask><mask id="rc${id}" maskUnits="userSpaceOnUse" x="-60" y="-60" width="220" height="240"><rect x="-60" y="-60" width="220" height="240" fill="#fff"/><g transform="${T}" fill="#000" stroke="#000" stroke-width="10" stroke-linejoin="round">${A.sil}${cut}</g>${gsil}</mask></defs>`;
+ return `<svg class="hx ${u.side==='e'?'en':''}" viewBox="0 0 100 100" aria-hidden="true">${defs}<g mask="url(#rc${id})"><g transform="${T}">${ringsSvg(p)}</g></g><g transform="${T}">${A.body}<circle r="92" class="dfl"/><circle r="92" class="dln" mask="url(#dm${id})"/>${ringSparks(p)}</g><g class="jm" transform="translate(50 ${MCY}) scale(${MS*1.1})">${JI[u.job]}</g>${u.attr?gem2(u):''}</svg>`;
 }
-const CREST_DEFS=`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${[0,1,2].map(p=>`<clipPath id="agc${p}"><path d="${SH[p]}"/></clipPath>`).join('')}</defs></svg>`;
+const MGY=13,gem2=u=>gem(u.attr,50,MGY,1.15,abOf(u));
 const imgStyle=im=>{const r=im.r||1,z=im.z||1,w=r>=1?z*r*100:z*100,h=r>=1?z*100:z/r*100;return `background-image:url('${im.src}');background-size:${w}% ${h}%;background-position:${im.x}% ${im.y}%`};
 const avatar=(u,sz=44,prev)=>`<span class="av ${u.img?'avimg':''}" style="width:${sz}px;height:${sz}px" ${prev?`data-prev="${prev}"`:''}>${u.img?`<i class="phi" style="${imgStyle(u.img)}"></i>`:crest(u)}</span>`;
 const badge=u=>avatar(u,46);
-const posIc=(p,sz=30)=>`<svg class="ic" viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true"><path d="${SH[p]}" fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round"/></svg>`;
-const roleIc=(r,sz=30)=>`<svg class="ic" viewBox="2 4 96 96" width="${sz}" height="${sz}" aria-hidden="true"><g class="rm">${rmark(r,'c')}</g><path class="ghostsh" d="${SH.c}"/></svg>`;
-const jobIc=(j,sz=30)=>`<svg class="ic" viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true"><g class="jm">${JOB[j]}</g></svg>`;
-const sigSvg=k=>`<svg class="hm gm" viewBox="-15 -15 30 30" width="22" height="22" aria-hidden="true">${gem(k,0,0,1)}</svg>`;
+const posIc=(p,sz=30)=>`<svg class="ic" viewBox="0 0 100 100" width="${sz}" height="${sz}" aria-hidden="true"><g transform="translate(50 50) scale(.42)">${ringsSvg(p,1.7,1,1)}<circle r="92" class="dsc" stroke-width="13"/></g></svg>`;
+const roleIc=(r,sz=30)=>{const id=++MCID,A=mountArt(r,id);return `<svg class="ic" viewBox="-110 78 220 124" width="${sz}" height="${Math.round(sz*.56)}" style="overflow:hidden" aria-hidden="true"><defs>${A.defs}</defs><circle r="92" class="ghostsh" stroke-width="7"/>${A.body}</svg>`};
+const jobIc=(j,sz=30)=>`<svg class="ic" viewBox="-64 -64 128 128" width="${sz}" height="${sz}" aria-hidden="true"><g class="jm">${JI[j]}</g></svg>`;
+const sigSvg=(k,v=0)=>`<svg class="hm gm" viewBox="-15 -15 30 30" width="22" height="22" aria-hidden="true">${gem(k,0,0,1,v)}</svg>`;
 function loadImg(file,cb){if(!file)return;const fr=new FileReader();fr.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,320/Math.min(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb({src:c.toDataURL('image/jpeg',.85),r:im.width/im.height,z:1,x:50,y:50})};im.src=fr.result};fr.readAsDataURL(file)}
 const imgCtl=(ctx,im)=>`<div class="imgctl"><div class="row c"><label class="ghost filebtn">${im?'이미지 바꾸기':'이미지 넣기'}<input type="file" accept="image/*" data-ctx="${ctx}" hidden></label>${im?`<button class="ghost" data-act="imgclear" data-ctx="${ctx}">이미지 삭제</button>`:''}</div>
  ${im?`<div class="sliders">${[['z','확대',100,300,Math.round(im.z*100)],['x','가로 위치',0,100,im.x],['y','세로 위치',0,100,im.y]].map(([k,l,a,b,v])=>`<label>${l}<input type="range" min="${a}" max="${b}" value="${v}" data-ctx="${ctx}" data-ik="${k}"></label>`).join('')}</div>`:'<p class="small mute">이미지 미등록 시 기본 문장이 표시됩니다.</p>'}</div>`;
@@ -5154,13 +5122,13 @@ function top(){
  <div class="menu">${run?`<span><b>${floorLabel(S.floor)}</b></span>
  ` :''}</div>`;
 }
-function chips(g,items,sel,cls='',act='pick',locked=false){return `<div class="chips choice-${g} ${cls}">${items.map(it=>`<button type="button" class="chip choice-chip ${String(sel)===String(it.k)?'on':''} ${it.paired?'pair-match':''}" aria-pressed="${String(sel)===String(it.k)}" data-act="${act}" data-g="${g}" data-v="${it.k}" ${locked?'disabled':''}><span class="choice-icon">${it.ic||''}${it.sg?sigSvg(it.k):''}</span><span class="choice-name">${it.n}</span>${it.sub?`<span class="choice-sub">${it.sub}</span>`:''}</button>`).join('')}</div>`}
-function traitChoices(sel,act='pick',locked=false){
- return `<div class="trait-pairs">${RESONANCES.map(r=>`<div class="trait-pair" role="group" aria-label="${AT[r.sin].n} · ${AT[r.virt].n}">${chips('attr',[r.sin,r.virt].map(k=>({...AT[k],sg:1,paired:k===resonanceMate(sel)})),sel,'seven',act,locked)}</div>`).join('')}</div>`;
+function chips(g,items,sel,cls='',act='pick',locked=false){return `<div class="chips choice-${g} ${cls}">${items.map(it=>`<button type="button" class="chip choice-chip ${String(sel)===String(it.k)?'on':''} ${it.paired?'pair-match':''}" aria-pressed="${String(sel)===String(it.k)}" data-act="${act}" data-g="${g}" data-v="${it.k}" ${locked?'disabled':''}><span class="choice-icon">${it.ic||''}${it.sg?sigSvg(it.k,it.v||0):''}</span><span class="choice-name">${it.n}</span>${it.sub?`<span class="choice-sub">${it.sub}</span>`:''}</button>`).join('')}</div>`}
+function traitChoices(sel,act='pick',locked=false,ab=0){
+ return `<div class="trait-pairs">${RESONANCES.map(r=>`<div class="trait-pair" role="group" aria-label="${AT[r.sin].n} · ${AT[r.virt].n}">${chips('attr',[r.sin,r.virt].map(k=>({...AT[k],sg:1,v:k===sel?ab:0,paired:k===resonanceMate(sel)})),sel,'seven',act,locked)}</div>`).join('')}</div>`;
 }
 function traitDescription(k,note,sel=0,act=null,locked=false){
  const r=RES_BY_ATTR[k];const A=AT[k];
- const opts=`<div class="trait-opts" role="group" aria-label="${A.n} 고유 효과 선택">${A.opts.map((o,i)=>`<button type="button" class="trait-opt ${sel===i?'on':''}" ${act&&!locked?`data-act="${act}" data-g="ab" data-v="${i}"`:'disabled'} aria-pressed="${sel===i}"><b>${o.n}</b><span>${o.ab}</span></button>`).join('')}</div>`;
+ const opts=`<div class="trait-opts" role="group" aria-label="${A.n} 고유 효과 선택">${A.opts.map((o,i)=>`<button type="button" class="trait-opt ${sel===i?'on':''}" ${act&&!locked?`data-act="${act}" data-g="ab" data-v="${i}"`:'disabled'} aria-pressed="${sel===i}"><b>${sigSvg(k,i)} ${o.n}</b><span>${o.ab}</span></button>`).join('')}</div>`;
  return `<p class="desc"><b>${A.n}</b> ${A.sin?'7대죄 · 공격·디버프':'7주선 · 방어·버프'} — 고유 효과 하나를 고르세요.</p>${opts}${r?`<div class="resonance-detail"><div class="resonance-heading"><b>공명 · ${r.n}</b><span>${AT[r.sin].n} × ${AT[r.virt].n}</span></div><p class="small">${r.ab}</p>${note?'<p class="small mute resonance-note">상반된 특성끼리 공명</p>':''}</div>`:''}`;
 }
 function resonanceSummary(units){
@@ -5188,7 +5156,7 @@ function creator(mode){
  <div class="grp"><h3>직업 <small>공격 유형·사거리</small></h3>${chips('job',Object.entries(JOBS).map(([k,v])=>({k,n:v.n,sub:v.sub,ic:jobIc(k)})),d.job,'','pick',!!fixed)}<p class="desc"><b>${J.n}</b> ${J.tr}<br>${J.ab}</p></div>
  <div class="grp"><h3>포지션 <small>배치 효과</small></h3>${chips('pos',POS.map(p=>({...p,ic:posIc(p.k)})),d.pos,'','pick',fullFixed)}<p class="desc"><b>${POS[d.pos].n}</b> ${POS[d.pos].ab}</p></div>
  <div class="grp"><h3>역할 <small>역할 효과</small></h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(r=>({...r,ic:roleIc(r.k)})),d.role,'','pick',fullFixed)}<p class="desc"><b>${ROLES[d.role].n}</b> ${ROLES[d.role].ab}</p></div>
- <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(d.attr,'pick',fullFixed)}${traitDescription(d.attr,true,abOf(d),'pick',fullFixed)}</div>
+ <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(d.attr,'pick',fullFixed,abOf(d))}${traitDescription(d.attr,true,abOf(d),'pick',fullFixed)}</div>
  </div>
  <aside class="win side-sticky cr-side" data-t="프로필 — ${gname(d.tier)}"><div class="prof">${avatar({...d,side:'a'},96,'draft')}<div><h3>${esc(d.name||'이름 없는 헌터')}</h3><div class="small mute">${gname(d.tier)} · Lv1 · ${tJob(d.job)} · ${totalBudget(d)} · HP ${Math.ceil(Math.round(T.hp*(d.role==='tank'?1.2:1))*(mode==='npc'&&has('leaf')?1.15:1))}</div><p class="small mute" style="margin:6px 0 0">${tPos(d.pos)} · ${tRole(d.role)}${d.attr?' · '+tAttr(d.attr,abOf(d)):''}</p></div></div>
  ${fixed?'':imgCtl('draft',d.img)}
@@ -5431,7 +5399,7 @@ function respecHTML(E,u){
  <div class="grp"><h3>직업</h3>${chips('job',Object.entries(JOBS).map(([k,v])=>({k,n:v.n,sub:v.sub,ic:jobIc(k)})),r.job,'','rpick')}</div>
  <div class="grp"><h3>배치</h3>${chips('pos',POS.map(p=>({...p,ic:posIc(p.k)})),r.pos,'','rpick')}</div>
  <div class="grp"><h3>역할</h3>${chips('role',ROLE_ORDER.map(k=>ROLES[k]).map(x=>({...x,ic:roleIc(x.k)})),r.role,'','rpick')}</div>
- <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(r.attr,'rpick')}${traitDescription(r.attr,false,abOf(r),'rpick')}</div>
+ <div class="grp"><h3>고유 특성 <small>고유 효과·공명</small></h3>${traitChoices(r.attr,'rpick',false,abOf(r))}${traitDescription(r.attr,false,abOf(r),'rpick')}</div>
  <div class="row"><button class="ghost" data-act="reclose">변경 취소</button>${reDiff(E,u)?`<span class="small">바뀜: ${['job','pos','role','attr'].filter(k=>r[k]!==u[k]).map(k=>({job:'직업',pos:'배치',role:'역할',attr:'특성'})[k]).join(', ')}</span>`:'<span class="small mute">아직 바뀐 것이 없습니다.</span>'}</div></div>`;
 }
 function editOv(){
@@ -5441,7 +5409,7 @@ function editOv(){
  <div class="prof" style="margin-top:10px">${avatar({...u,img:E.img},104,'edit')}<div style="flex:1;min-width:0"><input type="text" id="ednm" maxlength="12" value="${esc(E.name!=null?E.name:u.name)}" aria-label="이름" ${locked?'readonly title="고정 NPC 이름은 변경할 수 없습니다."':''}>${locked?'':imgCtl('edit',E.img)}</div></div>
  <div class="pinfo">
   <div><span class="mute">등급</span><b>${gname(u.tier)}</b></div><div><span class="mute">레벨</span><b>Lv ${u.lvl}</b> <small class="mute">EXP ${u.exp}/${expNeed(u.lvl)}</small></div><div><span class="mute">직업</span><b>${jobIc(u.job,16)} ${tJob(u.job)}</b></div><div><span class="mute">HP</span><b>${u.hp} / ${u.maxHp}</b></div>
-  <div><span class="mute">배치</span><b>${posIc(u.pos,15)} ${tPos(u.pos)}</b></div><div><span class="mute">역할</span><b>${roleIc(u.role,16)} ${tRole(u.role)}</b></div><div><span class="mute">특성</span><b>${sigSvg(u.attr)} ${tAttr(u.attr)}</b></div><div><span class="mute">강화</span><b>${u.up}회</b> <small class="mute">총량 ${totalBudget(u)}</small></div>
+  <div><span class="mute">배치</span><b>${posIc(u.pos,15)} ${tPos(u.pos)}</b></div><div><span class="mute">역할</span><b>${roleIc(u.role,16)} ${tRole(u.role)}</b></div><div><span class="mute">특성</span><b>${sigSvg(u.attr,abOf(u))} ${tAttr(u.attr)}</b></div><div><span class="mute">강화</span><b>${u.up}회</b> <small class="mute">총량 ${totalBudget(u)}</small></div>
   <div class="wide2"><span class="mute">분배형</span><b>${presetTxt(u)}</b> <small class="mute">${dstr(u.dice,u)}${lb?` · 레벨 업으로 총량 +${lb*LVB} (분배형에 맞춰 자동 재분배)`:''}</small></div>
  </div>
  <h3 class="sub l">기본 설정 변경</h3>${respecHTML(E,u)}
@@ -5846,7 +5814,7 @@ function render(){
  if(key!==lastPopupKey){lastPopupKey=key;popupMin=false}
  const popup=isMapPopup(),content=sc(),mainContent=popup?mapScreen():content;
  document.querySelector('body>.map-popup-layer')?.remove();
- document.getElementById('app').innerHTML=CREST_DEFS+`<div class="mainwin"><div class="mw-handle" data-side="l" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div><div class="mw-handle" data-side="r" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div>${top()}<main class="wrap scr-${popup?'map':S.screen} ${popup?'map-behind-popup':''}">${!popup&&S.msg?`<p class="msg">${S.msg}</p>`:''}${mainContent}</main><div class="status">${dockAvail()?`<button class="status-party ${dock.party.open?'on':''}" data-act="dock" data-v="party" title="출전 파티 창 ${dock.party.open?'닫기':'열기'}">${mi('recruit')} <span class="tb-l">파티 목록</span><span class="tb-s">파티</span></button><button class="status-party tb-mob ${dock.bag.open||dockFixed('bag')?'on':''}" data-act="dock" data-v="bag" title="가방">${BAG_ICON.replace('width="26" height="26"','width="18" height="18"')} 가방</button><button class="status-party tb-mob ${dock.arts.open?'on':''}" data-act="dock" data-v="arts" title="아티팩트">${px('artifact',18)} 유물 ${S.arts.length}</button>`:`<span>${SCN[S.screen]}</span>`}<span>${S.party.length?esc(P().name)+' · '+gname(P().tier)+' · Lv'+P().lvl:'LOST'}</span><span>최고 ${floorLabel(S.stats.best)}${lastSave?' · 자동 저장 '+hhmm(lastSave):''}</span></div>${popup?popupHTML(content):''}${S.showSet?settingsOv():S.showDex?dexOv():S.showStory?storyOv():S.edit?editOv():S.showParty?partyOv():''}</div>`;
+ document.getElementById('app').innerHTML=`<div class="mainwin"><div class="mw-handle" data-side="l" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div><div class="mw-handle" data-side="r" title="창 폭 조절 (두 번 누르면 기본 폭)" aria-hidden="true"></div>${top()}<main class="wrap scr-${popup?'map':S.screen} ${popup?'map-behind-popup':''}">${!popup&&S.msg?`<p class="msg">${S.msg}</p>`:''}${mainContent}</main><div class="status">${dockAvail()?`<button class="status-party ${dock.party.open?'on':''}" data-act="dock" data-v="party" title="출전 파티 창 ${dock.party.open?'닫기':'열기'}">${mi('recruit')} <span class="tb-l">파티 목록</span><span class="tb-s">파티</span></button><button class="status-party tb-mob ${dock.bag.open||dockFixed('bag')?'on':''}" data-act="dock" data-v="bag" title="가방">${BAG_ICON.replace('width="26" height="26"','width="18" height="18"')} 가방</button><button class="status-party tb-mob ${dock.arts.open?'on':''}" data-act="dock" data-v="arts" title="아티팩트">${px('artifact',18)} 유물 ${S.arts.length}</button>`:`<span>${SCN[S.screen]}</span>`}<span>${S.party.length?esc(P().name)+' · '+gname(P().tier)+' · Lv'+P().lvl:'LOST'}</span><span>최고 ${floorLabel(S.stats.best)}${lastSave?' · 자동 저장 '+hhmm(lastSave):''}</span></div>${popup?popupHTML(content):''}${S.showSet?settingsOv():S.showDex?dexOv():S.showStory?storyOv():S.edit?editOv():S.showParty?partyOv():''}</div>`;
  {const w1=document.querySelector('main.wrap');if(w1)w1.scrollTop=SCROLL0?0:wT;SCROLL0=false}
  {const ov1=document.querySelector('.ov .win');if(ov1&&ovK&&ov1.parentNode.dataset.k===ovK){ov1.scrollTop=ovT;const dx1=ov1.querySelector('.dex-scroll');if(dx0&&dx1&&oldDexTab===(S.dexTab||'art'))dx1.scrollTop=dxT;const settingsBody1=ov1.querySelector('.settings-body');if(settingsBody0&&settingsBody1)settingsBody1.scrollTop=settingsScroll}}
  if(popup){
