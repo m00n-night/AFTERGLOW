@@ -2261,6 +2261,11 @@ body>.map-popup-layer>.map-popup-window.minimized .map-popup-titlebar{border-bot
 .dxsub{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 .dxsub .chip{min-height:32px;padding:3px 10px;font-size:12.5px;font-weight:700;white-space:nowrap}
 .dxsub .chip small{font-weight:400;opacity:.75;margin-left:2px}
+/* 분류 버튼: 이름과 NN/NN을 한 줄로 두고 버튼 한가운데 정렬 */
+:is(#app,body) .dxsub .chip{flex-direction:row;align-items:center;justify-content:center;text-align:center;gap:4px;min-height:36px}
+:is(#app,body) .dxsub .chip small{display:inline;margin-left:0}
+.dxno{display:inline-block;margin-right:6px;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;opacity:.6;letter-spacing:.02em}
+.dx.unk .dxno{letter-spacing:0}
 .dx-sum{display:block;font-weight:700;color:var(--ink)}
 .dx-det{display:block;margin-top:3px}
 .dxtbl{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:12.5px;background:var(--paper);color:var(--ink)}
@@ -5573,11 +5578,13 @@ function dexOv(){
  if(tab==='art'){
   const inCat=c=>ARTS.filter(a=>c==='all'||artCat(a)===c);
   const cnt=c=>{const l=inCat(c);return [l.filter(a=>seen(a.k)).length,l.length]};
-  const card=a=>ent(artIc(a.k),a.n,`<span class="dx-sum">${a.d}</span><span class="dx-det">${fullArtDescription(a)}</span>`,own(a.k)?' <span class="own">보유</span>':'',own(a.k)?'on':'');
-  const grid=c=>{const l=inCat(c),f=l.filter(a=>seen(a.k)),h=l.length-f.length;return `<div class="dxg">${f.map(card).join('')}${h?unk(`아직 얻지 못한 아티팩트 ${h}종`):''}</div>`};
+  const no=a=>`<span class="dxno">No.${String(ARTS.indexOf(a)+1).padStart(String(ARTS.length).length,'0')}</span>`;
+  const card=a=>ent(artIc(a.k),no(a)+a.n,`<span class="dx-sum">${a.d}</span><span class="dx-det">${fullArtDescription(a)}</span>`,own(a.k)?' <span class="own">보유</span>':'',own(a.k)?'on':'');
+  const lock=a=>ent(px('unknown'),no(a)+'??','아직 얻지 못했습니다.','','unk');
+  const grid=c=>`<div class="dxg">${inCat(c).map(a=>seen(a.k)?card(a):lock(a)).join('')}</div>`;
   const chips=[['all','전체'],...ART_CATS].map(([k,n])=>{const [s,t]=cnt(k);return `<button class="chip ${sub===k?'on':''}" data-act="dextab" data-v="art:${k}">${n} <small>${s}/${t}</small></button>`}).join('');
   const caps=[['atk','공격 주사위 +'],['pct','공격 피해 +'],['def','방어 주사위 +'],['reduce','받는 피해 -'],['crit','치명타 확률 +'],['shield','전투 시작 보호막 '],['heal','라운드 회복 ']].map(([k,n])=>n+EXTRA_CAP[k]+'%').join(' · ');
-  const list=sub==='all'?ART_CATS.map(([k,n])=>{const [s,t]=cnt(k);return `<h3 class="sub l">${n} <small class="mute">${s}/${t}</small></h3>${grid(k)}`}).join(''):grid(ART_CATS.some(x=>x[0]===sub)?sub:'all');
+  const list=sub==='all'?grid('all'):grid(ART_CATS.some(x=>x[0]===sub)?sub:'all');
   body=`<p class="small mute">전체 ${ARTS.length}종 · 발견 ${ARTS.filter(a=>seen(a.k)).length}종 · 이번 회차 보유 ${ARTS.filter(a=>own(a.k)).length}종. 발견한 아티팩트만 표시되며, 사용하면 사라지는 아티팩트도 발견 기록은 남습니다. 한 회차에서 같은 아티팩트는 두 번 얻을 수 없습니다.</p>
   <div class="dxsub">${chips}</div>${list}
   <p class="small mute">‘추가 아티팩트’(수치형 효과)는 같은 유형끼리 합산하되 상한이 있습니다: ${caps}. 출전 인원 증가 유물은 가장 큰 하나만 적용되며 최대 ${PARTY_MAX}명까지 편성할 수 있습니다.</p>`;
